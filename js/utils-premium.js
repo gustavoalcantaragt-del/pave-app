@@ -2,32 +2,19 @@
 const Utils = {
     // Sistema de Notificações (Toasts)
     showToast(message, type = 'info') {
+        // Normaliza tipo: 'error' → 'error', 'success' → 'success', resto → 'info'
+        const cssType = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            padding: 1rem 2rem;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border-left: 4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#f43f5e' : '#38bdf8'};
-            color: white;
-            border-radius: 8px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5);
-            z-index: 9999;
-            animation: slideIn 0.3s ease-out;
-            font-weight: 600;
-        `;
-        toast.innerText = message;
+        toast.className = `toast toast-${cssType}`;
+        toast.innerHTML = message;
         document.body.appendChild(toast);
 
         setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateY(20px)';
-            toast.style.transition = 'all 0.5s ease-out';
-            setTimeout(() => toast.remove(), 500);
-        }, 3000);
+            toast.style.transform = 'translateX(120%)';
+            toast.style.transition = 'all 0.35s ease-out';
+            setTimeout(() => toast.remove(), 350);
+        }, 3500);
     },
 
     // Modal de Confirmação (substitui confirm() nativo)

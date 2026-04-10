@@ -57,7 +57,7 @@ window.runSimulation = function() {
     if (lucro < 0) {
         const deficit = Math.abs(lucro);
         riskAlertHTML = `
-            <div style="grid-column: 1 / -1; padding:1.2rem; background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.4); border-radius:12px; margin-bottom:1rem; display:flex; align-items:flex-start; gap:15px; color:#ff453a;">
+            <div style="grid-column: 1 / -1; padding:1.2rem; background:rgba(226,75,74,0.1); border:1px solid rgba(226,75,74,0.4); border-radius:12px; margin-bottom:1rem; display:flex; align-items:flex-start; gap:15px; color:#E24B4A;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:3px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 <div style="text-align:left;">
                     <h4 style="margin:0 0 5px 0;">Déficit de Operação!</h4>
@@ -69,16 +69,16 @@ window.runSimulation = function() {
     // Result cards
     const resultEl = document.getElementById('sim-result');
     if (resultEl) {
-        const cardStyle = (color) => `padding:1.5rem 1rem; background:rgba(0,0,0,0.3); border-radius:12px; text-align:center; border-top:3px solid ${color};`;
+        const cardStyle = (color) => `padding:1.5rem 1rem; background:var(--bg-elevated); border-radius:12px; text-align:center; border-top:3px solid ${color};`;
         resultEl.innerHTML = riskAlertHTML + `
             <div style="${cardStyle('#5ac8fa')}">
                 <div style="font-size:0.75rem; color:var(--text-secondary); font-weight:700;">MARGEM CONTRIBUIÇÃO</div>
                 <div style="font-size:1.3rem; font-weight:800; color:#5ac8fa; margin-top:0.5rem;">R$ ${margem.toLocaleString('pt-BR')}</div>
                 <div style="font-size:0.7rem; color:var(--text-secondary);">${margemPct}%</div>
             </div>
-            <div style="${cardStyle(lucro >= 0 ? '#30d158' : '#ff453a')}">
+            <div style="${cardStyle(lucro >= 0 ? '#1D9E75' : '#E24B4A')}">
                 <div style="font-size:0.75rem; color:var(--text-secondary); font-weight:700;">LUCRO PROJETADO</div>
-                <div style="font-size:1.3rem; font-weight:800; color:${lucro >= 0 ? '#30d158' : '#ff453a'}; margin-top:0.5rem;">R$ ${lucro.toLocaleString('pt-BR')}</div>
+                <div style="font-size:1.3rem; font-weight:800; color:${lucro >= 0 ? '#1D9E75' : '#E24B4A'}; margin-top:0.5rem;">R$ ${lucro.toLocaleString('pt-BR')}</div>
                 <div style="font-size:0.7rem; color:var(--text-secondary);">${lucroPct}%</div>
             </div>
             <div style="${cardStyle('var(--accent-blue)')}">
@@ -104,7 +104,7 @@ window.runSimulation = function() {
                 labels: ['Faturamento', 'Custos Fixos', 'Custos Variáveis', 'Lucro'],
                 datasets: [
                     { label: 'Atual', data: [currentFat, currentData?.totalFixos || 0, currentData?.totalVariaveis || 0, currentLucro], backgroundColor: 'rgba(142,142,147,0.5)', borderRadius: 8 },
-                    { label: 'Projetado', data: [fat, fix, vari, lucro], backgroundColor: ['rgba(0,122,255,0.7)', 'rgba(255,69,58,0.7)', 'rgba(255,214,10,0.7)', lucro >= 0 ? 'rgba(48,209,88,0.7)' : 'rgba(255,69,58,0.7)'], borderRadius: 8 }
+                    { label: 'Projetado', data: [fat, fix, vari, lucro], backgroundColor: ['rgba(0,122,255,0.7)', 'rgba(226,75,74,0.7)', 'rgba(255,214,10,0.7)', lucro >= 0 ? 'rgba(29,158,117,0.7)' : 'rgba(226,75,74,0.7)'], borderRadius: 8 }
                 ]
             },
             options: {
@@ -169,7 +169,7 @@ window.simularRH = function() {
                 <td style="text-align:right; padding-top:12px;">${(custoTotal / salario).toFixed(2)}x o Salário</td>
             </tr>
         </table>
-        <div style="margin-top:1rem; font-size:0.75rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+        <div style="margin-top:1rem; font-size:0.75rem; border-top:1px solid var(--border); padding-top:10px;">
            <i>Nota: Este é o custo efetivo <b>médio mensal</b>. Não estão inclusos V.T., V.R. ou convênios.</i>
         </div>
     `;

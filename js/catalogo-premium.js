@@ -5,6 +5,35 @@
 // Comissões e Extras SEMPRE permanecem ativos.
 const COMBO_REPLACED_FIELDS = ['calc-ins-prin', 'calc-ins-med', 'calc-ins-geral', 'calc-ali-det'];
 
+// ── TOGGLE MODO COMISSÃO (R$ / %) ───────────────────────────────────────────
+window.calcComModo = function(campo, modo) {
+    // campo: 'vet' | 'ext'
+    const modoEl  = document.getElementById(`com-${campo}-modo`);
+    const btnRS   = document.getElementById(`com-${campo}-btn-rs`);
+    const btnPct  = document.getElementById(`com-${campo}-btn-pct`);
+    const input   = document.getElementById(`calc-com-${campo}`);
+    const hint    = document.getElementById(`com-${campo}-hint`);
+    if (!modoEl) return;
+
+    modoEl.value = modo;
+    if (modo === 'pct') {
+        btnRS.style.background  = 'transparent';
+        btnRS.style.color       = 'var(--text-muted)';
+        btnPct.style.background = 'var(--brand-cta)';
+        btnPct.style.color      = '#fff';
+        if (input) { input.step = '0.1'; input.max = '100'; input.placeholder = '0%'; }
+        if (hint) hint.style.display = 'inline';
+    } else {
+        btnRS.style.background  = 'var(--brand-cta)';
+        btnRS.style.color       = '#fff';
+        btnPct.style.background = 'transparent';
+        btnPct.style.color      = 'var(--text-muted)';
+        if (input) { input.step = '0.01'; input.removeAttribute('max'); input.placeholder = '0,00'; }
+        if (hint) { hint.style.display = 'none'; hint.textContent = ''; }
+    }
+    window.updateCat();
+};
+
 // ── CALCULADOR COMPARTILHADO ────────────────────────────────────────────────
 // Usado tanto por updateCat() quanto por salvarServico() para evitar
 // duplicação e o bug de variáveis fora de escopo.
@@ -25,8 +54,12 @@ function _calcCosts() {
         ? (window.comboItems || []).reduce((sum, i) => sum + (parseFloat(i.custo) || 0) * (parseInt(i.qtd) || 1), 0)
         : getVal('calc-ins-prin') + getVal('calc-ins-med') + getVal('calc-ins-geral') + getVal('calc-ali-det');
 
-    // Comissões — SEMPRE incluídas, independente do modo combo
-    const comissoes = getVal('calc-com-vet') + getVal('calc-com-ext');
+    // Comissões — SEMPRE incluídas, com suporte a % do preço
+    const vetModo  = document.getElementById('com-vet-modo')?.value || 'rs';
+    const extModo  = document.getElementById('com-ext-modo')?.value || 'rs';
+    const comVetRS = vetModo === 'pct' ? preco * (getVal('calc-com-vet') / 100) : getVal('calc-com-vet');
+    const comExtRS = extModo === 'pct' ? preco * (getVal('calc-com-ext') / 100) : getVal('calc-com-ext');
+    const comissoes = comVetRS + comExtRS;
 
     // Extras — SEMPRE incluídos, independente do modo combo
     const extras = getVal('calc-ext-des') + getVal('calc-ext-kit') + getVal('calc-ext-out');
@@ -74,7 +107,7 @@ window.updateCat = function() {
         else if (dif < -15)
             benchmarkHtml = `<div style="margin-top:1rem; padding:10px; border-radius:8px; background:rgba(255,214,10,0.1); border:1px solid rgba(255,214,10,0.3); color:#ffd60a; font-size:0.85rem;"><b>Oportunidade:</b> Seu preço está ${Math.abs(dif).toFixed(1)}% <b>abaixo</b> do mercado (R$ ${concorrencia.toFixed(2)}). Há espaço para aumentar a margem!</div>`;
         else
-            benchmarkHtml = `<div style="margin-top:1rem; padding:10px; border-radius:8px; background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.3); color:#30d158; font-size:0.85rem;">Seu preço está altamente competitivo e alinhado com o mercado (R$ ${concorrencia.toFixed(2)}).</div>`;
+            benchmarkHtml = `<div style="margin-top:1rem; padding:10px; border-radius:8px; background:rgba(29,158,117,0.1); border:1px solid rgba(29,158,117,0.3); color:#1D9E75; font-size:0.85rem;">Seu preço está altamente competitivo e alinhado com o mercado (R$ ${concorrencia.toFixed(2)}).</div>`;
     }
 
     document.getElementById('calc-lucro-val').innerText = c.lucroPct.toFixed(1) + '%';
@@ -84,10 +117,29 @@ window.updateCat = function() {
     `;
 
     const statusEl = document.getElementById('calc-lucro-status');
-    if (c.lucroRS > 0)      { statusEl.innerText = 'POSITIVA';   statusEl.style.color = '#30d158'; }
-    else if (c.lucroRS < 0) { statusEl.innerText = 'NEGATIVA';   statusEl.style.color = '#ff453a'; }
+    if (c.lucroRS > 0)      { statusEl.innerText = 'POSITIVA';   statusEl.style.color = '#1D9E75'; }
+    else if (c.lucroRS < 0) { statusEl.innerText = 'NEGATIVA';   statusEl.style.color = '#E24B4A'; }
     else                    { statusEl.innerText = 'BREAK-EVEN'; statusEl.style.color = '#ffd60a'; }
+
+    // Atualiza hint de R$ calculado quando comissões estão em modo %
+    _updateComHint('vet', c.preco);
+    _updateComHint('ext', c.preco);
 };
+
+function _updateComHint(campo, preco) {
+    const modo  = document.getElementById(`com-${campo}-modo`)?.value || 'rs';
+    const hint  = document.getElementById(`com-${campo}-hint`);
+    if (!hint) return;
+    if (modo === 'pct' && preco > 0) {
+        const pct = parseFloat(document.getElementById(`calc-com-${campo}`)?.value) || 0;
+        const rs  = preco * (pct / 100);
+        hint.textContent = `= R$ ${rs.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+        hint.style.display = 'inline';
+    } else {
+        hint.style.display = 'none';
+        hint.textContent = '';
+    }
+}
 
 // ── SALVAR SERVIÇO NO CATÁLOGO ──────────────────────────────────────────────
 window.salvarServico = function() {
@@ -160,9 +212,9 @@ function renderServicosSalvos() {
     // ── Health badge helper ────────────────────────────────────────────────────
     function healthBadge(margem) {
         const m = parseFloat(margem) || 0;
-        if (m >= 30) return { label: 'Ótima',   color: '#30d158', bg: 'rgba(48,209,88,0.1)',   border: 'rgba(48,209,88,0.3)' };
+        if (m >= 30) return { label: 'Ótima',   color: '#1D9E75', bg: 'rgba(29,158,117,0.1)',   border: 'rgba(29,158,117,0.3)' };
         if (m >= 15) return { label: 'Regular', color: '#ff9500', bg: 'rgba(255,149,0,0.1)',   border: 'rgba(255,149,0,0.3)' };
-        return        { label: 'Crítica', color: '#ff453a', bg: 'rgba(255,69,58,0.1)',    border: 'rgba(255,69,58,0.3)' };
+        return        { label: 'Crítica', color: '#E24B4A', bg: 'rgba(226,75,74,0.1)',    border: 'rgba(226,75,74,0.3)' };
     }
 
     const controls = `
@@ -194,10 +246,10 @@ function renderServicosSalvos() {
     container.innerHTML = controls + lista.map(s => {
         const lucro  = parseFloat(s.lucro) || 0;
         const health = healthBadge(s.margem);
-        const borderColor = lucro >= 0 ? health.color : '#ff453a';
+        const borderColor = lucro >= 0 ? health.color : '#E24B4A';
         return `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.875rem 1rem; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:0.5rem; border-left:3px solid ${borderColor}; transition:background 0.15s;"
-             onmouseover="this.style.background='rgba(255,255,255,0.025)'" onmouseout="this.style.background='rgba(0,0,0,0.2)'">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.875rem 1rem; background:var(--bg-elevated); border-radius:10px; margin-bottom:0.5rem; border-left:3px solid ${borderColor}; transition:background 0.15s;"
+             onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-elevated)'">
             <div style="min-width:0; flex:1;">
                 <div style="font-weight:700; font-size:0.9rem; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                     <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:280px;">${s.nome}</span>
@@ -212,9 +264,9 @@ function renderServicosSalvos() {
                 ${s.comboItens && s.comboItens.length > 0 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">${s.comboItens.join(' + ')}</div>` : ''}
             </div>
             <div style="text-align:right; flex-shrink:0; margin-left:1rem;">
-                <div style="font-weight:800; color:${lucro >= 0 ? '#30d158' : '#ff453a'}; font-size:0.95rem;">${fmt(lucro)}</div>
+                <div style="font-weight:800; color:${lucro >= 0 ? '#1D9E75' : '#E24B4A'}; font-size:0.95rem;">${fmt(lucro)}</div>
                 <div style="font-size:0.65rem; color:var(--text-muted); margin-top:1px;">lucro</div>
-                <button onclick="window.deleteServico(${s.id})" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.7rem; margin-top:4px; display:block; margin-left:auto;" onmouseover="this.style.color='#ff453a'" onmouseout="this.style.color='var(--text-muted)'">remover</button>
+                <button onclick="window.deleteServico(${s.id})" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.7rem; margin-top:4px; display:block; margin-left:auto;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='var(--text-muted)'">remover</button>
             </div>
         </div>`;
     }).join('');
@@ -325,30 +377,30 @@ window.renderComboItems = function() {
     list.innerHTML = window.comboItems.map(item => {
         const custoTotal = (parseFloat(item.custo) || 0) * (parseInt(item.qtd) || 1);
         return `
-        <div style="display:grid; grid-template-columns:2fr 1fr 72px auto; gap:8px; align-items:center;">
+        <div class="cat-combo-row" style="display:grid; grid-template-columns:2fr 1fr 72px auto; gap:8px; align-items:center;">
             <input type="text"
                    placeholder="Nome do item (ex: Vacina V10)"
                    value="${item.nome}"
                    oninput="window.updateComboItem(${item.id}, 'nome', this.value)"
-                   style="padding:9px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); color:var(--text-primary); font-size:0.875rem; font-family:inherit; outline:none; transition:border-color 0.15s;"
+                   style="padding:9px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.875rem; font-family:inherit; outline:none; transition:border-color 0.15s;"
                    onfocus="this.style.borderColor='var(--accent-blue)'"
-                   onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                   onblur="this.style.borderColor='var(--border)'">
             <input type="number"
                    placeholder="Custo (R$)" step="0.01" min="0"
                    value="${item.custo || ''}"
                    oninput="window.updateComboItem(${item.id}, 'custo', this.value)"
-                   style="padding:9px 12px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); color:var(--accent-gold); font-weight:700; font-size:0.875rem; font-family:inherit; outline:none; transition:border-color 0.15s;"
+                   style="padding:9px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--accent-gold); font-weight:700; font-size:0.875rem; font-family:inherit; outline:none; transition:border-color 0.15s;"
                    onfocus="this.style.borderColor='var(--accent-gold)'"
-                   onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+                   onblur="this.style.borderColor='var(--border)'">
             <input type="number"
                    placeholder="Qtd" min="1" step="1"
                    value="${item.qtd || 1}"
                    oninput="window.updateComboItem(${item.id}, 'qtd', this.value)"
-                   style="padding:9px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.4); color:var(--text-secondary); font-weight:600; font-size:0.875rem; font-family:inherit; text-align:center; outline:none;"
+                   style="padding:9px 8px; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-secondary); font-weight:600; font-size:0.875rem; font-family:inherit; text-align:center; outline:none;"
                    title="Quantidade">
             <button type="button"
                     onclick="window.removeComboItem(${item.id})"
-                    style="background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.25); color:#ff453a; padding:9px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
+                    style="background:rgba(226,75,74,0.1); border:1px solid rgba(226,75,74,0.25); color:#E24B4A; padding:9px; border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
                     title="Remover item">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -379,7 +431,7 @@ window.switchCatTab = function(tabName) {
     if (!btnNovo || !tabNovo) return;
 
     const activeSt   = { background: 'rgba(212,175,55,0.15)', color: 'var(--accent-gold)', border: '1px solid var(--accent-gold)' };
-    const inactiveSt = { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.1)' };
+    const inactiveSt = { background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' };
 
     if (tabName === 'salvos') {
         Object.assign(btnSalvos.style, activeSt);

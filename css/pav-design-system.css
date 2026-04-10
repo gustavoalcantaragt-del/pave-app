@@ -192,6 +192,18 @@ body.app-layout {
   letter-spacing: -0.2px;
 }
 
+/* Título da página no topbar — visível apenas no mobile */
+.topbar-mobile-title {
+  display: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .topbar-clinic {
   font-size: 0.78rem;
   color: var(--text-secondary);
@@ -1235,39 +1247,168 @@ input[type="range"] { accent-color: var(--brand-cta); }
   :root { --sidebar-width: 200px; }
 }
 
+/* ----------------------------------------------------------
+   MOBILE — ≤ 768px
+   ---------------------------------------------------------- */
 @media (max-width: 768px) {
   body.app-layout {
     grid-template-columns: 1fr;
     grid-template-rows: var(--topbar-height) 1fr 60px;
   }
 
-  .topbar-brand { width: auto; border-right: none; }
+  /* Topbar */
+  .topbar-brand { width: auto; border-right: none; padding: 0 0.75rem; }
   .topbar-clinic { display: none; }
+  .topbar-mobile-title { display: block; }
+  #sidebar-toggle { display: none; }
+  #ytd-container { display: none !important; }
+  #date-display  { display: none; }
+  #period-chip-container { display: none; }
 
-  .sidebar {
-    display: none; /* substituído pelo bottom-nav */
-  }
+  /* Oculta o header interno das seções (título já aparece no topbar) */
+  .main-content > main > section > header { display: none !important; }
 
-  .main-content {
-    grid-column: 1;
-    padding: 1rem 1rem 80px;
-  }
-
+  /* Sidebar → bottom-nav */
+  .sidebar { display: none; }
   .bottom-nav { display: flex; }
 
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
+  /* Main */
+  .main-content {
+    grid-column: 1;
+    padding: 1rem 0.875rem 80px;
   }
 
-  .form-grid { grid-template-columns: 1fr; }
+  /* Cards */
+  .card { padding: 1rem; margin-bottom: 1rem; }
 
-  header h2 { font-size: 1.375rem; }
+  /* Header da seção */
+  header h2 { font-size: 1.25rem; }
+  header { margin-bottom: 1.25rem; }
+
+  /* Stats grid */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.625rem;
+  }
+
+  /* Grids responsivos (classes adicionadas ao HTML) */
+  .form-grid  { grid-template-columns: 1fr; }
+  .grid-2     { grid-template-columns: 1fr !important; }
+  .grid-3     { grid-template-columns: 1fr 1fr !important; }
+  .grid-auto  { grid-template-columns: 1fr !important; }
+
+  /* Caixa Diário — form de lançamento */
+  .cx-form-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.875rem !important;
+  }
+  .cx-form-row > div:first-child { grid-column: 1 / -1; } /* Tipo ocupa linha inteira */
+
+  /* Caixa — lista + rateio */
+  .cx-lista-rateio { grid-template-columns: 1fr !important; }
+
+  /* Precificação — cabeçalho de combo */
+  .cat-combo-row {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .cat-combo-row > span:last-child { display: none; }
+
+  /* Simulador — inputs grandes */
+  .sim-input-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Finanças — botões de ação */
+  .balanco-actions { grid-template-columns: 1fr !important; }
+
+  /* Overflow horizontal em tabelas */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Dashboard — grids gerados via JS */
+  #dashboard-charts > div[style*="grid-template-columns:3fr 2fr"],
+  #aba-relatorios > div > div[style*="grid-template-columns:3fr 2fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  #rel-cx-summary[style*="repeat(4"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  #aba-relatorios [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  #aba-relatorios [style*="grid-template-columns:repeat(3"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  #aba-relatorios [style*="grid-template-columns:repeat(4"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  #aba-relatorios [style*="grid-template-columns:2fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Topbar actions — esconde itens menos essenciais */
+  .notif-btn { display: none; }
+  .topbar-actions { gap: 0.25rem; }
+  .theme-toggle { width: 32px; height: 32px; }
+  .user-avatar  { width: 28px; height: 28px; font-size: 0.68rem; }
+
+  /* Bottom nav — indicador pill acima do botão ativo */
+  .bottom-nav {
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding: 0 0.5rem env(safe-area-inset-bottom, 0px);
+  }
+  .bottom-nav-btn {
+    position: relative;
+    min-height: 44px;
+  }
+  .bottom-nav-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 3px;
+    background: var(--brand-cta);
+    border-radius: 0 0 4px 4px;
+  }
+
+  /* Scroll momentum + hide scrollbar */
+  .main-content {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .main-content::-webkit-scrollbar { display: none; }
+
+  /* Touch targets para inputs e botões */
+  input, select, textarea {
+    min-height: 44px;
+    font-size: 16px !important; /* previne zoom no iOS */
+  }
+  .btn-primary, .btn-secondary, .btn-danger {
+    min-height: 44px;
+  }
+
+  /* Trial banner — empilha no mobile */
+  .trial-banner {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    text-align: center;
+  }
+  .trial-banner > * { margin: 0 auto; }
 }
 
+/* ----------------------------------------------------------
+   MOBILE — ≤ 480px (telas muito pequenas)
+   ---------------------------------------------------------- */
 @media (max-width: 480px) {
   .stats-grid { grid-template-columns: 1fr; }
-  .main-content { padding: 0.875rem 0.875rem 80px; }
+  .main-content { padding: 0.75rem 0.75rem 80px; }
+  .grid-3 { grid-template-columns: 1fr !important; }
+  .cx-form-row { grid-template-columns: 1fr !important; }
+  .stat-card-value { font-size: 1.375rem; }
+  .card { padding: 0.875rem; }
 }
 
 /* ----------------------------------------------------------

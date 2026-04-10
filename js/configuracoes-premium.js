@@ -43,10 +43,10 @@ async function _renderSubscriptionCard() {
 
     const STATUS_LABELS = {
         trial:    { label: 'Trial',        color: '#ff9500' },
-        active:   { label: 'Ativo',        color: '#30d158' },
-        past_due: { label: 'Em Atraso',    color: '#ff453a' },
-        canceled: { label: 'Cancelado',    color: '#ff453a' },
-        expired:  { label: 'Expirado',     color: '#ff453a' },
+        active:   { label: 'Ativo',        color: '#1D9E75' },
+        past_due: { label: 'Em Atraso',    color: '#E24B4A' },
+        canceled: { label: 'Cancelado',    color: '#E24B4A' },
+        expired:  { label: 'Expirado',     color: '#E24B4A' },
         none:     { label: 'Sem Plano',    color: 'var(--text-muted)' },
         pending:  { label: 'Aguardando',   color: '#5ac8fa' },
     };
@@ -60,7 +60,7 @@ async function _renderSubscriptionCard() {
 
     if (sub.status === 'trial' && sub.daysLeft !== undefined) {
         elDays.textContent = sub.daysLeft > 0 ? `${sub.daysLeft} dia${sub.daysLeft !== 1 ? 's' : ''}` : 'Expirado';
-        elDays.style.color = sub.daysLeft > 3 ? '#30d158' : '#ff453a';
+        elDays.style.color = sub.daysLeft > 3 ? '#1D9E75' : '#E24B4A';
     } else if (sub.status === 'active') {
         elDays.textContent = '—';
         elDays.style.color = 'var(--text-muted)';
@@ -94,15 +94,15 @@ window.updateDivisaoPreview = function() {
     if (!statusEl) return;
 
     if (total === 100) {
-        statusEl.style.background = 'rgba(48,209,88,0.1)';
-        statusEl.style.border     = '1px solid rgba(48,209,88,0.3)';
-        statusEl.style.color      = '#30d158';
+        statusEl.style.background = 'rgba(29,158,117,0.1)';
+        statusEl.style.border     = '1px solid rgba(29,158,117,0.3)';
+        statusEl.style.color      = '#1D9E75';
         statusEl.textContent      = 'Total: 100% — Distribuição válida';
         if (saveBtn) saveBtn.disabled = false;
     } else {
-        statusEl.style.background = 'rgba(255,69,58,0.1)';
-        statusEl.style.border     = '1px solid rgba(255,69,58,0.3)';
-        statusEl.style.color      = '#ff453a';
+        statusEl.style.background = 'rgba(226,75,74,0.1)';
+        statusEl.style.border     = '1px solid rgba(226,75,74,0.3)';
+        statusEl.style.color      = '#E24B4A';
         statusEl.textContent      = `Total: ${total}% — Precisa somar 100%`;
         if (saveBtn) saveBtn.disabled = true;
     }

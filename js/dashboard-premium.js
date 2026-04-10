@@ -68,7 +68,7 @@ window.renderDashboard = function(forceData = null) {
     if (ytdEl && ytdContainer) {
         if (historicoAll.length > 0) {
             ytdContainer.style.display = 'block';
-            ytdEl.style.color = ytdLucro >= 0 ? '#30d158' : '#ff453a';
+            ytdEl.style.color = ytdLucro >= 0 ? '#1D9E75' : '#E24B4A';
             ytdEl.innerText = `R$ ${ytdLucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
         } else {
             ytdContainer.style.display = 'none';
@@ -86,7 +86,7 @@ window.renderDashboard = function(forceData = null) {
     const deltaHTML = (pct, inverter = false) => {
         if (pct === null || !hasData) return '';
         const positivo = inverter ? pct < 0 : pct > 0;
-        const cor      = positivo ? '#30d158' : '#ff453a';
+        const cor      = positivo ? '#1D9E75' : '#E24B4A';
         const icon     = pct > 0 ? IC.arrowUp : IC.arrowDn;
         return `<span style="display:inline-flex; align-items:center; gap:3px; font-size:0.72rem; font-weight:700; color:${cor}; margin-left:8px;">${icon} ${Math.abs(pct).toFixed(1)}%</span>`;
     };
@@ -103,7 +103,7 @@ window.renderDashboard = function(forceData = null) {
     const fmt = v => `R$ ${(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
     const infoBanner = !hasData ? `
-        <div style="grid-column:1/-1; padding:1rem 1.5rem; background:rgba(10,132,255,0.06); border:1px solid rgba(10,132,255,0.2); border-radius:12px; display:flex; align-items:center; gap:12px; margin-bottom:0.5rem;">
+        <div style="grid-column:1/-1; padding:1rem 1.5rem; background:rgba(10,132,255,0.06); border:1px solid rgba(10,132,255,0.2); border-radius:var(--radius-card); display:flex; align-items:center; gap:12px; margin-bottom:0.5rem;">
             <span style="color:var(--accent-blue); flex-shrink:0;">${IC.info}</span>
             <span style="font-size:0.875rem; color:var(--text-secondary);">Preencha seu primeiro balanço financeiro para ativar os indicadores.</span>
             <button onclick="document.getElementById('tab-balanco').click()" class="btn-primary" style="margin-left:auto; padding:0.45rem 1rem; font-size:0.8rem; flex-shrink:0;">Ir para Finanças</button>
@@ -113,8 +113,8 @@ window.renderDashboard = function(forceData = null) {
     const ticketIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>`;
     const cards = [
         { label: 'Receita Operacional', value: totais.faturamento,    color: 'var(--accent-blue)', icon: IC.revenue,  delta: dFat,   inverter: false },
-        { label: 'Margem Líquida',      value: totais.lucroGerencial, color: totais.lucroGerencial >= 0 ? '#30d158' : '#ff453a', icon: IC.profit, delta: dLucro, inverter: false },
-        { label: 'Custos Fixos',        value: totais.totalFixos,     color: '#ff453a',            icon: IC.fixed,    delta: dFix,   inverter: true  },
+        { label: 'Margem Líquida',      value: totais.lucroGerencial, color: totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A', icon: IC.profit, delta: dLucro, inverter: false },
+        { label: 'Custos Fixos',        value: totais.totalFixos,     color: '#E24B4A',            icon: IC.fixed,    delta: dFix,   inverter: true  },
         { label: 'Custos Variáveis',    value: totais.totalVariaveis, color: '#ffd60a',            icon: IC.variable, delta: dVar,   inverter: true  },
         { label: 'Ticket Médio',        value: ticketMed,             color: '#5ac8fa',            icon: ticketIcon,  delta: null,   inverter: false,
           sub: qtdAtend > 0 ? `${qtdAtend} atendimentos` : 'Sem atendimentos' }
@@ -135,13 +135,13 @@ window.renderDashboard = function(forceData = null) {
 
     // ── CHARTS + INDICADORES ──────────────────────────────────────────────────
     const healthScore = parseFloat(pctFix) || 0;
-    let healthColor = '#30d158', healthLabel = 'Saudável';
+    let healthColor = '#1D9E75', healthLabel = 'Saudável';
     let healthDesc  = 'Estrutura de custos fixos controlada. Operação sustentável.';
     if (healthScore > 35 && healthScore <= 50) {
         healthColor = '#ffd60a'; healthLabel = 'Atenção';
         healthDesc  = 'Custos fixos elevados. Monitore o faturamento para evitar déficits.';
     } else if (healthScore > 50) {
-        healthColor = '#ff453a'; healthLabel = 'Risco Crítico';
+        healthColor = '#E24B4A'; healthLabel = 'Risco Crítico';
         healthDesc  = 'Mais de 50% do faturamento comprometido com estrutura fixa.';
     }
 
@@ -173,9 +173,9 @@ window.renderDashboard = function(forceData = null) {
             <div class="card">
                 <h3 style="margin-bottom:1.5rem;">Indicadores Vitais</h3>
                 <div style="display:flex; flex-direction:column; gap:0.875rem;">
-                    <div class="kpi-row" style="border-left-color:${totais.lucroGerencial >= 0 ? '#30d158' : '#ff453a'};">
+                    <div class="kpi-row" style="border-left-color:${totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A'};">
                         <span class="kpi-row-label">Margem Líquida</span>
-                        <span class="kpi-row-value" style="color:${totais.lucroGerencial >= 0 ? '#30d158' : '#ff453a'};">${hasData ? lucroPct + '%' : '—'}</span>
+                        <span class="kpi-row-value" style="color:${totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A'};">${hasData ? lucroPct + '%' : '—'}</span>
                     </div>
                     <div class="kpi-row" style="border-left-color:#5ac8fa;">
                         <span class="kpi-row-label">Margem de Contribuição</span>
@@ -198,19 +198,19 @@ window.renderDashboard = function(forceData = null) {
             <h3 style="margin-bottom:1.5rem;">Metas do Período</h3>
             <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.25rem;">
                 ${metaFat > 0 ? `
-                <div style="padding:1.25rem; background:rgba(0,0,0,0.25); border-radius:12px; border-left:4px solid ${totais.faturamento >= metaFat ? '#30d158' : '#ff453a'};">
+                <div style="padding:1.25rem; background:var(--bg-elevated); border-radius:var(--radius-card); border-left:4px solid ${totais.faturamento >= metaFat ? '#1D9E75' : '#E24B4A'};">
                     <div style="color:var(--text-secondary); font-size:0.75rem; font-weight:700; margin-bottom:0.5rem; letter-spacing:0.5px; text-transform:uppercase;">Meta de Faturamento</div>
                     <div style="font-size:1.15rem; font-weight:800;">${fmt(metaFat)}</div>
-                    <div style="display:inline-flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:700; margin-top:0.5rem; color:${totais.faturamento >= metaFat ? '#30d158' : '#ff453a'};">
+                    <div style="display:inline-flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:700; margin-top:0.5rem; color:${totais.faturamento >= metaFat ? '#1D9E75' : '#E24B4A'};">
                         ${totais.faturamento >= metaFat ? IC.check : IC.xmark}
                         ${totais.faturamento >= metaFat ? 'Atingida' : 'Não atingida'}
                     </div>
                 </div>` : ''}
                 ${metaLucro > 0 ? `
-                <div style="padding:1.25rem; background:rgba(0,0,0,0.25); border-radius:12px; border-left:4px solid ${totais.lucroGerencial >= metaLucro ? '#30d158' : '#ff453a'};">
+                <div style="padding:1.25rem; background:var(--bg-elevated); border-radius:var(--radius-card); border-left:4px solid ${totais.lucroGerencial >= metaLucro ? '#1D9E75' : '#E24B4A'};">
                     <div style="color:var(--text-secondary); font-size:0.75rem; font-weight:700; margin-bottom:0.5rem; letter-spacing:0.5px; text-transform:uppercase;">Meta de Lucro</div>
                     <div style="font-size:1.15rem; font-weight:800;">${fmt(metaLucro)}</div>
-                    <div style="display:inline-flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:700; margin-top:0.5rem; color:${totais.lucroGerencial >= metaLucro ? '#30d158' : '#ff453a'};">
+                    <div style="display:inline-flex; align-items:center; gap:5px; font-size:0.8rem; font-weight:700; margin-top:0.5rem; color:${totais.lucroGerencial >= metaLucro ? '#1D9E75' : '#E24B4A'};">
                         ${totais.lucroGerencial >= metaLucro ? IC.check : IC.xmark}
                         ${totais.lucroGerencial >= metaLucro ? 'Atingida' : 'Não atingida'}
                     </div>
@@ -236,7 +236,7 @@ window.renderDashboard = function(forceData = null) {
                     { label: 'Reinvestimento', val: divisao.investimentos, ref: '20–40%', color: '#fff' },
                     { label: 'Reserva de Caixa', val: divisao.reserva, ref: '20–40%', color: '#fff' }
                 ].map(d => `
-                    <div style="padding:1.1rem; border:1px solid var(--border); border-radius:12px; text-align:center;">
+                    <div style="padding:1.1rem; border:1px solid var(--border); border-radius:var(--radius-card); text-align:center;">
                         <div style="color:var(--text-secondary); font-size:0.72rem; font-weight:700; margin-bottom:0.6rem; text-transform:uppercase; letter-spacing:0.5px;">${d.label}</div>
                         <div style="font-size:1.25rem; font-weight:800; color:${d.color};">${fmt(d.val)}</div>
                         <div style="font-size:0.68rem; color:var(--text-secondary); margin-top:5px;">Meta: ${d.ref}</div>
@@ -297,7 +297,7 @@ window.renderDashboard = function(forceData = null) {
                 type: 'doughnut',
                 data: {
                     labels: top5.map(e => e.name),
-                    datasets: [{ data: top5.map(e => e.val), backgroundColor: ['#ff453a','#ff9f0a','#ffd60a','#ffb340','#ffc67b','#b0b0b5','#30d158'].slice(0, top5.length), borderWidth: 0, spacing: 4 }]
+                    datasets: [{ data: top5.map(e => e.val), backgroundColor: ['#E24B4A','#ff9f0a','#ffd60a','#ffb340','#ffc67b','#b0b0b5','#1D9E75'].slice(0, top5.length), borderWidth: 0, spacing: 4 }]
                 },
                 options: { plugins: { legend: { position: 'bottom', labels: { color: '#8e8e93', font: { family: 'Montserrat', weight: '600' }, padding: 12 } } }, cutout: '72%' }
             });
@@ -319,7 +319,7 @@ window.renderDashboard = function(forceData = null) {
                 labels: evoLabels,
                 datasets: [
                     { label: 'Faturamento', data: evoFat,   borderColor: 'var(--accent-blue)', backgroundColor: 'rgba(10,132,255,0.08)', fill: true, tension: 0.4, pointRadius: 4 },
-                    { label: 'Lucro',       data: evoLucro, borderColor: '#30d158',             backgroundColor: 'rgba(48,209,88,0.08)',  fill: true, tension: 0.4, pointRadius: 4 }
+                    { label: 'Lucro',       data: evoLucro, borderColor: '#1D9E75',             backgroundColor: 'rgba(29,158,117,0.08)',  fill: true, tension: 0.4, pointRadius: 4 }
                 ]
             },
             options: {
@@ -339,14 +339,14 @@ window.renderDashboard = function(forceData = null) {
             listEl.innerHTML = `<p style="color:var(--text-secondary); font-size:0.85rem; padding:0.5rem 0;">Nenhuma consolidação registrada.</p>`;
         } else {
             listEl.innerHTML = historico.slice().reverse().map((h, i) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:0.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:var(--bg-elevated); border-radius:var(--radius-md); margin-bottom:0.5rem;">
                     <div>
                         <div style="font-weight:700; font-size:0.85rem;">${h.label || h.mesRef || 'N/A'}</div>
                         <div style="font-size:0.75rem; color:var(--text-secondary);">Fat: R$ ${(h.faturamento || 0).toLocaleString('pt-BR')}</div>
                     </div>
                     <div style="text-align:right;">
-                        <div style="font-weight:800; color:${(h.lucro || 0) >= 0 ? '#30d158' : '#ff453a'}; font-size:0.9rem;">R$ ${(h.lucro || 0).toLocaleString('pt-BR')}</div>
-                        <button onclick="window.deleteHistorico(${historico.length - 1 - i})" style="background:none; border:none; color:#ff453a; cursor:pointer; font-size:0.7rem; padding:2px 0;">remover</button>
+                        <div style="font-weight:800; color:${(h.lucro || 0) >= 0 ? '#1D9E75' : '#E24B4A'}; font-size:0.9rem;">R$ ${(h.lucro || 0).toLocaleString('pt-BR')}</div>
+                        <button onclick="window.deleteHistorico(${historico.length - 1 - i})" style="background:none; border:none; color:#E24B4A; cursor:pointer; font-size:0.7rem; padding:2px 0;">remover</button>
                     </div>
                 </div>
             `).join('');
@@ -357,7 +357,7 @@ window.renderDashboard = function(forceData = null) {
     const alertas = [];
     if (hasData) {
         if (totais.lucroGerencial < 0)
-            alertas.push({ msg: 'Lucro Gerencial negativo. Revise os custos imediatamente.',  color: '#ff453a' });
+            alertas.push({ msg: 'Lucro Gerencial negativo. Revise os custos imediatamente.',  color: '#E24B4A' });
         if (metaFat   > 0 && totais.faturamento    < metaFat)
             alertas.push({ msg: `Faturamento abaixo da meta em R$ ${(metaFat - totais.faturamento).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`, color: '#ffd60a' });
         if (metaLucro > 0 && totais.lucroGerencial < metaLucro)
@@ -375,7 +375,7 @@ window.renderDashboard = function(forceData = null) {
                     <h3 style="margin:0;">Alertas</h3>
                 </div>
                 ${alertas.map(a => `
-                    <div style="display:flex; align-items:flex-start; gap:10px; padding:0.75rem 1rem; background:rgba(0,0,0,0.25); border-left:3px solid ${a.color}; border-radius:8px; margin-bottom:0.5rem;">
+                    <div style="display:flex; align-items:flex-start; gap:10px; padding:0.75rem 1rem; background:var(--bg-elevated); border-left:3px solid ${a.color}; border-radius:var(--radius-sm); margin-bottom:0.5rem;">
                         <span style="color:${a.color}; flex-shrink:0; margin-top:1px;">${IC.alert}</span>
                         <span style="font-size:0.875rem; font-weight:600; color:var(--text-primary);">${a.msg}</span>
                     </div>`).join('')}
@@ -499,10 +499,10 @@ function _relVisaoGeral() {
             ${[
                 { label: 'Média Faturamento/Mês', val: fmt(mediaMensal),          color: 'var(--accent-blue)' },
                 { label: 'Média Diária (22d)',     val: fmt(mediaMensal / 22),     color: 'var(--accent-gold)' },
-                { label: 'Custos Fixos (último)',  val: fmt(totais.totalFixos),    color: '#ff453a' },
-                { label: 'Lucro Acumulado (Ano)',  val: fmt(lucroAno),             color: lucroAno >= 0 ? '#30d158' : '#ff453a' }
+                { label: 'Custos Fixos (último)',  val: fmt(totais.totalFixos),    color: '#E24B4A' },
+                { label: 'Lucro Acumulado (Ano)',  val: fmt(lucroAno),             color: lucroAno >= 0 ? '#1D9E75' : '#E24B4A' }
             ].map(k => `
-                <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px; text-align:center;">
+                <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:var(--radius-card); text-align:center;">
                     <div style="font-size:0.68rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; letter-spacing:0.8px; text-transform:uppercase;">${k.label}</div>
                     <div style="font-size:1.5rem; font-weight:800; color:${k.color};">${k.val}</div>
                 </div>`).join('')}
@@ -541,7 +541,7 @@ function _relVisaoGeral() {
                                 return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:0.625rem 0.875rem; font-weight:700;">${h.label || h.mesRef || 'N/A'}</td>
                                     <td style="padding:0.625rem 0.875rem; text-align:right; color:var(--accent-blue);">${fmt(h.faturamento)}</td>
-                                    <td style="padding:0.625rem 0.875rem; text-align:right; color:${(h.lucro||0)>=0?'#30d158':'#ff453a'}; font-weight:700;">${fmt(h.lucro)}</td>
+                                    <td style="padding:0.625rem 0.875rem; text-align:right; color:${(h.lucro||0)>=0?'#1D9E75':'#E24B4A'}; font-weight:700;">${fmt(h.lucro)}</td>
                                     <td style="padding:0.625rem 0.875rem; text-align:right; color:var(--text-secondary);">${margem}%</td>
                                 </tr>`;
                             }).join('')}
@@ -566,7 +566,7 @@ function _relVisaoGeral() {
                 labels,
                 datasets: [
                     { label: 'Faturamento', data: fatData,  backgroundColor: 'rgba(10,132,255,0.55)',  borderRadius: 4 },
-                    { label: 'Custos',      data: despData, backgroundColor: 'rgba(255,69,58,0.45)',   borderRadius: 4 }
+                    { label: 'Custos',      data: despData, backgroundColor: 'rgba(226,75,74,0.45)',   borderRadius: 4 }
                 ]
             },
             options: {
@@ -592,9 +592,9 @@ function _relVisaoGeral() {
                 datasets: [{
                     label: 'Lucro',
                     data: lucroData,
-                    borderColor: '#30d158',
-                    backgroundColor: 'rgba(48,209,88,0.08)',
-                    fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#30d158'
+                    borderColor: '#1D9E75',
+                    backgroundColor: 'rgba(29,158,117,0.08)',
+                    fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#1D9E75'
                 }]
             },
             options: {
@@ -639,7 +639,7 @@ function _relFluxoCaixa() {
                     <option value="pago">Pago</option>
                     <option value="pendente">Pendente</option>
                 </select>
-                <button onclick="window.exportCaixaCSV()" style="margin-left:auto; padding:0.4rem 1rem; border-radius:var(--radius-sm); border:1px solid rgba(48,209,88,0.3); background:rgba(48,209,88,0.08); color:#30d158; font-size:0.8rem; font-weight:700; font-family:var(--font-family); cursor:pointer;">
+                <button onclick="window.exportCaixaCSV()" style="margin-left:auto; padding:0.4rem 1rem; border-radius:var(--radius-sm); border:1px solid rgba(29,158,117,0.3); background:rgba(29,158,117,0.08); color:#1D9E75; font-size:0.8rem; font-weight:700; font-family:var(--font-family); cursor:pointer;">
                     Exportar CSV
                 </button>
             </div>
@@ -675,12 +675,12 @@ window._relFluxoCaixaRender = function() {
     const sumEl = document.getElementById('rel-cx-summary');
     if (sumEl) {
         sumEl.innerHTML = [
-            { label: 'Entradas Pagas',   val: fmt(recPago), color: '#30d158' },
-            { label: 'Saídas Pagas',     val: fmt(desPago), color: '#ff453a' },
-            { label: 'Saldo Confirmado', val: fmt(recPago - desPago), color: (recPago - desPago) >= 0 ? '#30d158' : '#ff453a' },
+            { label: 'Entradas Pagas',   val: fmt(recPago), color: '#1D9E75' },
+            { label: 'Saídas Pagas',     val: fmt(desPago), color: '#E24B4A' },
+            { label: 'Saldo Confirmado', val: fmt(recPago - desPago), color: (recPago - desPago) >= 0 ? '#1D9E75' : '#E24B4A' },
             { label: 'Saldo Projetado',  val: fmt(recPago + recPend - desPago - desPend), color: (recPago + recPend - desPago - desPend) >= 0 ? '#5ac8fa' : '#ff9500' }
         ].map(k => `
-            <div style="padding:1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px; text-align:center;">
+            <div style="padding:1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:var(--radius-card); text-align:center;">
                 <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:5px; letter-spacing:0.6px; text-transform:uppercase;">${k.label}</div>
                 <div style="font-size:1.2rem; font-weight:800; color:${k.color};">${k.val}</div>
             </div>`).join('');
@@ -707,7 +707,7 @@ window._relFluxoCaixaRender = function() {
             <tbody>
                 ${caixa.map(c => {
                     const isR  = c.tipo === 'receita';
-                    const cor  = isR ? '#30d158' : '#ff453a';
+                    const cor  = isR ? '#1D9E75' : '#E24B4A';
                     const dt   = c.vencimento.split('-').reverse().join('/');
                     return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                         <td style="padding:0.625rem 1rem; font-weight:600;">${c.descricao}</td>
@@ -716,7 +716,7 @@ window._relFluxoCaixaRender = function() {
                         <td style="padding:0.625rem 1rem; color:var(--text-muted); font-size:0.78rem;">${c.formaPag || '—'}</td>
                         <td style="padding:0.625rem 1rem; text-align:right; font-weight:800; color:${cor};">${isR ? '+' : '−'} ${fmt(c.valor)}</td>
                         <td style="padding:0.625rem 1rem; text-align:center;">
-                            <span style="padding:2px 10px; border-radius:20px; font-size:0.68rem; font-weight:700; text-transform:uppercase; background:${c.status==='pago'?'rgba(48,209,88,0.12)':'rgba(255,149,0,0.1)'}; color:${c.status==='pago'?'#30d158':'#ff9500'};">${c.status || 'pendente'}</span>
+                            <span style="padding:2px 10px; border-radius:20px; font-size:0.68rem; font-weight:700; text-transform:uppercase; background:${c.status==='pago'?'rgba(29,158,117,0.12)':'rgba(255,149,0,0.1)'}; color:${c.status==='pago'?'#1D9E75':'#ff9500'};">${c.status || 'pendente'}</span>
                         </td>
                     </tr>`;
                 }).join('')}
@@ -763,17 +763,17 @@ function _relDRE() {
                 <span style="font-weight:600; color:var(--text-secondary); font-size:0.85rem;">(−) Custos Variáveis</span>
                 <span style="font-weight:800; color:#ffd60a;">${fmt(t.totalVariaveis)}</span>
             </div>
-            <div style="display:flex; justify-content:space-between; padding:0.75rem 0.875rem; background:rgba(0,0,0,0.2); border-radius:8px; margin:4px 0;">
+            <div style="display:flex; justify-content:space-between; padding:0.75rem 0.875rem; background:var(--bg-elevated); border-radius:var(--radius-sm); margin:4px 0;">
                 <span style="font-weight:700; color:var(--accent-gold); font-size:0.85rem;">(=) Margem Contribuição</span>
                 <span style="font-weight:800; color:var(--accent-gold);">${fmt(t.margemContribuicao)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; padding:0.75rem 0; border-bottom:1px solid rgba(255,255,255,0.07);">
                 <span style="font-weight:600; color:var(--text-secondary); font-size:0.85rem;">(−) Despesas Fixas</span>
-                <span style="font-weight:800; color:#ff453a;">${fmt(t.totalFixos)}</span>
+                <span style="font-weight:800; color:#E24B4A;">${fmt(t.totalFixos)}</span>
             </div>
-            <div style="display:flex; justify-content:space-between; padding:0.875rem 0 0 0; margin-top:4px; border-top:2px solid rgba(255,255,255,0.12);">
+            <div style="display:flex; justify-content:space-between; padding:0.875rem 0 0 0; margin-top:4px; border-top:2px solid var(--border);">
                 <span style="font-weight:800; color:#fff;">(=) Lucro Líquido</span>
-                <span style="font-weight:900; font-size:1.05rem; color:${lucro>=0?'#30d158':'#ff453a'};">${fmt(lucro)}</span>
+                <span style="font-weight:900; font-size:1.05rem; color:${lucro>=0?'#1D9E75':'#E24B4A'};">${fmt(lucro)}</span>
             </div>
             <div style="color:var(--text-secondary); font-size:0.75rem; text-align:right; margin-top:0.625rem;">
                 Margem: <strong>${((lucro/fat)*100).toFixed(1)}%</strong>
@@ -806,7 +806,7 @@ function _relDRE() {
                         const arrow = (d, inv=false) => {
                             if (d === null) return '';
                             const pos = inv ? parseFloat(d) < 0 : parseFloat(d) > 0;
-                            return `<span style="color:${pos?'#30d158':'#ff453a'}; font-size:0.75rem; font-weight:700;">${parseFloat(d)>0?'▲':'▼'} ${Math.abs(d)}%</span>`;
+                            return `<span style="color:${pos?'#1D9E75':'#E24B4A'}; font-size:0.75rem; font-weight:700;">${parseFloat(d)>0?'▲':'▼'} ${Math.abs(d)}%</span>`;
                         };
                         const rows = [
                             { label: 'Faturamento', cur: cur.faturamento||0,    prev: prevEntry.faturamento||0, inv: false },
@@ -840,10 +840,10 @@ function _relDRE() {
                 <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;">
                     ${[
                         { label: 'Faturamento Total', val: totFat,          color: 'var(--accent-blue)' },
-                        { label: 'Lucro Total',        val: totLucro,        color: totLucro>=0?'#30d158':'#ff453a' },
+                        { label: 'Lucro Total',        val: totLucro,        color: totLucro>=0?'#1D9E75':'#E24B4A' },
                         { label: 'Margem Média',       val: totFat>0 ? ((totLucro/totFat)*100).toFixed(1)+'%' : '—', color: 'var(--accent-gold)', isStr: true }
                     ].map(k => `
-                        <div style="padding:1.25rem; background:rgba(0,0,0,0.2); border-radius:12px; text-align:center;">
+                        <div style="padding:1.25rem; background:var(--bg-elevated); border-radius:var(--radius-card); text-align:center;">
                             <div style="font-size:0.68rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; letter-spacing:0.6px; text-transform:uppercase;">${k.label}</div>
                             <div style="font-size:1.5rem; font-weight:800; color:${k.color};">${k.isStr ? k.val : 'R$ '+k.val.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
                         </div>`).join('')}
@@ -870,20 +870,20 @@ function _relCustos() {
     const fat    = data.faturamento || 1;
 
     const custos = [
-        { label: 'Folha de Pagamento',   val: data.folha||0,                  tipo: 'Fixo',     badge: '#ff453a' },
-        { label: 'Aluguel',              val: data.aluguel||0,                tipo: 'Fixo',     badge: '#ff453a' },
+        { label: 'Folha de Pagamento',   val: data.folha||0,                  tipo: 'Fixo',     badge: '#E24B4A' },
+        { label: 'Aluguel',              val: data.aluguel||0,                tipo: 'Fixo',     badge: '#E24B4A' },
         { label: 'Insumos / Estoque',    val: data.insumos||0,                tipo: 'Variável', badge: '#ffd60a' },
         { label: 'Impostos',             val: data.impostos||0,               tipo: 'Variável', badge: '#ffd60a' },
         { label: 'Taxas Cartão',         val: data.taxasCartao||0,            tipo: 'Variável', badge: '#ffd60a' },
-        { label: 'Marketing',            val: data.marketing||0,              tipo: 'Fixo',     badge: '#ff453a' },
-        { label: 'Sistemas / Software',  val: data.sistemas||0,               tipo: 'Fixo',     badge: '#ff453a' },
+        { label: 'Marketing',            val: data.marketing||0,              tipo: 'Fixo',     badge: '#E24B4A' },
+        { label: 'Sistemas / Software',  val: data.sistemas||0,               tipo: 'Fixo',     badge: '#E24B4A' },
         { label: 'Boletos Fornecedores', val: data.boletosFornecedores||0,    tipo: 'Variável', badge: '#ffd60a' },
-        { label: 'Contabilidade',        val: data.contabilidade||0,          tipo: 'Fixo',     badge: '#ff453a' },
-        { label: 'Telecom',              val: data.telecom||0,                tipo: 'Fixo',     badge: '#ff453a' },
+        { label: 'Contabilidade',        val: data.contabilidade||0,          tipo: 'Fixo',     badge: '#E24B4A' },
+        { label: 'Telecom',              val: data.telecom||0,                tipo: 'Fixo',     badge: '#E24B4A' },
         { label: 'Comissões',            val: data.comissoes||0,              tipo: 'Variável', badge: '#ffd60a' },
         { label: 'Lab Terceirizado',     val: data.labTerceirizado||0,        tipo: 'Variável', badge: '#ffd60a' },
         { label: 'Outros Variáveis',     val: data.outrosVariaveis||0,        tipo: 'Variável', badge: '#ffd60a' },
-        { label: 'Outros Fixos',         val: data.outrosFixos||0,            tipo: 'Fixo',     badge: '#ff453a' },
+        { label: 'Outros Fixos',         val: data.outrosFixos||0,            tipo: 'Fixo',     badge: '#E24B4A' },
     ].filter(c => c.val > 0).sort((a, b) => b.val - a.val);
 
     const top5 = custos.slice(0, 5);
@@ -895,12 +895,12 @@ function _relCustos() {
         <!-- Summary -->
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem;">
             ${[
-                { label: 'Total Custos Fixos',     val: fmt(totais.totalFixos),     color: '#ff453a' },
+                { label: 'Total Custos Fixos',     val: fmt(totais.totalFixos),     color: '#E24B4A' },
                 { label: 'Total Custos Variáveis', val: fmt(totais.totalVariaveis), color: '#ffd60a' },
                 { label: 'Custo Total',            val: fmt((totais.totalFixos||0)+(totais.totalVariaveis||0)), color: '#ff9500' },
                 { label: 'Ponto de Equilíbrio',    val: fmt(parseFloat(pe)),        color: 'var(--accent-gold)' }
             ].map(k => `
-                <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px; text-align:center;">
+                <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:var(--radius-card); text-align:center;">
                     <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:5px; letter-spacing:0.6px; text-transform:uppercase;">${k.label}</div>
                     <div style="font-size:1.25rem; font-weight:800; color:${k.color};">${k.val}</div>
                 </div>`).join('')}
@@ -952,7 +952,7 @@ function _relCustos() {
                 labels: ['Custos Fixos', 'Custos Variáveis', 'Lucro'],
                 datasets: [{
                     data: [totais.totalFixos||0, totais.totalVariaveis||0, Math.max(0, totais.lucroGerencial||0)],
-                    backgroundColor: ['#ff453a', '#ffd60a', '#30d158'],
+                    backgroundColor: ['#E24B4A', '#ffd60a', '#1D9E75'],
                     borderWidth: 0, spacing: 3
                 }]
             },
@@ -998,15 +998,15 @@ function _relServicos() {
                     <tbody>
                         ${sorted.map((s, i) => {
                             const margem  = parseFloat(s.margem) || 0;
-                            const health  = margem >= 30 ? { label: 'Ótima',   color: '#30d158' }
+                            const health  = margem >= 30 ? { label: 'Ótima',   color: '#1D9E75' }
                                           : margem >= 15 ? { label: 'Regular', color: '#ff9500' }
-                                          :                { label: 'Crítica', color: '#ff453a' };
+                                          :                { label: 'Crítica', color: '#E24B4A' };
                             return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                                 <td style="padding:0.625rem 0.875rem; color:var(--text-muted); font-size:0.8rem;">${i+1}</td>
                                 <td style="padding:0.625rem 0.875rem; font-weight:700;">${s.nome || '—'}</td>
                                 <td style="padding:0.625rem 0.875rem; text-align:right; color:var(--accent-blue); font-weight:700;">${fmt(s.preco)}</td>
-                                <td style="padding:0.625rem 0.875rem; text-align:right; color:#ff453a;">${fmt(s.custoTotal)}</td>
-                                <td style="padding:0.625rem 0.875rem; text-align:right; color:#30d158; font-weight:700;">${fmt(s.lucro)}</td>
+                                <td style="padding:0.625rem 0.875rem; text-align:right; color:#E24B4A;">${fmt(s.custoTotal)}</td>
+                                <td style="padding:0.625rem 0.875rem; text-align:right; color:#1D9E75; font-weight:700;">${fmt(s.lucro)}</td>
                                 <td style="padding:0.625rem 0.875rem; text-align:center; font-weight:800; color:${health.color};">${margem.toFixed(1)}%</td>
                                 <td style="padding:0.625rem 0.875rem; text-align:center;">
                                     <span style="padding:2px 10px; border-radius:20px; font-size:0.68rem; font-weight:700; background:${health.color}20; color:${health.color}; border:1px solid ${health.color}50;">${health.label}</span>
@@ -1020,14 +1020,14 @@ function _relServicos() {
 
         <!-- Recommendation alerts -->
         ${sorted.filter(s => (s.margem||0) < 15).length > 0 ? `
-        <div class="card" style="margin-top:1.5rem; border-left:3px solid #ff453a;">
+        <div class="card" style="margin-top:1.5rem; border-left:3px solid #E24B4A;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:1rem;">
-                <span style="color:#ff453a;">${IC.alert}</span>
+                <span style="color:#E24B4A;">${IC.alert}</span>
                 <h3 style="margin:0; font-size:0.95rem;">Serviços com Margem Crítica (&lt;15%)</h3>
             </div>
             ${sorted.filter(s => (s.margem||0) < 15).map(s => `
-                <div style="padding:0.75rem 1rem; background:rgba(255,69,58,0.06); border-radius:8px; margin-bottom:0.5rem; font-size:0.875rem;">
-                    <strong>${s.nome}</strong> — margem de <strong style="color:#ff453a;">${(s.margem||0).toFixed(1)}%</strong>. Considere revisar o preço ou reduzir custos.
+                <div style="padding:0.75rem 1rem; background:rgba(226,75,74,0.06); border-radius:var(--radius-sm); margin-bottom:0.5rem; font-size:0.875rem;">
+                    <strong>${s.nome}</strong> — margem de <strong style="color:#E24B4A;">${(s.margem||0).toFixed(1)}%</strong>. Considere revisar o preço ou reduzir custos.
                 </div>`).join('')}
         </div>` : ''}
     `;
@@ -1059,27 +1059,27 @@ function _relExportacao() {
         <div class="card">
             <h3 style="margin-bottom:1.25rem; font-size:0.95rem;">Exportar Dados</h3>
             <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem;">
-                <div style="padding:1.5rem; background:rgba(255,69,58,0.06); border:1px solid rgba(255,69,58,0.2); border-radius:12px; text-align:center;">
-                    <div style="font-weight:700; color:#ff453a; margin-bottom:0.5rem;">Relatório PDF</div>
+                <div style="padding:1.5rem; background:rgba(226,75,74,0.06); border:1px solid rgba(226,75,74,0.2); border-radius:var(--radius-card); text-align:center;">
+                    <div style="font-weight:700; color:#E24B4A; margin-bottom:0.5rem;">Relatório PDF</div>
                     <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:1rem;">DRE completo + indicadores. Ideal para entregar ao contador.</p>
                     <button onclick="Utils.setLoading(this,true); setTimeout(()=>{Utils.exportPDF(); Utils.setLoading(this,false);},100)"
-                        style="padding:0.6rem 1.5rem; border-radius:8px; border:1px solid rgba(255,69,58,0.4); background:rgba(255,69,58,0.12); color:#ff453a; font-weight:700; font-size:0.85rem; font-family:var(--font-family); cursor:pointer;">
+                        style="padding:0.6rem 1.5rem; border-radius:var(--radius-sm); border:1px solid rgba(226,75,74,0.4); background:rgba(226,75,74,0.12); color:#E24B4A; font-weight:700; font-size:0.85rem; font-family:var(--font-family); cursor:pointer;">
                         Gerar PDF
                     </button>
                 </div>
-                <div style="padding:1.5rem; background:rgba(48,209,88,0.06); border:1px solid rgba(48,209,88,0.2); border-radius:12px; text-align:center;">
-                    <div style="font-weight:700; color:#30d158; margin-bottom:0.5rem;">Planilha Excel</div>
+                <div style="padding:1.5rem; background:rgba(29,158,117,0.06); border:1px solid rgba(29,158,117,0.2); border-radius:var(--radius-card); text-align:center;">
+                    <div style="font-weight:700; color:#1D9E75; margin-bottom:0.5rem;">Planilha Excel</div>
                     <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:1rem;">Dados do balanço em formato .xlsx para análise.</p>
                     <button onclick="Utils.setLoading(this,true); setTimeout(()=>{Utils.exportExcel(); Utils.setLoading(this,false);},100)"
-                        style="padding:0.6rem 1.5rem; border-radius:8px; border:1px solid rgba(48,209,88,0.4); background:rgba(48,209,88,0.12); color:#30d158; font-weight:700; font-size:0.85rem; font-family:var(--font-family); cursor:pointer;">
+                        style="padding:0.6rem 1.5rem; border-radius:var(--radius-sm); border:1px solid rgba(29,158,117,0.4); background:rgba(29,158,117,0.12); color:#1D9E75; font-weight:700; font-size:0.85rem; font-family:var(--font-family); cursor:pointer;">
                         Gerar Excel
                     </button>
                 </div>
-                <div style="padding:1.5rem; background:rgba(10,132,255,0.06); border:1px solid rgba(10,132,255,0.2); border-radius:12px; text-align:center;">
+                <div style="padding:1.5rem; background:rgba(10,132,255,0.06); border:1px solid rgba(10,132,255,0.2); border-radius:var(--radius-card); text-align:center;">
                     <div style="font-weight:700; color:var(--accent-blue); margin-bottom:0.5rem;">Extrato CSV (Caixa)</div>
                     <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:1rem;">Todos os lançamentos do Caixa em .csv.</p>
                     <button onclick="window.exportCaixaCSV()"
-                        style="padding:0.6rem 1.5rem; border-radius:8px; border:1px solid rgba(10,132,255,0.4); background:rgba(10,132,255,0.12); color:var(--accent-blue); font-weight:700; font-size:0.85rem; font-family:var(--font-family); cursor:pointer;">
+                        style="padding:0.6rem 1.5rem; border-radius:var(--radius-sm); border:1px solid rgba(10,132,255,0.4); background:rgba(10,132,255,0.12); color:var(--accent-blue); font-weight:700; font-size:0.85rem; font-family:var(--font-family); cursor:pointer;">
                         Exportar CSV
                     </button>
                 </div>
@@ -1127,9 +1127,9 @@ window.updateLiveBalanco = function() {
 
     if (varEl) varEl.innerText = fmt(totais.totalVariaveis);
     if (fixEl) fixEl.innerText = fmt(totais.totalFixos);
-    if (lucroEl) { lucroEl.innerText = fmt(totais.lucroGerencial); lucroEl.style.color = totais.lucroGerencial >= 0 ? '#30d158' : '#ff453a'; }
+    if (lucroEl) { lucroEl.innerText = fmt(totais.lucroGerencial); lucroEl.style.color = totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A'; }
     if (beEl) {
-        if (mc <= 0 && totais.totalFixos > 0) { beEl.innerText = 'MARGEM NEGATIVA'; beEl.style.color = '#ff453a'; beEl.style.fontSize = '0.9rem'; }
+        if (mc <= 0 && totais.totalFixos > 0) { beEl.innerText = 'MARGEM NEGATIVA'; beEl.style.color = '#E24B4A'; beEl.style.fontSize = '0.9rem'; }
         else { beEl.innerText = fmt(be); beEl.style.color = 'var(--accent-gold)'; beEl.style.fontSize = '1.1rem'; }
     }
 

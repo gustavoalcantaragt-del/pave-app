@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sections = document.querySelectorAll('main section');
     const pageTitle = document.getElementById('page-title');
     const pageSubtitle = document.getElementById('page-subtitle');
+    const mobileTitle = document.getElementById('mobile-page-title');
 
     buttons.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             pageTitle.innerText = tabs[tabId].title;
             pageSubtitle.innerText = tabs[tabId].subtitle;
+            if (mobileTitle) mobileTitle.textContent = tabs[tabId].title;
 
             // Dynamic logic
             if (tabId === 'tab-dashboard' && window.renderDashboard) window.renderDashboard();

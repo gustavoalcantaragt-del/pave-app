@@ -14,18 +14,20 @@ window.cxTipoChange = function() {
     const lblDesp = document.getElementById('cx-tipo-despesa-label');
     const dotDesp = document.getElementById('cx-dot-despesa');
     if (lblDesp) {
-        lblDesp.style.border        = isDespesa ? '2px solid rgba(255,69,58,0.7)' : '2px solid rgba(255,255,255,0.08)';
-        lblDesp.style.background    = isDespesa ? 'rgba(255,69,58,0.1)' : 'transparent';
-        lblDesp.querySelector('div').style.color = isDespesa ? '#ff453a' : 'var(--text-secondary)';
+        lblDesp.style.border     = isDespesa ? '2px solid rgba(226,75,74,0.5)' : '2px solid var(--border)';
+        lblDesp.style.background = isDespesa ? 'rgba(226,75,74,0.08)' : 'transparent';
+        const txtDesp = lblDesp.querySelector('span[style*="font-weight:700"]');
+        if (txtDesp) txtDesp.style.color = isDespesa ? 'var(--color-danger)' : 'var(--text-secondary)';
     }
     if (dotDesp) dotDesp.style.display = isDespesa ? 'block' : 'none';
 
     const lblRec = document.getElementById('cx-tipo-receita-label');
     const dotRec = document.getElementById('cx-dot-receita');
     if (lblRec) {
-        lblRec.style.border      = !isDespesa ? '2px solid rgba(48,209,88,0.7)' : '2px solid rgba(255,255,255,0.08)';
-        lblRec.style.background  = !isDespesa ? 'rgba(48,209,88,0.08)' : 'transparent';
-        lblRec.querySelector('div').style.color = !isDespesa ? '#30d158' : 'var(--text-secondary)';
+        lblRec.style.border      = !isDespesa ? '2px solid rgba(29,158,117,0.5)' : '2px solid var(--border)';
+        lblRec.style.background  = !isDespesa ? 'rgba(29,158,117,0.08)' : 'transparent';
+        const txtRec = lblRec.querySelector('span[style*="font-weight:700"]');
+        if (txtRec) txtRec.style.color = !isDespesa ? 'var(--color-success)' : 'var(--text-secondary)';
     }
     if (dotRec) dotRec.style.display = !isDespesa ? 'block' : 'none';
 };
@@ -177,7 +179,7 @@ window.renderCaixa = function() {
     if (salEl) {
         const saldo = mesRec - mesDes;
         salEl.innerText = fmt(saldo);
-        salEl.style.color = saldo >= 0 ? '#30d158' : '#ff453a';
+        salEl.style.color = saldo >= 0 ? '#1D9E75' : '#E24B4A';
     }
 
     // ── Period chip ───────────────────────────────────────────────────────────
@@ -216,13 +218,13 @@ window.renderCaixa = function() {
     filtrados.forEach((mv) => {
         const isPago    = mv.status === 'pago';
         const isReceita = mv.tipo === 'receita';
-        const corValor  = isReceita ? '#30d158' : '#ff453a';
+        const corValor  = isReceita ? '#1D9E75' : '#E24B4A';
         const srm       = mv.vencimento.split('-').reverse().join('/');
         const isSelected = _cxSelectedIds.has(mv.id);
 
         const iconSvg = isReceita
-            ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>`
-            : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff453a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>`;
+            ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>`
+            : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>`;
 
         const formaPagLabel = FORMA_PAG_LABEL[mv.formaPag] || '';
         const subMeta = [mv.categoria, srm, formaPagLabel].filter(Boolean).join(' · ');
@@ -248,7 +250,7 @@ window.renderCaixa = function() {
                 style="width:15px; height:15px; accent-color:var(--accent-blue); cursor:pointer; flex-shrink:0; border-radius:4px;">
 
             <!-- Icon -->
-            <div style="width:34px; height:34px; border-radius:50%; background:${isReceita ? 'rgba(48,209,88,0.1)' : 'rgba(255,69,58,0.1)'}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+            <div style="width:34px; height:34px; border-radius:50%; background:${isReceita ? 'rgba(29,158,117,0.1)' : 'rgba(226,75,74,0.1)'}; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                 ${iconSvg}
             </div>
 
@@ -264,10 +266,10 @@ window.renderCaixa = function() {
                 <span style="font-size:1rem; font-weight:800; color:${corValor}; white-space:nowrap;">
                     ${isReceita ? '+' : '−'} R$ ${mv.valor.toLocaleString('pt-BR', {minimumFractionDigits:2})}
                 </span>
-                <button onclick="window.toggleStatusCaixa('${mv.id}')" style="padding:0.3rem 0.7rem; border-radius:20px; font-size:0.7rem; font-weight:700; cursor:pointer; white-space:nowrap; background:${isPago ? 'rgba(48,209,88,0.1)' : 'rgba(255,149,0,0.1)'}; color:${isPago ? '#30d158' : '#ff9500'}; border:1px solid ${isPago ? 'rgba(48,209,88,0.3)' : 'rgba(255,149,0,0.3)'}; transition:all 0.15s;">
+                <button onclick="window.toggleStatusCaixa('${mv.id}')" style="padding:0.3rem 0.7rem; border-radius:20px; font-size:0.7rem; font-weight:700; cursor:pointer; white-space:nowrap; background:${isPago ? 'rgba(29,158,117,0.1)' : 'rgba(255,149,0,0.1)'}; color:${isPago ? '#1D9E75' : '#ff9500'}; border:1px solid ${isPago ? 'rgba(29,158,117,0.3)' : 'rgba(255,149,0,0.3)'}; transition:all 0.15s;">
                     ${isPago ? 'Pago' : 'Pendente'}
                 </button>
-                <button onclick="window.deleteCaixa('${mv.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; border-radius:4px; display:flex; align-items:center;" title="Excluir" onmouseover="this.style.color='#ff453a'" onmouseout="this.style.color='var(--text-muted)'">
+                <button onclick="window.deleteCaixa('${mv.id}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:4px; border-radius:4px; display:flex; align-items:center;" title="Excluir" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='var(--text-muted)'">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
                 </button>
             </div>
