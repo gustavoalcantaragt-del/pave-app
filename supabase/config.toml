@@ -36,10 +36,11 @@ pop3_port = 54326
 file_size_limit = "50MiB"
 
 [auth]
-site_url = "http://localhost:3000"
+site_url = "https://gustavoalcantaragt-del.github.io/pave-app"
 additional_redirect_urls = [
-    "http://localhost:3000/balanco-web/email-confirmado.html",
-    "https://pave.seudominio.com.br/email-confirmado.html"
+    "https://gustavoalcantaragt-del.github.io/pave-app/email-confirmado.html",
+    "http://localhost:3000/email-confirmado.html",
+    "http://127.0.0.1:5500/email-confirmado.html"
 ]
 # Tempo de expiração do JWT (segundos)
 jwt_expiry = 28800  # 8 horas
