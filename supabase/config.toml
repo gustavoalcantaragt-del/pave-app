@@ -1,0 +1,59 @@
+# ============================================================
+# PAVE — Supabase Project Config
+# Usado pela Supabase CLI para desenvolvimento local e deploy.
+# Documentação: https://supabase.com/docs/guides/local-development
+# ============================================================
+
+[project]
+# ID do projeto Supabase (encontre em: Settings → General)
+project_id = "areconfszyizkwxjmmsx"
+
+[api]
+# Porta local para a API REST (supabase start)
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+# Porta local para o banco PostgreSQL
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+# Porta local para o Supabase Studio
+port = 54323
+api_url = "http://localhost"
+
+[inbucket]
+# Servidor de email fake para desenvolvimento (confirmar emails locais)
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+file_size_limit = "50MiB"
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = [
+    "http://localhost:3000/balanco-web/email-confirmado.html",
+    "https://pave.seudominio.com.br/email-confirmado.html"
+]
+# Tempo de expiração do JWT (segundos)
+jwt_expiry = 28800  # 8 horas
+
+[auth.email]
+# Habilitar confirmação de email
+enable_confirmations = true
+
+[auth.sms]
+enable_signup = false
+
+# ── Edge Functions ────────────────────────────────────────────
+[functions.asaas-checkout]
+verify_jwt = false   # rota pública — auth verificada internamente
+
+[functions.asaas-webhook]
+verify_jwt = false   # ASAAS chama sem token Supabase

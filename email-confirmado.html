@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-mail Confirmado — PAVE</title>
+    <meta name="description" content="Seu e-mail foi confirmado. Bem-vindo ao PAVE.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/pav-design-system.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(48,209,88,0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(10,132,255,0.05) 0%, transparent 50%),
+                var(--bg-deep);
+        }
+
+        .confirm-card {
+            max-width: 460px;
+            width: 90%;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            text-align: center;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .icon-circle {
+            width: 72px;
+            height: 72px;
+            background: rgba(48,209,88,0.12);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.75rem;
+            border: 2px solid rgba(48,209,88,0.3);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+        }
+
+        p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .countdown {
+            margin: 1.75rem 0 1.25rem;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .countdown strong {
+            color: var(--accent-blue);
+        }
+
+        .progress-bar-track {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 1.75rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #30d158, #34c759);
+            border-radius: 99px;
+            width: 100%;
+            transform-origin: left;
+            animation: shrink 5s linear forwards;
+        }
+
+        @keyframes shrink {
+            from { transform: scaleX(1); }
+            to   { transform: scaleX(0); }
+        }
+
+        .btn-primary {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #30d158, #34c759);
+            color: #000;
+            font-weight: 800;
+            font-size: 0.95rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity .2s;
+        }
+
+        .btn-primary:hover { opacity: .85; }
+
+        .logo {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: .5px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="confirm-card">
+        <div class="logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            PAVE
+        </div>
+
+        <div class="icon-circle">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#30d158" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </div>
+
+        <h1>E-mail Confirmado!</h1>
+        <p>Sua conta foi ativada com sucesso. Você já pode acessar todas as funcionalidades do PAVE.</p>
+
+        <div class="countdown">
+            Redirecionando em <strong id="timer">5</strong>s…
+        </div>
+
+        <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+
+        <a href="index.html" class="btn-primary" id="btn-entrar">Acessar o PAVE agora</a>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ── Trocar token da URL para sessão ──────────────────────────────────────
+        // Supabase redireciona com #access_token=...&type=signup ou type=recovery
+        (async function() {
+            const _sb = supabase.createClient(PAV_CONFIG.SUPABASE_URL, PAV_CONFIG.SUPABASE_ANON_KEY);
+
+            // getSession() troca o hash fragment por sessão automaticamente
+            const { data: { session } } = await _sb.auth.getSession();
+
+            const hash = window.location.hash;
+            const isRecovery = hash.includes('type=recovery');
+
+            if (isRecovery) {
+                // Redefinição de senha — redirecionar para login com flag
+                document.querySelector('h1').textContent = 'Senha Redefinida!';
+                document.querySelector('p').textContent = 'Sua senha foi atualizada. Faça login com a nova senha.';
+                document.getElementById('btn-entrar').href = 'login.html';
+            }
+
+            // Countdown de 5 segundos
+            let count = 5;
+            const timerEl = document.getElementById('timer');
+            const target = isRecovery ? 'login.html' : 'index.html';
+
+            const interval = setInterval(() => {
+                count--;
+                if (timerEl) timerEl.textContent = count;
+                if (count <= 0) {
+                    clearInterval(interval);
+                    window.location.href = target;
+                }
+            }, 1000);
+
+            // Botão vai direto sem esperar
+            document.getElementById('btn-entrar').addEventListener('click', () => {
+                clearInterval(interval);
+            });
+        })();
+    </script>
+</body>
+</html>

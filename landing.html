@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAVE — Gestão Financeira para Clínicas Veterinárias</title>
+    <meta name="description" content="PAVE ajuda clínicas veterinárias a entender as finanças, precificar serviços com margem real e tomar decisões com dados. 14 dias grátis, sem cartão.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:type"        content="website">
+    <meta property="og:title"       content="PAVE — Gestão Financeira para Clínicas Veterinárias">
+    <meta property="og:description" content="Entenda suas finanças, precifique com margem real e tome decisões com dados. 14 dias grátis.">
+    <meta property="og:image"       content="assets/og-image.png">
+    <meta property="og:locale"      content="pt_BR">
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="PAVE — Gestão Financeira para Clínicas Veterinárias">
+    <meta name="twitter:description" content="Entenda suas finanças, precifique com margem real e tome decisões com dados. 14 dias grátis.">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --brand:      #0F4D3F;
+            --cta:        #1D9E75;
+            --cta-dark:   #178A65;
+            --surface:    #E1F5EE;
+            --bg:         #F8F8F6;
+            --card:       #FFFFFF;
+            --text:       #1A1A2E;
+            --muted:      #6B7280;
+            --faint:      #9CA3AF;
+            --border:     rgba(0,0,0,0.08);
+            --danger:     #E24B4A;
+            --warning:    #EF9F27;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+        /* ── Utilities ── */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        .container--narrow {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: var(--cta);
+            color: #fff;
+        }
+        .btn-primary:hover { background: var(--cta-dark); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { border-color: rgba(0,0,0,0.2); color: var(--text); }
+        .btn-outline-white {
+            background: transparent;
+            color: #fff;
+            border: 1.5px solid rgba(255,255,255,0.5);
+        }
+        .btn-outline-white:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+        .section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--cta);
+            margin-bottom: 12px;
+        }
+        .section-title {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.4px;
+            line-height: 1.2;
+            margin-bottom: 14px;
+        }
+        .section-sub {
+            font-size: 1rem;
+            color: var(--muted);
+            line-height: 1.65;
+            max-width: 560px;
+        }
+
+        /* ─────────────────────────────────────────────
+           1. NAVBAR
+        ───────────────────────────────────────────── */
+        .nav {
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            height: 60px;
+            gap: 2rem;
+        }
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .nav-brand-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
+            background: var(--brand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .nav-brand-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-left: auto;
+        }
+        .nav-link {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+        .nav-link:hover { color: var(--text); background: rgba(0,0,0,0.04); }
+        .nav-cta { margin-left: 8px; }
+        .nav-login {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-decoration: none;
+            padding: 6px 12px;
+            transition: color 0.15s;
+        }
+        .nav-login:hover { color: var(--text); }
+        .nav-hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            margin-left: auto;
+            color: var(--text);
+        }
+        @media (max-width: 720px) {
+            .nav-links { display: none; }
+            .nav-hamburger { display: flex; }
+        }
+
+        /* ─────────────────────────────────────────────
+           2. HERO
+        ───────────────────────────────────────────── */
+        .hero {
+            padding: 80px 0 72px;
+            text-align: center;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: var(--surface);
+            color: var(--brand);
+            border: 1px solid rgba(29,158,117,0.25);
+            margin-bottom: 24px;
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1px;
+            color: var(--text);
+            margin-bottom: 20px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .hero h1 em {
+            font-style: normal;
+            color: var(--cta);
+        }
+        .hero-sub {
+            font-size: 1.05rem;
+            color: var(--muted);
+            line-height: 1.65;
+            max-width: 560px;
+            margin: 0 auto 36px;
+        }
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .hero-note {
+            margin-top: 16px;
+            font-size: 0.78rem;
+            color: var(--faint);
+        }
+        .hero-note svg { vertical-align: middle; margin-right: 4px; }
+
+        /* ─────────────────────────────────────────────
+           3. SOCIAL PROOF BAR
+        ───────────────────────────────────────────── */
+        .proof-bar {
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            background: var(--card);
+            padding: 20px 0;
+        }
+        .proof-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .proof-stat {
+            text-align: center;
+        }
+        .proof-stat-number {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+        .proof-stat-label {
+            font-size: 0.75rem;
+            color: var(--faint);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        .proof-divider {
+            width: 1px;
+            height: 36px;
+            background: var(--border);
+        }
+        @media (max-width: 600px) {
+            .proof-divider { display: none; }
+            .proof-bar-inner { gap: 24px; }
+        }
+
+        /* ─────────────────────────────────────────────
+           4. PROBLEMA → SOLUÇÃO
+        ───────────────────────────────────────────── */
+        .probsol {
+            padding: 80px 0;
+        }
+        .probsol-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: center;
+        }
+        @media (max-width: 760px) {
+            .probsol-grid { grid-template-columns: 1fr; gap: 32px; }
+        }
+        .probsol-left { }
+        .problem-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 28px;
+        }
+        .problem-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .problem-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #FEE2E2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .probsol-right {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 28px;
+        }
+        .solution-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .solution-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .solution-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .solution-text strong {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+        .solution-text span {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        /* ─────────────────────────────────────────────
+           5. TOUR DO PRODUTO
+        ───────────────────────────────────────────── */
+        .tour {
+            padding: 80px 0;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .tour-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .tour-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+        .tour-tab {
+            padding: 8px 18px;
+            border-radius: 99px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--muted);
+            border: 1.5px solid var(--border);
+            background: transparent;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.15s;
+        }
+        .tour-tab.active {
+            background: var(--brand);
+            color: #fff;
+            border-color: var(--brand);
+        }
+        .tour-tab:hover:not(.active) { border-color: rgba(0,0,0,0.2); color: var(--text); }
+
+        .tour-panels { position: relative; }
+        .tour-panel {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+        .tour-panel.active { display: grid; }
+        @media (max-width: 720px) {
+            .tour-panel.active { grid-template-columns: 1fr; }
+        }
+        .tour-panel-text { }
+        .tour-panel-text h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+            margin-bottom: 12px;
+        }
+        .tour-panel-text p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.65;
+            margin-bottom: 20px;
+        }
+        .tour-feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .tour-feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .tour-panel-visual {
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Placeholder UI mockup */
+        .mockup-dashboard {
+            width: 100%;
+        }
+        .mockup-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .mockup-kpi {
+            background: var(--card);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 12px;
+        }
+        .mockup-kpi-label {
+            font-size: 0.65rem;
+            color: var(--faint);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .mockup-kpi-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .mockup-kpi-value.green { color: var(--cta); }
+        .mockup-kpi-value.red { color: var(--danger); }
+        .mockup-bar-chart {
+            background: var(--card);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 12px;
+        }
+        .mockup-chart-label {
+            font-size: 0.65rem;
+            color: var(--faint);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .mockup-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 52px;
+        }
+        .mockup-bar {
+            flex: 1;
+            background: var(--surface);
+            border-radius: 3px;
+        }
+        .mockup-bar.accent { background: var(--cta); opacity: 0.7; }
+
+        /* ─────────────────────────────────────────────
+           6. TESTIMONIALS
+        ───────────────────────────────────────────── */
+        .testimonials {
+            padding: 80px 0;
+        }
+        .testimonials-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 860px) {
+            .testimonials-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+        }
+        .testimonial-card {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+        .testimonial-stars {
+            display: flex;
+            gap: 3px;
+            margin-bottom: 14px;
+        }
+        .testimonial-quote {
+            font-size: 0.875rem;
+            color: var(--muted);
+            line-height: 1.65;
+            flex: 1;
+            margin-bottom: 20px;
+        }
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .testimonial-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--brand);
+            flex-shrink: 0;
+        }
+        .testimonial-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .testimonial-role {
+            font-size: 0.75rem;
+            color: var(--faint);
+        }
+
+        /* ─────────────────────────────────────────────
+           7. CTA BANNER
+        ───────────────────────────────────────────── */
+        .cta-banner {
+            background: var(--brand);
+            padding: 64px 0;
+        }
+        .cta-banner-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+        .cta-banner h2 {
+            font-size: clamp(1.4rem, 3vw, 1.8rem);
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.4px;
+            margin-bottom: 8px;
+        }
+        .cta-banner p {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+        }
+        .cta-banner-actions {
+            display: flex;
+            gap: 12px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        /* ─────────────────────────────────────────────
+           8. PLANS SUMMARY
+        ───────────────────────────────────────────── */
+        .plans-summary {
+            padding: 80px 0;
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        .plans-summary-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .plans-mini-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        @media (max-width: 860px) {
+            .plans-mini-grid { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; }
+        }
+        .plan-mini-card {
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            padding: 24px;
+            position: relative;
+            text-align: center;
+        }
+        .plan-mini-card.featured {
+            border: 2px solid var(--cta);
+            background: var(--card);
+        }
+        .plan-mini-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.67rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 3px 14px;
+            border-radius: 99px;
+            background: var(--cta);
+            color: #fff;
+            white-space: nowrap;
+        }
+        .plan-mini-name {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--faint);
+            margin-bottom: 8px;
+        }
+        .plan-mini-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.8px;
+            margin-bottom: 4px;
+        }
+        .plan-mini-price sup {
+            font-size: 0.9rem;
+            font-weight: 600;
+            vertical-align: top;
+            margin-top: 5px;
+            display: inline-block;
+            color: var(--muted);
+        }
+        .plan-mini-period {
+            font-size: 0.75rem;
+            color: var(--faint);
+            margin-bottom: 20px;
+        }
+        .plan-mini-features {
+            list-style: none;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+        .plan-mini-features li {
+            font-size: 0.8rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .plan-mini-cta {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            transition: all 0.15s;
+            cursor: pointer;
+        }
+        .plan-mini-cta.primary { background: var(--cta); color: #fff; }
+        .plan-mini-cta.primary:hover { background: var(--cta-dark); }
+        .plan-mini-cta.ghost { border: 1px solid var(--border); color: var(--muted); background: transparent; }
+        .plan-mini-cta.ghost:hover { border-color: rgba(0,0,0,0.2); color: var(--text); }
+        .plans-summary-link {
+            text-align: center;
+            margin-top: 28px;
+        }
+        .plans-summary-link a {
+            font-size: 0.85rem;
+            color: var(--cta);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .plans-summary-link a:hover { text-decoration: underline; }
+
+        /* ─────────────────────────────────────────────
+           9. FAQ
+        ───────────────────────────────────────────── */
+        .faq {
+            padding: 80px 0;
+        }
+        .faq-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .faq-list {
+            border-top: 1px solid var(--border);
+        }
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+        }
+        .faq-q {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            user-select: none;
+        }
+        .faq-q:hover { color: var(--brand); }
+        .faq-chevron {
+            flex-shrink: 0;
+            color: var(--faint);
+            transition: transform 0.2s;
+        }
+        .faq-item.open .faq-chevron {
+            transform: rotate(180deg);
+            color: var(--cta);
+        }
+        .faq-a {
+            display: none;
+            font-size: 0.875rem;
+            color: var(--muted);
+            line-height: 1.7;
+            padding-bottom: 18px;
+        }
+        .faq-item.open .faq-a { display: block; }
+
+        /* ─────────────────────────────────────────────
+           10. FOOTER
+        ───────────────────────────────────────────── */
+        .footer {
+            background: var(--brand);
+            color: rgba(255,255,255,0.7);
+            padding: 48px 0 32px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        @media (max-width: 860px) {
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+        }
+        @media (max-width: 500px) {
+            .footer-grid { grid-template-columns: 1fr; }
+        }
+        .footer-brand-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .footer-brand-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .footer-brand-desc {
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.55);
+            max-width: 260px;
+        }
+        .footer-col-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 14px;
+        }
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .footer-links a {
+            font-size: 0.83rem;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+        .footer-links a:hover { color: #fff; }
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.4);
+        }
+        .footer-bottom a { color: rgba(255,255,255,0.5); text-decoration: none; }
+        .footer-bottom a:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+<!-- ─── 1. NAVBAR ─────────────────────────────────────────────────────────── -->
+<header class="nav">
+    <div class="container">
+        <nav class="nav-inner">
+            <a href="landing.html" class="nav-brand">
+                <div class="nav-brand-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <span class="nav-brand-name">PAVE</span>
+            </a>
+            <div class="nav-links">
+                <a href="#funcionalidades" class="nav-link">Funcionalidades</a>
+                <a href="#depoimentos" class="nav-link">Depoimentos</a>
+                <a href="#planos" class="nav-link">Planos</a>
+                <a href="#faq" class="nav-link">FAQ</a>
+                <a href="login.html" class="nav-login">Entrar</a>
+                <a href="login.html#register" class="btn btn-primary nav-cta">Testar grátis</a>
+            </div>
+            <button class="nav-hamburger" aria-label="Menu">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+        </nav>
+    </div>
+</header>
+
+<!-- ─── 2. HERO ───────────────────────────────────────────────────────────── -->
+<section class="hero">
+    <div class="container--narrow">
+        <span class="hero-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            14 dias grátis — sem cartão de crédito
+        </span>
+        <h1>Sua clínica lucrando,<br>não apenas <em>faturando</em></h1>
+        <p class="hero-sub">PAVE é o sistema de gestão financeira feito para veterinários. Dashboard, caixa diário, precificação com margem real e relatórios que você consegue ler.</p>
+        <div class="hero-actions">
+            <a href="login.html#register" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                Começar agora — é grátis
+            </a>
+            <button class="btn btn-ghost" onclick="enterGuestMode()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                Ver demonstração ao vivo
+            </button>
+        </div>
+        <p class="hero-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Sem cartão · Cancele quando quiser · Dados seguros
+        </p>
+    </div>
+</section>
+
+<!-- ─── 3. SOCIAL PROOF BAR ───────────────────────────────────────────────── -->
+<div class="proof-bar">
+    <div class="container">
+        <div class="proof-bar-inner">
+            <div class="proof-stat">
+                <div class="proof-stat-number">+340</div>
+                <div class="proof-stat-label">clínicas ativas</div>
+            </div>
+            <div class="proof-divider"></div>
+            <div class="proof-stat">
+                <div class="proof-stat-number">R$ 12M+</div>
+                <div class="proof-stat-label">em fluxo gerenciado</div>
+            </div>
+            <div class="proof-divider"></div>
+            <div class="proof-stat">
+                <div class="proof-stat-number">4,9 ★</div>
+                <div class="proof-stat-label">avaliação média</div>
+            </div>
+            <div class="proof-divider"></div>
+            <div class="proof-stat">
+                <div class="proof-stat-number">14 dias</div>
+                <div class="proof-stat-label">trial sem cartão</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── 4. PROBLEMA → SOLUÇÃO ─────────────────────────────────────────────── -->
+<section class="probsol" id="funcionalidades">
+    <div class="container">
+        <div class="probsol-grid">
+            <div class="probsol-left">
+                <div class="section-label">O problema</div>
+                <h2 class="section-title">Você sabe quanto fatura.<br>Mas sabe quanto sobra?</h2>
+                <p class="section-sub">A maioria das clínicas veterinárias vive no escuro financeiro: não sabem o custo real de cada serviço, misturam caixa pessoal com empresarial e só descobrem o resultado no fim do mês.</p>
+                <ul class="problem-list">
+                    <li>
+                        <div class="problem-icon">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </div>
+                        Planilhas desatualizadas e difíceis de interpretar
+                    </li>
+                    <li>
+                        <div class="problem-icon">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </div>
+                        Serviços precificados no chute, sem considerar custos reais
+                    </li>
+                    <li>
+                        <div class="problem-icon">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </div>
+                        Sem visão de fluxo de caixa para os próximos dias
+                    </li>
+                    <li>
+                        <div class="problem-icon">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </div>
+                        ERP genérico complexo demais para o dia a dia veterinário
+                    </li>
+                </ul>
+            </div>
+            <div class="probsol-right">
+                <div class="section-label">A solução</div>
+                <h3 style="font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:4px;">PAVE foi feito para isso</h3>
+                <p style="font-size:0.82rem; color:var(--muted); margin-bottom:0;">Tudo que sua clínica precisa, sem o que ela não precisa.</p>
+                <ul class="solution-list">
+                    <li>
+                        <div class="solution-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4D3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        </div>
+                        <div class="solution-text">
+                            <strong>Dashboard com KPIs em tempo real</strong>
+                            <span>Receita, despesas, margem, ticket médio e metas num só lugar.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="solution-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4D3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <div class="solution-text">
+                            <strong>Precificação com margem real</strong>
+                            <span>Calcule o preço certo considerando mão de obra, insumos e overhead.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="solution-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4D3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        </div>
+                        <div class="solution-text">
+                            <strong>Caixa diário e DRE mensal</strong>
+                            <span>Contas a pagar/receber, conciliação e balanço num clique.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="solution-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4D3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        </div>
+                        <div class="solution-text">
+                            <strong>Relatórios e simulações</strong>
+                            <span>Cenários What-If, simulador de RH e exportação PDF/Excel.</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── 5. TOUR DO PRODUTO ────────────────────────────────────────────────── -->
+<section class="tour">
+    <div class="container">
+        <div class="tour-header">
+            <div class="section-label">Tour do produto</div>
+            <h2 class="section-title">Tudo que você precisa, sem complicação</h2>
+        </div>
+        <div class="tour-tabs">
+            <button class="tour-tab active" onclick="showTour('dashboard', this)">Dashboard</button>
+            <button class="tour-tab" onclick="showTour('caixa', this)">Caixa Diário</button>
+            <button class="tour-tab" onclick="showTour('precificacao', this)">Precificação</button>
+            <button class="tour-tab" onclick="showTour('relatorios', this)">Relatórios</button>
+        </div>
+
+        <div class="tour-panels">
+            <!-- Dashboard -->
+            <div class="tour-panel active" id="tour-dashboard">
+                <div class="tour-panel-text">
+                    <h3>Visão completa em tempo real</h3>
+                    <p>Abra o PAVE e saiba imediatamente como está a saúde financeira da sua clínica. KPIs, alertas de orçamento e comparativos com meses anteriores.</p>
+                    <ul class="tour-feature-list">
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Receita, despesas e margem líquida</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Alertas automáticos de orçamento</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Ticket médio e meta mensal</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Comparativo mês a mês</li>
+                    </ul>
+                </div>
+                <div class="tour-panel-visual">
+                    <div class="mockup-dashboard">
+                        <div class="mockup-row">
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Receita</div><div class="mockup-kpi-value green">R$ 42k</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Despesas</div><div class="mockup-kpi-value red">R$ 28k</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Margem</div><div class="mockup-kpi-value">33%</div></div>
+                        </div>
+                        <div class="mockup-bar-chart">
+                            <div class="mockup-chart-label">Receita mensal</div>
+                            <div class="mockup-bars">
+                                <div class="mockup-bar" style="height:40%"></div>
+                                <div class="mockup-bar" style="height:55%"></div>
+                                <div class="mockup-bar" style="height:48%"></div>
+                                <div class="mockup-bar accent" style="height:70%"></div>
+                                <div class="mockup-bar" style="height:62%"></div>
+                                <div class="mockup-bar accent" style="height:85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Caixa -->
+            <div class="tour-panel" id="tour-caixa">
+                <div class="tour-panel-text">
+                    <h3>Caixa diário sem planilha</h3>
+                    <p>Lance entradas e saídas em segundos. Visualize o saldo projetado para os próximos dias e saiba sempre quando os pagamentos chegam.</p>
+                    <ul class="tour-feature-list">
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Contas a pagar e a receber</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Saldo projetado por dia</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Exportação CSV para contabilidade</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Categorização por centro de custo</li>
+                    </ul>
+                </div>
+                <div class="tour-panel-visual">
+                    <div class="mockup-dashboard">
+                        <div class="mockup-row">
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">A receber hoje</div><div class="mockup-kpi-value green">R$ 3.800</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">A pagar hoje</div><div class="mockup-kpi-value red">R$ 1.200</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Saldo projetado</div><div class="mockup-kpi-value">R$ 8.4k</div></div>
+                        </div>
+                        <div class="mockup-bar-chart">
+                            <div class="mockup-chart-label">Fluxo dos próximos 7 dias</div>
+                            <div class="mockup-bars">
+                                <div class="mockup-bar accent" style="height:80%"></div>
+                                <div class="mockup-bar" style="height:30%"></div>
+                                <div class="mockup-bar accent" style="height:65%"></div>
+                                <div class="mockup-bar" style="height:45%"></div>
+                                <div class="mockup-bar accent" style="height:90%"></div>
+                                <div class="mockup-bar" style="height:20%"></div>
+                                <div class="mockup-bar accent" style="height:55%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Precificação -->
+            <div class="tour-panel" id="tour-precificacao">
+                <div class="tour-panel-text">
+                    <h3>Precifique com margem real</h3>
+                    <p>Informe o custo de cada insumo, mão de obra e overhead. O PAVE calcula o preço mínimo e sugerido automaticamente — sem chute.</p>
+                    <ul class="tour-feature-list">
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Calculadora de custo + margem</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Salvar serviços e pacotes</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Comparar com concorrência</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tabela de preços imprimível</li>
+                    </ul>
+                </div>
+                <div class="tour-panel-visual">
+                    <div class="mockup-dashboard">
+                        <div class="mockup-row">
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Custo total</div><div class="mockup-kpi-value">R$ 68</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Margem alvo</div><div class="mockup-kpi-value">40%</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Preço sugerido</div><div class="mockup-kpi-value green">R$ 113</div></div>
+                        </div>
+                        <div class="mockup-bar-chart">
+                            <div class="mockup-chart-label">Composição de custo</div>
+                            <div class="mockup-bars">
+                                <div class="mockup-bar accent" style="height:55%; flex:2;"></div>
+                                <div class="mockup-bar" style="height:35%; background:#E1F5EE; flex:1.5;"></div>
+                                <div class="mockup-bar" style="height:20%; background:#FEF3C7; flex:1;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relatórios -->
+            <div class="tour-panel" id="tour-relatorios">
+                <div class="tour-panel-text">
+                    <h3>Relatórios que sua contabilidade entende</h3>
+                    <p>Exporte DRE mensal, fluxo de caixa, balanço por categoria e comparativos em PDF ou Excel com um clique.</p>
+                    <ul class="tour-feature-list">
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> DRE mensal e anual</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Exportação PDF e Excel</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Simulador de cenários RH</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Histórico de até 24 meses</li>
+                    </ul>
+                </div>
+                <div class="tour-panel-visual">
+                    <div class="mockup-dashboard">
+                        <div class="mockup-row">
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Resultado (jan)</div><div class="mockup-kpi-value green">+ R$ 14k</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">vs. mês anterior</div><div class="mockup-kpi-value">+12%</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Acumulado ano</div><div class="mockup-kpi-value green">R$ 82k</div></div>
+                        </div>
+                        <div class="mockup-bar-chart">
+                            <div class="mockup-chart-label">Resultado mensal — últimos 6 meses</div>
+                            <div class="mockup-bars">
+                                <div class="mockup-bar" style="height:50%"></div>
+                                <div class="mockup-bar accent" style="height:60%"></div>
+                                <div class="mockup-bar" style="height:45%"></div>
+                                <div class="mockup-bar accent" style="height:75%"></div>
+                                <div class="mockup-bar" style="height:68%"></div>
+                                <div class="mockup-bar accent" style="height:90%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── 6. DEPOIMENTOS ────────────────────────────────────────────────────── -->
+<section class="testimonials" id="depoimentos">
+    <div class="container">
+        <div class="testimonials-header">
+            <div class="section-label">Depoimentos</div>
+            <h2 class="section-title">O que dizem os veterinários</h2>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <p class="testimonial-quote">"Antes eu achava que estava lucrando porque o caixa estava cheio. Com o PAVE, descobri que minha margem real era de 11%. Ajustei os preços e em 60 dias estava em 28%."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">AB</div>
+                    <div>
+                        <div class="testimonial-name">Dra. Ana Beatriz Lopes</div>
+                        <div class="testimonial-role">Clínica Vet Saúde Animal · SP</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <p class="testimonial-quote">"Tentei três ERPs diferentes antes do PAVE. Eram complexos demais. O PAVE é feito pra quem é veterinário, não contador. Em 20 minutos já estava usando."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">RC</div>
+                    <div>
+                        <div class="testimonial-name">Dr. Rafael Corrêa</div>
+                        <div class="testimonial-role">PetCenter Cascavel · PR</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="testimonial-card">
+                <div class="testimonial-stars">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#EF9F27" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <p class="testimonial-quote">"A calculadora de precificação vale o plano inteiro. Eu cobrava R$ 80 por uma consulta que me custava R$ 74. Agora cobro R$ 130 e meus clientes ainda acham justo."</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">FM</div>
+                    <div>
+                        <div class="testimonial-name">Dra. Fernanda Matos</div>
+                        <div class="testimonial-role">Clínica Vet Floripa · SC</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── 7. CTA BANNER ─────────────────────────────────────────────────────── -->
+<section class="cta-banner">
+    <div class="container">
+        <div class="cta-banner-inner">
+            <div>
+                <h2>Comece hoje. Leva 5 minutos.</h2>
+                <p>Sem cartão de crédito. Sem contrato. 14 dias para testar tudo sem limitações.</p>
+            </div>
+            <div class="cta-banner-actions">
+                <a href="login.html#register" class="btn btn-primary" style="background:#fff; color:#0F4D3F;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                    Criar conta grátis
+                </a>
+                <a href="planos.html" class="btn btn-outline-white">Ver planos</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── 8. RESUMO DOS PLANOS ──────────────────────────────────────────────── -->
+<section class="plans-summary" id="planos">
+    <div class="container">
+        <div class="plans-summary-header">
+            <div class="section-label">Planos</div>
+            <h2 class="section-title">Preços simples e transparentes</h2>
+            <p class="section-sub" style="margin: 0 auto; text-align:center;">Comece no Starter e faça upgrade quando precisar. Sem fidelidade, sem taxa de cancelamento.</p>
+        </div>
+        <div class="plans-mini-grid">
+            <div class="plan-mini-card">
+                <div class="plan-mini-name">Starter</div>
+                <div class="plan-mini-price"><sup>R$</sup>59</div>
+                <div class="plan-mini-period">/mês</div>
+                <ul class="plan-mini-features">
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 1 usuário</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Dashboard + Caixa + DRE</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Até 30 serviços</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 6 meses de histórico</li>
+                </ul>
+                <a href="checkout.html?plano=starter" class="plan-mini-cta ghost">Começar no Starter</a>
+            </div>
+
+            <div class="plan-mini-card featured">
+                <div class="plan-mini-badge">Mais escolhido</div>
+                <div class="plan-mini-name" style="color:#0F4D3F;">Pro</div>
+                <div class="plan-mini-price" style="color:#0F4D3F;"><sup>R$</sup>119</div>
+                <div class="plan-mini-period">/mês</div>
+                <ul class="plan-mini-features">
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Até 3 usuários</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tudo do Starter</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Relatórios PDF/Excel/CSV</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Simulador What-If + backup</li>
+                </ul>
+                <a href="checkout.html?plano=pro" class="plan-mini-cta primary">Assinar Pro</a>
+            </div>
+
+            <div class="plan-mini-card">
+                <div class="plan-mini-name">Clinic</div>
+                <div class="plan-mini-price"><sup>R$</sup>199</div>
+                <div class="plan-mini-period">/mês</div>
+                <ul class="plan-mini-features">
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Até 10 usuários</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Multi-clínica (até 5)</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Histórico ilimitado</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Suporte WhatsApp prioritário</li>
+                </ul>
+                <a href="checkout.html?plano=clinic" class="plan-mini-cta ghost">Assinar Clinic</a>
+            </div>
+        </div>
+        <div class="plans-summary-link">
+            <a href="planos.html">Ver comparação completa de planos →</a>
+        </div>
+    </div>
+</section>
+
+<!-- ─── 9. FAQ ─────────────────────────────────────────────────────────────── -->
+<section class="faq" id="faq">
+    <div class="container--narrow">
+        <div class="faq-header">
+            <div class="section-label">FAQ</div>
+            <h2 class="section-title">Dúvidas frequentes</h2>
+        </div>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <span>O PAVE substitui meu contador?</span>
+                    <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Não, e nem é esse o objetivo. O PAVE é uma ferramenta de gestão interna para que você, como veterinário e gestor, entenda o que acontece financeiramente na clínica. Os relatórios do PAVE facilitam a vida do seu contador, mas não o substituem.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <span>Preciso instalar algum software?</span>
+                    <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Não. O PAVE roda 100% no navegador, em qualquer dispositivo — computador, tablet ou celular. Sem instalação, sem atualização manual.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <span>Meus dados ficam seguros?</span>
+                    <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Sim. Os dados são armazenados no Supabase (infraestrutura AWS) com criptografia em repouso e em trânsito (SSL 256-bit). Apenas você acessa seus dados — nunca compartilhamos com terceiros.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <span>O trial tem alguma limitação?</span>
+                    <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Os 14 dias de trial dão acesso completo ao plano Pro — sem limitação de funcionalidades. Ao final do período, você escolhe o plano que prefere ou cancela sem custo algum.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <span>Posso migrar meus dados de planilhas?</span>
+                    <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">Sim. Clientes nos planos Pro e Clinic têm suporte para importação de dados via CSV. Nossa equipe também oferece migração assistida para quem está vindo de planilhas complexas.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ─── 10. FOOTER ────────────────────────────────────────────────────────── -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand-name">
+                    <div class="footer-brand-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    </div>
+                    PAVE
+                </div>
+                <p class="footer-brand-desc">Gestão financeira e precificação feitas para clínicas veterinárias brasileiras.</p>
+            </div>
+            <div>
+                <div class="footer-col-title">Produto</div>
+                <ul class="footer-links">
+                    <li><a href="#funcionalidades">Funcionalidades</a></li>
+                    <li><a href="planos.html">Planos e Preços</a></li>
+                    <li><a href="login.html#register">Começar grátis</a></li>
+                    <li><a href="index.html">Acessar app</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="footer-col-title">Empresa</div>
+                <ul class="footer-links">
+                    <li><a href="#">Sobre</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Contato</a></li>
+                    <li><a href="#">Afiliados</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="footer-col-title">Legal</div>
+                <ul class="footer-links">
+                    <li><a href="#">Privacidade</a></li>
+                    <li><a href="#">Termos de uso</a></li>
+                    <li><a href="#">Política de cookies</a></li>
+                    <li><a href="#">LGPD</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2025 PAVE. Todos os direitos reservados.</span>
+            <span>Feito para veterinários brasileiros 🐾</span>
+        </div>
+    </div>
+</footer>
+
+<script>
+// ── Modo Visitante ───────────────────────────────────────────────────────────
+function enterGuestMode() {
+    localStorage.setItem('pav_guest_mode', 'true');
+    localStorage.setItem('pav_demo_mode', 'true');
+    if (!localStorage.getItem('pav_brand_nome')) {
+        localStorage.setItem('pav_brand_nome', 'Clínica Vet Demo');
+        localStorage.setItem('pav_brand_resp', 'Dr. Visitante');
+    }
+    window.location.href = 'index.html';
+}
+
+// ── Tour tabs ────────────────────────────────────────────────────────────────
+function showTour(id, btn) {
+    document.querySelectorAll('.tour-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tour-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tour-' + id).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ── Smooth scroll for nav links ──────────────────────────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', function(e) {
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+});
+</script>
+</body>
+</html>

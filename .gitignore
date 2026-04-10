@@ -1,0 +1,28 @@
+# Ambiente
+.env
+.env.local
+*.env.local
+
+# Claude Code
+.mcp.json
+.claude/
+
+# Dependências
+node_modules/
+
+# Build
+dist/
+.next/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*

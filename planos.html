@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAVE — Planos e Preços</title>
+    <meta name="description" content="Conheça os planos do PAVE: Starter, Pro e Clinic. Gestão financeira e precificação para clínicas veterinárias a partir de R$59/mês.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:type"        content="website">
+    <meta property="og:title"       content="PAVE — Planos e Preços">
+    <meta property="og:description" content="Gestão financeira e precificação para clínicas veterinárias a partir de R$59/mês. 14 dias grátis, sem cartão.">
+    <meta property="og:image"       content="assets/og-image.png">
+    <meta property="og:locale"      content="pt_BR">
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="PAVE — Planos e Preços">
+    <meta name="twitter:description" content="Gestão financeira e precificação para clínicas veterinárias a partir de R$59/mês. 14 dias grátis, sem cartão.">
+    <meta name="twitter:image"       content="assets/og-image.png">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/pav-design-system.css">
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #F8F8F6;
+            color: #1A1A2E;
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* ── Top bar ── */
+        .plans-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 60px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .plans-topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .plans-topbar-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #0F4D3F;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .plans-topbar-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1A1A2E;
+            letter-spacing: -0.3px;
+        }
+        .plans-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        #nav-user-email {
+            font-size: 0.8rem;
+            color: #6B7280;
+        }
+        .plans-back-link {
+            padding: 7px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            color: #6B7280;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.15s;
+            font-family: 'Inter', sans-serif;
+        }
+        .plans-back-link:hover {
+            border-color: rgba(0,0,0,0.2);
+            color: #1A1A2E;
+        }
+
+        /* ── Hero ── */
+        .plans-hero {
+            text-align: center;
+            padding: 56px 2rem 40px;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        .plans-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: #E1F5EE;
+            color: #0F4D3F;
+            border: 1px solid rgba(29,158,117,0.25);
+            margin-bottom: 20px;
+            letter-spacing: 0.2px;
+        }
+        .plans-hero h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #1A1A2E;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+        .plans-hero p {
+            font-size: 1rem;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+
+        /* ── Billing toggle ── */
+        .billing-toggle-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 28px auto 36px;
+        }
+        .billing-pill {
+            display: flex;
+            align-items: center;
+            background: #F0F0EE;
+            border-radius: 99px;
+            padding: 4px;
+            gap: 2px;
+        }
+        .toggle-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #9CA3AF;
+            cursor: pointer;
+            padding: 7px 18px;
+            border-radius: 99px;
+            transition: all 0.18s;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .toggle-label.active {
+            background: #fff;
+            color: #1A1A2E;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .annual-save-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #E1F5EE;
+            color: #0F4D3F;
+            padding: 2px 8px;
+            border-radius: 99px;
+            margin-left: 6px;
+        }
+        /* hidden checkbox for JS compat */
+        #billing-toggle { display: none; }
+
+        /* ── Current plan banner ── */
+        #current-plan-banner {
+            display: none;
+            max-width: 1100px;
+            margin: 0 auto 8px;
+            padding: 0 2rem;
+        }
+        .current-plan-inner {
+            padding: 12px 16px;
+            background: #E1F5EE;
+            border: 1px solid rgba(29,158,117,0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .current-plan-inner a {
+            color: #1D9E75;
+            font-weight: 600;
+            text-decoration: none;
+            margin-left: auto;
+            font-size: 0.82rem;
+        }
+        .current-plan-inner a:hover { text-decoration: underline; }
+
+        /* ── Plans grid ── */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 0 2rem 56px;
+        }
+        @media (max-width: 900px) {
+            .plans-grid { grid-template-columns: 1fr; max-width: 460px; }
+            .plans-hero h1 { font-size: 1.7rem; }
+        }
+
+        .plan-card {
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: #fff;
+            padding: 28px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: box-shadow 0.2s;
+        }
+        .plan-card:hover {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .plan-card.featured {
+            border: 2px solid #1D9E75;
+            box-shadow: 0 4px 24px rgba(29,158,117,0.12);
+        }
+        .plan-badge {
+            position: absolute;
+            top: -13px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 16px;
+            border-radius: 99px;
+            background: #1D9E75;
+            color: #fff;
+        }
+
+        .plan-name {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #9CA3AF;
+            margin-bottom: 6px;
+        }
+        .plan-card.featured .plan-name { color: #0F4D3F; }
+
+        .plan-desc {
+            font-size: 0.82rem;
+            color: #9CA3AF;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .plan-price { margin-bottom: 20px; }
+        .plan-price-main {
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #1A1A2E;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+        .plan-price-main sup {
+            font-size: 1rem;
+            font-weight: 600;
+            vertical-align: top;
+            margin-top: 6px;
+            display: inline-block;
+            letter-spacing: 0;
+            color: #6B7280;
+        }
+        .plan-card.featured .plan-price-main { color: #0F4D3F; }
+        .plan-price-period {
+            font-size: 0.78rem;
+            color: #9CA3AF;
+            margin-top: 5px;
+        }
+        .plan-price-annual {
+            font-size: 0.78rem;
+            color: #1D9E75;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .plan-divider {
+            height: 1px;
+            background: rgba(0,0,0,0.07);
+            margin: 16px 0;
+        }
+
+        .plan-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+            margin-bottom: 24px;
+        }
+        .plan-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #6B7280;
+        }
+        .plan-features li .feat-icon { flex-shrink: 0; margin-top: 1px; }
+        .plan-features li.feat-off { opacity: 0.38; }
+        .plan-features li.feat-highlight { color: #1A1A2E; font-weight: 500; }
+
+        .plan-cta {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+            text-decoration: none;
+            display: block;
+            border: none;
+        }
+        .plan-cta.primary {
+            background: #1D9E75;
+            color: #fff;
+        }
+        .plan-cta.primary:hover { background: #178A65; }
+        .plan-cta.secondary {
+            background: transparent;
+            color: #6B7280;
+            border: 1px solid rgba(0,0,0,0.12);
+        }
+        .plan-cta.secondary:hover {
+            border-color: rgba(0,0,0,0.22);
+            color: #1A1A2E;
+        }
+        .plan-cta.gold {
+            background: #0F4D3F;
+            color: #fff;
+        }
+        .plan-cta.gold:hover { background: #0a3d31; }
+
+        /* ── Comparison table ── */
+        .comparison-wrap {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 0 2rem 56px;
+        }
+        .comparison-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        .comparison-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: #fff;
+            color: #6B7280;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.15s;
+        }
+        .comparison-toggle-btn:hover { border-color: rgba(0,0,0,0.2); color: #1A1A2E; }
+        .comparison-toggle-btn .caret {
+            transition: transform 0.2s;
+        }
+        .comparison-toggle-btn.open .caret { transform: rotate(180deg); }
+
+        .comparison-table-wrap {
+            display: none;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.08);
+            overflow: hidden;
+            background: #fff;
+        }
+        .comparison-table-wrap.visible { display: block; }
+
+        .comparison-table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        .comparison-table-wrap thead th {
+            padding: 14px 16px;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+            color: #9CA3AF;
+            border-bottom: 1px solid rgba(0,0,0,0.07);
+            text-align: center;
+            background: #FAFAF9;
+        }
+        .comparison-table-wrap thead th:first-child { text-align: left; }
+        .comparison-table-wrap thead th.col-pro { color: #0F4D3F; }
+        .comparison-table-wrap tbody tr:hover { background: #FAFAFA; }
+        .comparison-table-wrap tbody td {
+            padding: 11px 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            text-align: center;
+            color: #6B7280;
+        }
+        .comparison-table-wrap tbody td:first-child {
+            text-align: left;
+            font-weight: 500;
+            color: #1A1A2E;
+        }
+        .comparison-table-wrap .section-row td {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #9CA3AF;
+            background: #F5F5F3;
+            padding: 8px 16px;
+        }
+
+        /* ── Guarantee block ── */
+        .guarantee-block {
+            max-width: 640px;
+            margin: 0 auto 56px;
+            padding: 0 2rem;
+        }
+        .guarantee-inner {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px 24px;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .guarantee-icon {
+            width: 44px;
+            height: 44px;
+            flex-shrink: 0;
+            border-radius: 10px;
+            background: #E1F5EE;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .guarantee-inner h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #1A1A2E;
+            margin-bottom: 4px;
+        }
+        .guarantee-inner p {
+            font-size: 0.82rem;
+            color: #6B7280;
+            line-height: 1.55;
+        }
+
+        /* ── FAQ ── */
+        .faq {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 0 2rem 64px;
+        }
+        .faq-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .faq-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1A1A2E;
+            letter-spacing: -0.3px;
+        }
+        .faq-item {
+            border-bottom: 1px solid rgba(0,0,0,0.07);
+        }
+        .faq-item:first-of-type { border-top: 1px solid rgba(0,0,0,0.07); }
+        .faq-q {
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #1A1A2E;
+            padding: 16px 0;
+            user-select: none;
+        }
+        .faq-q:hover { color: #0F4D3F; }
+        .faq-a {
+            display: none;
+            font-size: 0.85rem;
+            color: #6B7280;
+            line-height: 1.7;
+            padding-bottom: 16px;
+        }
+        .faq-item.open .faq-a { display: block; }
+        .faq-item.open .faq-chevron { transform: rotate(180deg); color: #1D9E75; }
+        .faq-chevron { transition: transform 0.2s; flex-shrink: 0; color: #9CA3AF; }
+
+        /* ── Footer ── */
+        .plans-footer {
+            border-top: 1px solid rgba(0,0,0,0.07);
+            padding: 24px 2rem;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #9CA3AF;
+            background: #fff;
+        }
+        .plans-footer a { color: #6B7280; text-decoration: none; }
+        .plans-footer a:hover { color: #1A1A2E; }
+    </style>
+</head>
+<body>
+
+<!-- Top bar -->
+<header class="plans-topbar">
+    <a href="landing.html" class="plans-topbar-brand">
+        <div class="plans-topbar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="plans-topbar-name">PAVE</span>
+    </a>
+    <div class="plans-topbar-actions">
+        <span id="nav-user-email"></span>
+        <a href="index.html" class="plans-back-link">← Voltar ao App</a>
+    </div>
+</header>
+
+<!-- Hero -->
+<section class="plans-hero">
+    <span class="plans-hero-badge">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        14 dias grátis — sem cartão de crédito
+    </span>
+    <h1>Gestão financeira veterinária que você entende</h1>
+    <p>Escolha o plano ideal para sua clínica. Cancele a qualquer momento, sem multa.</p>
+</section>
+
+<!-- Current plan banner (shown when logged in and on trial/active) -->
+<div id="current-plan-banner">
+    <div class="current-plan-inner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="current-plan-text" style="color:#6B7280;"></span>
+        <a href="index.html">← Voltar ao app</a>
+    </div>
+</div>
+
+<!-- Billing toggle -->
+<div class="billing-toggle-wrap">
+    <input type="checkbox" id="billing-toggle">
+    <div class="billing-pill">
+        <span class="toggle-label active" id="lbl-mensal" onclick="setBilling('mensal')">Mensal</span>
+        <span class="toggle-label" id="lbl-anual" onclick="setBilling('anual'); document.getElementById('billing-toggle').checked=true;">
+            Anual
+            <span class="annual-save-tag">−17%</span>
+        </span>
+    </div>
+</div>
+
+<!-- Plans grid -->
+<div class="plans-grid">
+
+    <!-- STARTER -->
+    <div class="plan-card" id="card-starter">
+        <div class="plan-name">Starter</div>
+        <div class="plan-desc">Para clínicas pequenas e consultórios que estão começando a organizar as finanças.</div>
+        <div class="plan-price">
+            <div class="plan-price-main"><sup>R$</sup><span id="price-starter">59</span></div>
+            <div class="plan-price-period">/mês · cobrado mensalmente</div>
+            <div class="plan-price-annual" id="annual-starter" style="display:none;">R$ 590/ano · economia de R$ 118</div>
+        </div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+            <li class="feat-highlight">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                1 usuário
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Dashboard financeiro completo
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Caixa Diário (contas a pagar/receber)
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Balanço mensal com DRE
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Até 30 serviços precificados
+            </li>
+            <li class="feat-off">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+                Relatórios avançados (PDF/Excel)
+            </li>
+            <li class="feat-off">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+                Simulador What-If
+            </li>
+            <li class="feat-off">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+                Backup na nuvem (Supabase)
+            </li>
+        </ul>
+        <a href="checkout.html?plano=starter" class="plan-cta secondary" id="cta-starter">Começar no Starter</a>
+    </div>
+
+    <!-- PRO (featured) -->
+    <div class="plan-card featured" id="card-pro">
+        <div class="plan-badge">Mais escolhido</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-desc">Para clínicas em crescimento que precisam de controle total e análises avançadas.</div>
+        <div class="plan-price">
+            <div class="plan-price-main"><sup>R$</sup><span id="price-pro">119</span></div>
+            <div class="plan-price-period">/mês · cobrado mensalmente</div>
+            <div class="plan-price-annual" id="annual-pro" style="display:none;">R$ 1.190/ano · economia de R$ 238</div>
+        </div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+            <li class="feat-highlight">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Até 3 usuários
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Tudo do Starter
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Serviços ilimitados
+            </li>
+            <li class="feat-highlight">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Relatórios avançados (PDF/Excel/CSV)
+            </li>
+            <li class="feat-highlight">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Simulador RH e Cenários What-If
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Backup na nuvem em tempo real
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Histórico de 24 meses
+            </li>
+            <li class="feat-off">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+                Multi-clínica
+            </li>
+        </ul>
+        <a href="checkout.html?plano=pro" class="plan-cta primary" id="cta-pro">Assinar Pro</a>
+    </div>
+
+    <!-- CLINIC -->
+    <div class="plan-card" id="card-clinic">
+        <div class="plan-name">Clinic</div>
+        <div class="plan-desc">Para grupos e redes de clínicas com múltiplas unidades e equipes maiores.</div>
+        <div class="plan-price">
+            <div class="plan-price-main"><sup>R$</sup><span id="price-clinic">199</span></div>
+            <div class="plan-price-period">/mês · cobrado mensalmente</div>
+            <div class="plan-price-annual" id="annual-clinic" style="display:none;">R$ 1.990/ano · economia de R$ 398</div>
+        </div>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+            <li class="feat-highlight">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Até 10 usuários
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Tudo do Pro
+            </li>
+            <li class="feat-highlight">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Multi-clínica (até 5 unidades)
+            </li>
+            <li class="feat-highlight">
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Histórico ilimitado
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Suporte prioritário via WhatsApp
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                Onboarding dedicado
+            </li>
+            <li>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                SLA de 99,9% de uptime
+            </li>
+        </ul>
+        <a href="checkout.html?plano=clinic" class="plan-cta gold" id="cta-clinic">Assinar Clinic</a>
+    </div>
+
+</div>
+
+<!-- Feature comparison table (collapsible) -->
+<div class="comparison-wrap">
+    <div class="comparison-toggle">
+        <button class="comparison-toggle-btn" id="comparison-btn" onclick="toggleComparison()">
+            Ver comparação completa de recursos
+            <svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+    </div>
+    <div class="comparison-table-wrap" id="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:44%; text-align:left;">Recurso</th>
+                    <th>Starter</th>
+                    <th class="col-pro">Pro</th>
+                    <th>Clinic</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="section-row"><td colspan="4">Financeiro</td></tr>
+                <tr><td>Dashboard com KPIs</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Balanço Mensal (DRE)</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Caixa Diário</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Ticket Médio e Metas</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Histórico de consolidações</td><td>6 meses</td><td>24 meses</td><td>Ilimitado</td></tr>
+
+                <tr class="section-row"><td colspan="4">Precificação</td></tr>
+                <tr><td>Calculadora de margem</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Combos e pacotes</td><td>✓</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Serviços salvos</td><td>30</td><td>Ilimitado</td><td>Ilimitado</td></tr>
+                <tr><td>Busca e ordenação</td><td>✓</td><td>✓</td><td>✓</td></tr>
+
+                <tr class="section-row"><td colspan="4">Relatórios &amp; Exportação</td></tr>
+                <tr><td>Relatórios (PDF/Excel)</td><td>—</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Extrato CSV Caixa</td><td>—</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Simulador RH / What-If</td><td>—</td><td>✓</td><td>✓</td></tr>
+
+                <tr class="section-row"><td colspan="4">Infraestrutura</td></tr>
+                <tr><td>Backup na nuvem</td><td>—</td><td>✓</td><td>✓</td></tr>
+                <tr><td>Usuários</td><td>1</td><td>3</td><td>10</td></tr>
+                <tr><td>Multi-clínica</td><td>—</td><td>—</td><td>Até 5</td></tr>
+                <tr><td>Suporte</td><td>Email</td><td>Email</td><td>WhatsApp prioritário</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 30-day guarantee -->
+<div class="guarantee-block">
+    <div class="guarantee-inner">
+        <div class="guarantee-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F4D3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+            <h3>Garantia de 30 dias</h3>
+            <p>Se não ficar satisfeito nos primeiros 30 dias após a assinatura, devolvemos 100% do valor pago. Sem perguntas.</p>
+        </div>
+    </div>
+</div>
+
+<!-- FAQ -->
+<section class="faq">
+    <div class="faq-header">
+        <h2>Dúvidas frequentes</h2>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+            <span>Preciso de cartão de crédito para o trial?</span>
+            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Não. O trial de 14 dias é completamente gratuito e não exige nenhum dado de pagamento. Você só fornece suas informações caso decida assinar ao final do período.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+            <span>Posso cancelar a qualquer momento?</span>
+            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Sim. Não há fidelidade nem multa por cancelamento. Sua assinatura continua ativa até o final do período já pago, e após isso não é mais cobrado nada.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+            <span>Meus dados ficam salvos se eu cancelar?</span>
+            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Os dados ficam armazenados no banco de dados por 90 dias após o cancelamento. Recomendamos exportar seus relatórios em PDF ou Excel antes de encerrar.</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+            <span>Como funciona o pagamento?</span>
+            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">O pagamento é processado via ASAAS, plataforma brasileira certificada pelo Banco Central. Aceitamos Pix, boleto bancário e cartão de crédito (até 12x).</div>
+    </div>
+
+    <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+            <span>Posso mudar de plano depois?</span>
+            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Sim, você pode fazer upgrade ou downgrade a qualquer momento. No upgrade, o novo valor é cobrado proporcionalmente no próximo ciclo. No downgrade, vale a partir do próximo mês.</div>
+    </div>
+</section>
+
+<footer class="plans-footer">
+    <p>© 2025 PAVE · <a href="landing.html">Início</a> · <a href="#">Privacidade</a> · <a href="#">Termos</a></p>
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+// ── Billing toggle ──────────────────────────────────────────────────────────
+const PRICES = {
+    starter: { mensal: 59,  anual: 49  },
+    pro:     { mensal: 119, anual: 99  },
+    clinic:  { mensal: 199, anual: 166 }
+};
+
+let _billing = 'mensal';
+
+function setBilling(mode) {
+    _billing = mode;
+    const isAnual = mode === 'anual';
+
+    document.getElementById('lbl-mensal').classList.toggle('active', !isAnual);
+    document.getElementById('lbl-anual').classList.toggle('active', isAnual);
+
+    ['starter', 'pro', 'clinic'].forEach(p => {
+        document.getElementById('price-' + p).textContent = PRICES[p][mode];
+        const annualEl = document.getElementById('annual-' + p);
+        if (annualEl) annualEl.style.display = isAnual ? 'block' : 'none';
+    });
+
+    // Update CTA links with billing period
+    document.getElementById('cta-starter').href = `checkout.html?plano=starter&ciclo=${mode}`;
+    document.getElementById('cta-pro').href     = `checkout.html?plano=pro&ciclo=${mode}`;
+    document.getElementById('cta-clinic').href  = `checkout.html?plano=clinic&ciclo=${mode}`;
+
+    // Update period text
+    document.querySelectorAll('.plan-price-period').forEach(el => {
+        el.textContent = isAnual ? '/mês · cobrado anualmente' : '/mês · cobrado mensalmente';
+    });
+}
+
+// ── FAQ toggle ──────────────────────────────────────────────────────────────
+function toggleFaq(el) {
+    el.parentElement.classList.toggle('open');
+}
+
+// ── Comparison table toggle ─────────────────────────────────────────────────
+function toggleComparison() {
+    const table = document.getElementById('comparison-table');
+    const btn   = document.getElementById('comparison-btn');
+    const isOpen = table.classList.toggle('visible');
+    btn.classList.toggle('open', isOpen);
+    btn.firstChild.textContent = isOpen
+        ? 'Ocultar comparação de recursos '
+        : 'Ver comparação completa de recursos ';
+}
+
+// ── Auth state: show current plan, personalize CTAs ─────────────────────────
+(async function init() {
+    try {
+        const _sb = supabase.createClient(PAV_CONFIG.SUPABASE_URL, PAV_CONFIG.SUPABASE_ANON_KEY);
+        const { data: { session } } = await _sb.auth.getSession();
+
+        if (session) {
+            document.getElementById('nav-user-email').textContent = session.user.email;
+
+            // Get subscription status
+            const { data: sub } = await _sb
+                .from('subscriptions')
+                .select('status, trial_ends_at, plan_id, plans(name)')
+                .eq('user_id', session.user.id)
+                .single();
+
+            if (sub) {
+                const banner = document.getElementById('current-plan-banner');
+                const text   = document.getElementById('current-plan-text');
+                banner.style.display = 'block';
+
+                if (sub.status === 'trial') {
+                    const days = Math.max(0, Math.ceil((new Date(sub.trial_ends_at) - new Date()) / 86400000));
+                    text.innerHTML = `<strong style="color:#1D9E75;">Trial ativo</strong> — você tem <strong>${days} dia${days!==1?'s':''}</strong> restantes. Assine para continuar após o período gratuito.`;
+                } else if (sub.status === 'active') {
+                    const planName = sub.plans?.name || 'Pro';
+                    text.innerHTML = `<strong style="color:#1D9E75;">Plano ${planName} ativo.</strong> Obrigado por assinar!`;
+                    // Mark current plan card
+                    document.querySelectorAll('.plan-cta').forEach(btn => {
+                        if (btn.href.includes(planName.toLowerCase())) {
+                            btn.textContent = 'Plano atual';
+                            btn.classList.remove('primary','secondary','gold');
+                            btn.style.background = '#E1F5EE';
+                            btn.style.color = '#0F4D3F';
+                            btn.style.border = '1px solid rgba(29,158,117,0.3)';
+                            btn.style.cursor = 'default';
+                            btn.removeAttribute('href');
+                        }
+                    });
+                }
+            }
+        }
+    } catch (e) { /* silent — page works without auth */ }
+})();
+</script>
+</body>
+</html>

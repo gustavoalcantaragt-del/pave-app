@@ -1,0 +1,9 @@
+// ============================================================
+// PAVE — Configuração de Ambiente
+// Copie este arquivo para config.js e preencha com suas chaves.
+// Encontre em: Supabase Dashboard → Project Settings → API
+// ============================================================
+const PAV_CONFIG = {
+    SUPABASE_URL:      'https://SEU_PROJECT_ID.supabase.co',
+    SUPABASE_ANON_KEY: 'sua_anon_key_aqui'
+};

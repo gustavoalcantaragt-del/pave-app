@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAVE — Gestão Financeira Veterinária</title>
+    <meta name="description" content="PAVE é o sistema de gestão financeira e precificação para clínicas veterinárias, médicos veterinários e pet shops. Controle de caixa, balanço, relatórios e simulação de cenários.">
+    <meta name="robots" content="noindex, nofollow">
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website">
+    <meta property="og:title"       content="PAVE — Gestão Financeira Veterinária">
+    <meta property="og:description" content="Sistema completo de gestão financeira e precificação para clínicas veterinárias e pet shops.">
+    <meta property="og:image"       content="assets/og-image.png">
+    <meta property="og:locale"      content="pt_BR">
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="PAVE — Gestão Financeira Veterinária">
+    <meta name="twitter:description" content="Sistema completo de gestão financeira e precificação para clínicas veterinárias e pet shops.">
+    <meta name="twitter:image"       content="assets/og-image.png">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/pav-design-system.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="js/utils-premium.js"></script>
+</head>
+<body class="app-layout">
+
+    <!-- Topbar 52px -->
+    <header class="topbar-app">
+        <div class="topbar-brand">
+            <div class="topbar-brand-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <span class="topbar-brand-name">PAVE</span>
+        </div>
+
+        <button id="sidebar-toggle" title="Recolher menu" aria-label="Recolher menu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+
+        <span class="topbar-clinic" id="topbar-clinic-name"></span>
+
+        <div class="topbar-actions">
+            <div id="ytd-container" style="display:none; text-align:right; margin-right:0.75rem;">
+                <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.5px;">Lucro Ano</div>
+                <div id="ytd-valor" style="font-size:1rem; font-weight:700; color:var(--color-success);">R$ 0,00</div>
+            </div>
+            <div id="period-chip-container"></div>
+            <div id="date-display" style="font-size:0.78rem; color:var(--text-secondary); font-weight:500; white-space:nowrap;"></div>
+            <button class="theme-toggle" id="theme-toggle" title="Alternar tema" aria-label="Alternar tema claro/escuro">
+                <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <button class="notif-btn" title="Notificações" aria-label="Notificações">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </button>
+            <div class="user-avatar" id="user-avatar-btn" title="Perfil">?</div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <nav class="nav-links">
+            <button id="tab-dashboard" class="nav-btn active">
+                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></i>
+                <span>Dashboard</span>
+            </button>
+            <button id="tab-caixa" class="nav-btn">
+                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></i>
+                <span>Caixa Diário</span>
+            </button>
+            <button id="tab-balanco" class="nav-btn">
+                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="m3 7 9-4 9 4"/><path d="M5 7l-2 9a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2l-2-9"/><path d="M19 7l2 9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2l2-9"/></svg></i>
+                <span>Finanças (Mês)</span>
+            </button>
+            <button id="tab-catalogo" class="nav-btn">
+                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></i>
+                <span>Precificação</span>
+            </button>
+            <button id="tab-relatorios" class="nav-btn">
+                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></i>
+                <span>Relatórios</span>
+            </button>
+            <button id="tab-simulacao" class="nav-btn">
+                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></i>
+                <span>Simulador RH</span>
+            </button>
+
+            <div class="nav-divider"></div>
+
+            <button id="tab-config" class="nav-btn">
+                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></i>
+                <span>Configurações</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div id="user-display"></div>
+            <button id="btn-logout" class="nav-btn" style="color:var(--color-danger); margin-top:0.25rem;">
+                <i><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></i>
+                <span>Encerrar Sessão</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Bottom Nav Mobile -->
+    <nav class="bottom-nav" aria-label="Navegação principal">
+        <button class="bottom-nav-btn active" data-tab="tab-dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <span>Início</span>
+        </button>
+        <button class="bottom-nav-btn" data-tab="tab-caixa">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span>Caixa</span>
+        </button>
+        <button class="bottom-nav-btn" data-tab="tab-balanco">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="m3 7 9-4 9 4"/><path d="M5 7l-2 9a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2l-2-9"/><path d="M19 7l2 9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2l2-9"/></svg>
+            <span>Finanças</span>
+        </button>
+        <button class="bottom-nav-btn" data-tab="tab-catalogo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <span>Preços</span>
+        </button>
+        <button class="bottom-nav-btn" data-tab="tab-config">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Config</span>
+        </button>
+    </nav>
+
+    <!-- Main -->
+    <main class="main-content">
+        <header>
+            <div>
+                <h2 id="page-title">Bem-vindo de volta</h2>
+                <p id="page-subtitle">Sua clínica em números</p>
+            </div>
+        </header>
+
+        <!-- Dashboard -->
+        <section id="aba-dashboard">
+            <div class="stats-grid" id="dashboard-stats"></div>
+            <div id="dashboard-charts"></div>
+        </section>
+
+        <!-- Caixa Diário -->
+        <section id="aba-caixa" style="display:none;">
+
+            <!-- BLOCO 1: Resumo Mensal + Filtros -->
+            <div class="card" style="margin-bottom:1.5rem; padding:0; overflow:hidden;">
+
+                <!-- Linha 1: Resumo do mês completo -->
+                <div style="padding:1rem 1.5rem; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.015); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+                    <span style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Resumo do Mês</span>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:0.875rem; flex:1; max-width:580px;">
+                        <div style="padding:0.75rem 1rem; border-radius:var(--radius-md); background:rgba(48,209,88,0.06); border:1px solid rgba(48,209,88,0.18); text-align:center;">
+                            <div style="font-size:0.65rem; font-weight:700; color:#30d158; margin-bottom:3px; letter-spacing:0.5px;">RECEITAS MÊS</div>
+                            <div id="cxResumoReceitas" style="font-size:1.2rem; font-weight:800; color:#30d158;">R$ 0,00</div>
+                        </div>
+                        <div style="padding:0.75rem 1rem; border-radius:var(--radius-md); background:rgba(255,69,58,0.06); border:1px solid rgba(255,69,58,0.18); text-align:center;">
+                            <div style="font-size:0.65rem; font-weight:700; color:#ff453a; margin-bottom:3px; letter-spacing:0.5px;">DESPESAS MÊS</div>
+                            <div id="cxResumoDespesas" style="font-size:1.2rem; font-weight:800; color:#ff453a;">R$ 0,00</div>
+                        </div>
+                        <div style="padding:0.75rem 1rem; border-radius:var(--radius-md); background:rgba(255,255,255,0.03); border:1px solid var(--border); text-align:center;">
+                            <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:3px; letter-spacing:0.5px;">SALDO MÊS</div>
+                            <div id="cxResumoSaldo" style="font-size:1.2rem; font-weight:800; color:var(--text-primary);">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Linha 2: Filtros de período e categoria -->
+                <div style="padding:0.875rem 1.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                    <!-- Mode toggle -->
+                    <div style="display:flex; gap:3px; background:rgba(0,0,0,0.25); border-radius:8px; padding:3px; flex-shrink:0;">
+                        <button id="cxBtnDia" onclick="window.setCxPeriodo('dia')"
+                            style="padding:0.35rem 0.875rem; border-radius:6px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:var(--accent-blue); color:#fff;">Dia</button>
+                        <button id="cxBtnSemana" onclick="window.setCxPeriodo('semana')"
+                            style="padding:0.35rem 0.875rem; border-radius:6px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Semana</button>
+                        <button id="cxBtnMes" onclick="window.setCxPeriodo('mes')"
+                            style="padding:0.35rem 0.875rem; border-radius:6px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Mês</button>
+                    </div>
+                    <!-- Date picker -->
+                    <input type="date" id="cxFiltroDia"
+                        style="padding:0.4rem 0.875rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-weight:700; font-size:0.88rem; cursor:pointer; font-family:var(--font-family);">
+                    <!-- Category filter -->
+                    <select id="cxFiltroCategoria"
+                        style="padding:0.4rem 0.875rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.82rem; font-family:var(--font-family); cursor:pointer; flex:1; max-width:260px;">
+                        <option value="">Todas as Categorias</option>
+                        <optgroup label="Receitas">
+                            <option value="faturamento">Faturamento</option>
+                        </optgroup>
+                        <optgroup label="Custos Variáveis">
+                            <option value="insumos">Insumos</option>
+                            <option value="terceirizadosVar">Terceirizados</option>
+                            <option value="labTerceirizado">Laboratório</option>
+                            <option value="comissoes">Comissões</option>
+                        </optgroup>
+                        <optgroup label="Custos Fixos">
+                            <option value="folha">Folha</option>
+                            <option value="aluguel">Aluguel</option>
+                            <option value="agua">Água</option
+                            <option value="luz">Luz</option>
+                            <option value="sistemas">Sistemas</option>
+                            <option value="telecom">Telecom</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="contabilidade">Contabilidade</option>
+                        </optgroup>
+                        <optgroup label="Outros">
+                            <option value="outros">Outros</option>
+                        </optgroup>
+                    </select>
+                    <!-- Period label chip -->
+                    <span id="cxPeriodoChip" style="font-size:0.78rem; font-weight:700; color:var(--text-muted); white-space:nowrap; margin-left:auto;"></span>
+                </div>
+            </div>
+
+            <!-- FORMULÁRIO FULL-WIDTH -->
+            <div class="card" style="margin-bottom:1.5rem; padding:0; overflow:hidden;">
+
+                <!-- Cabeçalho -->
+                <div style="padding:1.125rem 2rem; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.015); display:flex; align-items:center; gap:0.625rem;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <h3 style="margin:0; font-size:0.95rem; font-weight:700; color:var(--text-primary);">Novo Lançamento</h3>
+                    <span style="font-size:0.78rem; color:var(--text-muted); margin-left:0.25rem;">— registre uma entrada ou saída financeira</span>
+                </div>
+
+                <form id="caixaForm" style="padding:1.75rem 2rem;">
+
+                    <!-- LINHA 1: Tipo | Valor | Data | Recorrência -->
+                    <div style="display:grid; grid-template-columns:auto 1fr 1fr auto; gap:1.25rem; align-items:end; margin-bottom:1.25rem;">
+
+                        <!-- Tipo de Movimentação -->
+                        <div>
+                            <div style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:0.625rem;">Tipo</div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <label id="cx-tipo-despesa-label" style="display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1.125rem; border-radius:var(--radius-md); border:2px solid rgba(255,69,58,0.45); background:rgba(255,69,58,0.09); cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+                                    <input type="radio" name="cxTipoRadio" id="cxTipoDespesa" value="despesa" checked onchange="window.cxTipoChange()" style="display:none;">
+                                    <span style="width:14px; height:14px; border-radius:50%; border:2px solid #ff453a; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <span id="cx-dot-despesa" style="width:7px; height:7px; border-radius:50%; background:#ff453a; display:block;"></span>
+                                    </span>
+                                    <span style="font-weight:700; font-size:0.875rem; color:#ff453a;">Despesa</span>
+                                    <span style="font-size:0.72rem; color:var(--text-muted);">(−)</span>
+                                </label>
+                                <label id="cx-tipo-receita-label" style="display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1.125rem; border-radius:var(--radius-md); border:2px solid rgba(255,255,255,0.08); background:transparent; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
+                                    <input type="radio" name="cxTipoRadio" id="cxTipoReceita" value="receita" onchange="window.cxTipoChange()" style="display:none;">
+                                    <span style="width:14px; height:14px; border-radius:50%; border:2px solid rgba(48,209,88,0.4); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <span id="cx-dot-receita" style="width:7px; height:7px; border-radius:50%; background:#30d158; display:none;"></span>
+                                    </span>
+                                    <span style="font-weight:700; font-size:0.875rem; color:var(--text-secondary);">Receita</span>
+                                    <span style="font-size:0.72rem; color:var(--text-muted);">(+)</span>
+                                </label>
+                            </div>
+                            <input type="hidden" id="cxTipo" value="despesa">
+                        </div>
+
+                        <!-- Valor -->
+                        <div class="input-group" style="margin:0;">
+                            <label>Valor (R$)</label>
+                            <input type="number" step="0.01" min="0" id="cxValor" placeholder="0,00" required
+                                   style="font-size:1.2rem; font-weight:800; color:var(--accent-gold);">
+                        </div>
+
+                        <!-- Vencimento -->
+                        <div class="input-group" style="margin:0;">
+                            <label>Data de Vencimento</label>
+                            <input type="date" id="cxVencimento" required>
+                        </div>
+
+                        <!-- Recorrência (inline, compacto) -->
+                        <div style="padding:0.75rem 1rem; border:1px solid var(--border); border-radius:var(--radius-md); background:rgba(0,0,0,0.1); min-width:180px;">
+                            <div style="display:flex; align-items:center; gap:0.625rem;">
+                                <input type="checkbox" id="cxRecorrente"
+                                       style="width:16px; height:16px; accent-color:var(--accent-gold); cursor:pointer; flex-shrink:0;"
+                                       onchange="document.getElementById('cxVezesDiv').style.display = this.checked ? 'flex' : 'none'">
+                                <label for="cxRecorrente" style="margin:0; cursor:pointer; font-weight:600; font-size:0.82rem; color:var(--text-secondary); white-space:nowrap;">Recorrente?</label>
+                            </div>
+                            <div id="cxVezesDiv" style="display:none; align-items:center; gap:0.5rem; margin-top:0.625rem;">
+                                <span style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">Repetir por</span>
+                                <input type="number" id="cxVezes" value="2" min="2" max="60"
+                                       style="width:52px; padding:4px 6px; text-align:center; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-family:var(--font-family); font-size:0.85rem;">
+                                <span style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">meses</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- LINHA 2: Descrição (full-width) -->
+                    <div style="margin-bottom:1.25rem;">
+                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:0.5rem;">Descrição</label>
+                        <input type="text" id="cxDescricao"
+                               placeholder="Ex: Conta de Luz, Consulta veterinária paga, Compra de insumos..."
+                               required
+                               style="width:100%; padding:0.875rem 1rem; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.95rem; font-family:var(--font-family); outline:none; transition:border-color 0.15s;"
+                               onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+
+                    <!-- LINHA 3: Categoria | Forma de Pagamento -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem;">
+                        <div class="input-group" style="margin:0;">
+                            <label>Categoria Financeira</label>
+                            <select id="cxCategoria">
+                                <optgroup label="Receitas">
+                                    <option value="faturamento">Faturamento (Serviços / Consultas)</option>
+                                </optgroup>
+                                <optgroup label="Custos Variáveis">
+                                    <option value="insumos">Insumos / Estoque</option>
+                                    <option value="terceirizadosVar">Terceirizados</option>
+                                    <option value="labTerceirizado">Laboratório</option>
+                                    <option value="comissoes">Comissões</option>
+                                </optgroup>
+                                <optgroup label="Custos Fixos">
+                                    <option value="folha">Folha de Pagamento</option>
+                                    <option value="aluguel">Aluguel</option>
+                                    <option value="agua">Água</option>
+                                    <option value="luz">Luz</option>
+                                    <option value="sistemas">Sistemas / Software</option>
+                                    <option value="telecom">Telefone / Internet</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="contabilidade">Contabilidade</option>
+                                </optgroup>
+                                <optgroup label="Outros">
+                                    <option value="outros">Outros</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin:0;">
+                            <label>Forma de Pagamento</label>
+                            <select id="cxFormaPagamento">
+                                <option value="pix">PIX</option>
+                                <option value="cartao_debito">Cartão de Débito</option>
+                                <option value="cartao_credito">Cartão de Crédito</option>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="transferencia">Transferência / TED / DOC</option>
+                                <option value="boleto">Boleto Bancário</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- LINHA 4: Observação (full-width, opcional) -->
+                    <div style="margin-bottom:1.75rem;">
+                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:0.5rem;">
+                            Observação <span style="font-weight:500; opacity:0.55; text-transform:none; letter-spacing:0;">(opcional)</span>
+                        </label>
+                        <textarea id="cxObservacao"
+                                  placeholder="Informações adicionais sobre este lançamento..."
+                                  style="width:100%; resize:vertical; min-height:64px; max-height:140px; padding:0.75rem 1rem; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.875rem; font-family:var(--font-family); line-height:1.5; outline:none; transition:border-color 0.15s;"
+                                  onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+                    </div>
+
+                    <!-- LINHA 5: Botão de ação -->
+                    <div style="display:flex; justify-content:flex-end;">
+                        <button type="submit" class="btn-primary"
+                                style="padding:0.875rem 2.5rem; font-size:0.95rem; display:flex; align-items:center; gap:0.625rem; border-radius:var(--radius-md);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Registrar Lançamento
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- LISTA DE LANÇAMENTOS + CUSTO DIÁRIO: grid 2 colunas -->
+            <div style="display:grid; grid-template-columns:1fr 340px; gap:1.5rem; align-items:start;">
+
+                <!-- Lista de lançamentos -->
+                <div class="card" style="padding:0; overflow:hidden;">
+                    <div style="padding:1rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
+                        <div>
+                            <h3 style="margin:0; font-size:0.95rem; font-weight:700;">Lançamentos</h3>
+                            <p id="cxListaSubtitulo" style="margin:0; font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Período selecionado</p>
+                        </div>
+                        <div id="cxBulkBar" style="display:none; align-items:center; gap:0.625rem;">
+                            <span id="cxBulkCount" style="font-size:0.78rem; color:var(--text-secondary); font-weight:700;"></span>
+                            <button onclick="window.marcarSelecionadosPago()" style="padding:0.35rem 0.875rem; border-radius:6px; border:1px solid rgba(48,209,88,0.35); background:rgba(48,209,88,0.08); color:#30d158; font-size:0.78rem; font-weight:700; font-family:var(--font-family); cursor:pointer;">Marcar como Pago</button>
+                            <button onclick="window.limparSelecaoCaixa()" style="padding:0.35rem 0.625rem; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:0.78rem; font-family:var(--font-family); cursor:pointer;">Cancelar</button>
+                        </div>
+                    </div>
+                    <div id="cxListaMovimentos" style="display:flex; flex-direction:column; max-height:560px; overflow-y:auto;"></div>
+                </div>
+
+                <!-- Custo Operacional por Dia -->
+                <div class="card" style="border:1px solid rgba(212,175,55,0.15);">
+                    <h3 class="text-gold" style="margin-bottom:0.75rem; font-size:0.95rem;">Custo Operacional por Dia</h3>
+                    <p style="color:var(--text-secondary); font-size:0.82rem; margin-bottom:1.25rem;">Baseado nos Custos Fixos do Balanço Financeiro consolidado.</p>
+                    <div style="display:flex; flex-direction:column; gap:0.875rem;">
+                        <div class="input-group" style="margin:0;">
+                            <label>Dias trabalhados no mês</label>
+                            <input type="number" id="cxRateioDias" value="22" oninput="window.calcRateioDiario()">
+                        </div>
+                        <button class="btn-primary" onclick="window.calcRateioDiario()" style="width:100%; padding:0.75rem;">Calcular</button>
+                        <div style="text-align:center; padding:1rem; background:rgba(255,69,58,0.06); border:1px solid rgba(255,69,58,0.15); border-radius:var(--radius-md);">
+                            <div style="font-size:0.68rem; color:var(--text-muted); letter-spacing:0.5px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">Custo por dia</div>
+                            <div id="cxRateioResultado" style="font-size:1.6rem; font-weight:800; color:#ff453a;">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Finanças (Balanço) -->
+        <section id="aba-balanco" style="display:none;">
+            <form id="balancoForm" oninput="if(window.updateLiveBalanco) window.updateLiveBalanco()">
+                
+                <!-- Card 1: Faturamento -->
+                <div class="card" style="margin-bottom: 2rem; border-top: 4px solid var(--accent-blue);">
+                    <div class="collapsible-header" onclick="pavToggle(this)">
+                        <h3 class="text-accent" style="font-size: 1.2rem; margin:0;">Faturamento e Metas</h3>
+                        <span class="collapse-icon">▾</span>
+                    </div>
+                    <div class="collapsible-body">
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Data (Dia/Mês)</label>
+                            <input type="date" id="mesReferencia" required style="font-size:1.1rem; padding:0.8rem;">
+                        </div>
+                        <div class="input-group">
+                            <label>Faturamento Real</label>
+                            <input type="number" id="faturamento" required style="font-size:1.2rem; font-weight:bold; color:var(--accent-blue);">
+                        </div>
+                        <div class="input-group">
+                            <label>Nº de Atendimentos no Mês</label>
+                            <input type="number" id="qtdAtendimentos" placeholder="Ex: 120" min="0" style="padding:0.8rem;">
+                        </div>
+                        <div class="input-group">
+                            <label>Meta de Faturamento</label>
+                            <input type="number" id="metaFaturamento" placeholder="Ex: 30000" style="padding:0.8rem;">
+                        </div>
+                        <div class="input-group">
+                            <label>Meta de Lucro Gerencial</label>
+                            <input type="number" id="metaLucro" placeholder="Ex: 8000" style="padding:0.8rem;">
+                        </div>
+                    </div>
+                    </div><!-- /collapsible-body -->
+                </div>
+
+                <!-- Card 2: Custos Variáveis -->
+                <div class="card" style="margin-bottom: 2rem; border-top: 4px solid #ff9500;">
+                    <div class="collapsible-header" onclick="pavToggle(this)">
+                        <div style="display:flex; align-items:center; gap:0.75rem; flex:1; min-width:0;">
+                            <h3 style="color:#ff9500; font-size: 1.2rem; margin:0;">Custos Variáveis <small style="color:var(--text-secondary); font-size:0.8rem; font-weight:normal;">(Sobe com as vendas)</small></h3>
+                            <span id="chip-variavel" style="display:none; padding:2px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; background:rgba(255,149,0,0.12); color:#ff9500; border:1px solid rgba(255,149,0,0.3); white-space:nowrap;"></span>
+                        </div>
+                        <span class="collapse-icon">▾</span>
+                    </div>
+                    <div class="collapsible-body">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Reembolso/Inadimplência</label><input type="number" id="reembolsoInadimplencia"></div>
+                        <div class="input-group"><label>Impostos</label><input type="number" id="impostos"></div>
+                        <div class="input-group"><label>Taxas de Cartão</label><input type="number" id="taxasCartao"></div>
+                        <div class="input-group"><label>Insumos Diários (Agulha, Seringa)</label><input type="number" id="insumos"></div>
+                        <div class="input-group"><label>Boletos de Fornecedores</label><input type="number" id="boletosFornecedores"></div>
+                        <div class="input-group"><label>Serviços Terceirizados</label><input type="number" id="terceirizadosVar"></div>
+                        <div class="input-group"><label>Laboratório Terceirizado</label><input type="number" id="labTerceirizado"></div>
+                        <div class="input-group"><label>Comissões</label><input type="number" id="comissoes"></div>
+                        <div class="input-group"><label>Plantões</label><input type="number" id="plantoes"></div>
+                        <div class="input-group"><label>Escritório e Limpeza (Var)</label><input type="number" id="escritorioLimpezaVar"></div>
+                        <div class="input-group"><label>Estorno</label><input type="number" id="estorno"></div>
+                        <div class="input-group"><label>Outros Variáveis</label><input type="number" id="outrosVariaveis"></div>
+                    </div>
+                    </div><!-- /collapsible-body -->
+                </div>
+
+                <!-- Card 3: Custos Fixos -->
+                <div class="card" style="margin-bottom: 2rem; border-top: 4px solid #ff453a;">
+                    <div class="collapsible-header" onclick="pavToggle(this)">
+                        <div style="display:flex; align-items:center; gap:0.75rem; flex:1; min-width:0;">
+                            <h3 style="color:#ff453a; font-size: 1.2rem; margin:0;">Custos Fixos <small style="color:var(--text-secondary); font-size:0.8rem; font-weight:normal;">(Abriu a porta, pagou)</small></h3>
+                            <span id="chip-fixo" style="display:none; padding:2px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; background:rgba(255,69,58,0.12); color:#ff453a; border:1px solid rgba(255,69,58,0.3); white-space:nowrap;"></span>
+                        </div>
+                        <span class="collapse-icon">▾</span>
+                    </div>
+                    <div class="collapsible-body">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Folha de Pagamento</label><input type="number" id="folha"></div>
+                        <div class="input-group"><label>Água</label><input type="number" id="agua"></div>
+                        <div class="input-group"><label>Luz</label><input type="number" id="luz"></div>
+                        <div class="input-group"><label>Sistemas/Software</label><input type="number" id="sistemas"></div>
+                        <div class="input-group"><label>Aluguel</label><input type="number" id="aluguel"></div>
+                        <div class="input-group"><label>Telefone/Internet/TV</label><input type="number" id="telecom"></div>
+                        <div class="input-group"><label>Contabilidade</label><input type="number" id="contabilidade"></div>
+                        <div class="input-group"><label>Marketing</label><input type="number" id="marketing"></div>
+                        <div class="input-group"><label>E-Social</label><input type="number" id="esocial"></div>
+                        <div class="input-group"><label>Taxas Administrativas</label><input type="number" id="taxasAdmin"></div>
+                        <div class="input-group"><label>CRMV</label><input type="number" id="crmv"></div>
+                        <div class="input-group"><label>Lixo Contaminante</label><input type="number" id="lixoContaminante"></div>
+                        <div class="input-group"><label>IPTU</label><input type="number" id="iptu"></div>
+                        <div class="input-group"><label>Limpeza Fixa</label><input type="number" id="limpezaFixa"></div>
+                        <div class="input-group"><label>Serv. Terceirizados Fixos</label><input type="number" id="terceirizadosFixos"></div>
+                        <div class="input-group"><label>Outros Fixos</label><input type="number" id="outrosFixos"></div>
+                    </div>
+                    </div><!-- /collapsible-body -->
+                </div>
+
+                <!-- Card 4: Empréstimos -->
+                <div class="card" style="margin-bottom: 2rem; border-top: 4px solid var(--accent-gold);">
+                    <div class="collapsible-header" onclick="pavToggle(this)">
+                        <h3 class="text-gold" style="font-size: 1.2rem; margin:0;">Empréstimos e Financiamentos</h3>
+                        <span class="collapse-icon">▾</span>
+                    </div>
+                    <div class="collapsible-body">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Parcela Mensal de Empréstimos</label><input type="number" id="emprestimos" placeholder="Ex: 2000"></div>
+                        <div class="input-group"><label>Descrição (opcional)</label><input type="text" id="emprestimosDesc" placeholder="Ex: Financiamento equipamentos"></div>
+                    </div>
+                    </div><!-- /collapsible-body -->
+                </div>
+
+                <!-- Resumo Inteligente do Balanço (Real-time) -->
+                <div id="balanco-live-summary" style="margin-bottom:2rem; border-radius:var(--radius-md); border:1px solid rgba(10,132,255,0.2); background:rgba(10,132,255,0.04); overflow:hidden;">
+                    <div style="padding:0.875rem 1.5rem; border-bottom:1px solid rgba(10,132,255,0.12); display:flex; align-items:center; gap:0.625rem;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue); letter-spacing:0.3px;">Prévia em tempo real</span>
+                        <span style="font-size:0.78rem; color:var(--text-muted); margin-left:0.25rem;">— atualiza conforme você preenche</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:0;">
+                        <div style="padding:1.1rem 1.5rem; border-right:1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Custos Variáveis</div>
+                            <div id="live-var" style="font-size:1.1rem; font-weight:800; color:#ff9500;">R$ 0,00</div>
+                        </div>
+                        <div style="padding:1.1rem 1.5rem; border-right:1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Custos Fixos</div>
+                            <div id="live-fix" style="font-size:1.1rem; font-weight:800; color:#ff453a;">R$ 0,00</div>
+                        </div>
+                        <div style="padding:1.1rem 1.5rem; border-right:1px solid rgba(255,255,255,0.05);">
+                            <div style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Lucro Líquido</div>
+                            <div id="live-lucro" style="font-size:1.1rem; font-weight:800; color:var(--text-primary);">R$ 0,00</div>
+                        </div>
+                        <div style="padding:1.1rem 1.5rem;" title="Faturamento mínimo para cobrir todos os custos">
+                            <div style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; display:flex; align-items:center; gap:4px;">Ponto de Equilíbrio <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+                            <div id="live-breakeven" style="font-size:1.1rem; font-weight:800; color:var(--accent-gold);">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botoes -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:1rem; margin-bottom: 2rem;">
+                    <button type="button" onclick="if(window.syncWithCaixa) window.syncWithCaixa()" style="padding:1.25rem; background:rgba(212,175,55,0.1); border:1px solid var(--accent-gold); color:var(--accent-gold); border-radius:8px; font-weight:700; cursor:pointer; font-size:1.1rem; transition: background 0.2s;" onmouseover="this.style.backgroundColor='rgba(212,175,55,0.2)'" onmouseout="this.style.backgroundColor='rgba(212,175,55,0.1)'">Sincronizar com Caixa Pagos</button>
+                    <button type="submit" class="btn-primary" style="padding:1.25rem; font-size:1.1rem; box-shadow: 0 4px 15px rgba(10,132,255,0.3);">Salvar e Consolidar Balanço</button>
+                </div>
+            </form>
+        </section>
+
+
+
+
+        <!-- Catálogo e Precificação -->
+        <section id="aba-catalogo" style="display:none;">
+            
+            <!-- Abas Internas da Precificação -->
+            <div style="display:flex; gap:10px; margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:1rem; overflow-x:auto;">
+                <button onclick="window.switchCatTab('novo')" id="btn-cat-novo" style="padding:0.8rem 1.5rem; border-radius:8px; font-weight:700; background:rgba(212,175,55,0.15); border:1px solid var(--accent-gold); color:var(--accent-gold); cursor:pointer; flex-shrink:0;">Nova Precificação & Combos</button>
+                <button onclick="window.switchCatTab('salvos')" id="btn-cat-salvos" style="padding:0.8rem 1.5rem; border-radius:8px; font-weight:700; background:transparent; border:1px solid rgba(255,255,255,0.1); color:var(--text-secondary); cursor:pointer; flex-shrink:0;">Ver Serviços Cadastrados</button>
+            </div>
+
+            <!-- TAB 1: Calculadora de Precificação -->
+            <div id="cat-tab-novo" class="card" style="margin-bottom: 2rem;">
+                <h3 class="text-accent" style="margin-bottom: 1.5rem;">Calculadora de Precificação Detalhada</h3>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Nome do Serviço / Pacote</label>
+                        <input type="text" id="calc-nome" placeholder="Ex: Consulta Domiciliar">
+                    </div>
+                    <div class="input-group">
+                        <label class="text-gold">Preço Mínimo (Seu Preço R$)</label>
+                        <input type="number" id="calc-preco" placeholder="Ex: 170.00" oninput="window.updateCat()">
+                    </div>
+                    <div class="input-group">
+                        <label>Preço Médio Concorrência (R$)</label>
+                        <input type="number" id="calc-concorrencia" placeholder="Opcional" oninput="window.updateCat()">
+                    </div>
+                </div>
+                
+                <div style="margin-top:1.5rem; margin-bottom:1.5rem; padding:1rem; border:1px solid rgba(255,255,255,0.1); border-radius:8px; display:flex; align-items:flex-start; gap:10px; background:rgba(0,0,0,0.2);">
+                    <input type="checkbox" id="calc-is-combo" style="width:18px; height:18px; margin-top:2px;" onchange="window.toggleComboMode(this.checked)">
+                    <div>
+                        <label for="calc-is-combo" style="margin:0; cursor:pointer; color:var(--text-secondary); font-weight:700;">Venda de Pacote/Combo Casado</label>
+                        <p style="margin:0; font-size:0.75rem; color:var(--text-secondary);">Some os custos diretos de vários produtos/serviços (ex: Vacina + Vermífugo) para calcular a margem global.</p>
+                    </div>
+                </div>
+                
+                <!-- COMBO BUILDER -->
+                <div id="calc-combo-builder" style="display:none; padding:1.25rem 1.5rem; background:rgba(212,175,55,0.04); border:1px solid rgba(212,175,55,0.25); border-radius:var(--radius-md); margin-bottom:2rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+                        <h4 style="color:var(--accent-gold); margin:0; font-size:0.95rem;">Itens do Pacote</h4>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">custo de aquisição de cada item</span>
+                    </div>
+
+                    <!-- Cabeçalho de colunas -->
+                    <div style="display:grid; grid-template-columns:2fr 1fr 72px auto; gap:8px; margin-bottom:6px; padding:0 2px;">
+                        <span style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; padding-left:12px;">Nome do Item</span>
+                        <span style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; padding-left:12px;">Custo Unitário</span>
+                        <span style="font-size:0.65rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; text-align:center;">Qtd</span>
+                        <span></span>
+                    </div>
+
+                    <div id="combo-items-list" style="display:flex; flex-direction:column; gap:8px; margin-bottom:1rem;">
+                        <!-- Injetado por JS -->
+                    </div>
+
+                    <button type="button" onclick="window.addComboItem()" style="background:rgba(212,175,55,0.08); border:1px solid rgba(212,175,55,0.3); color:var(--accent-gold); padding:8px 16px; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.82rem; display:inline-flex; align-items:center; gap:6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Adicionar Item ao Pacote
+                    </button>
+
+                    <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.07); display:flex; justify-content:space-between; align-items:center;">
+                        <span style="color:var(--text-secondary); font-size:0.82rem;">Custo Total dos Insumos do Pacote:</span>
+                        <span id="combo-total-cost" style="font-size:1.2rem; font-weight:800; color:#ff453a;">R$ 0,00</span>
+                    </div>
+
+                    <!-- Nota explicativa: o que continua ativo -->
+                    <div style="margin-top:0.875rem; padding:0.75rem 1rem; background:rgba(10,132,255,0.05); border:1px solid rgba(10,132,255,0.15); border-radius:var(--radius-sm); display:flex; align-items:center; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Os campos de <b style="color:var(--text-primary);">Comissão</b> e <b style="color:var(--text-primary);">Custos Extras</b> continuam ativos e são somados normalmente ao custo total.
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <!-- Custos Percentuais -->
+                    <div>
+                        <h4 style="margin-bottom: 1rem; color:var(--text-secondary);">Custos Relativos (%)</h4>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Custo Fixo (%) <span id="cf-auto-badge" style="font-size:0.65rem; color:var(--accent-gold); display:none;">• auto</span></label><input type="number" id="calc-cf-pct" value="15" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Taxa Cartão/PIX (%)</label><input type="number" id="calc-taxa-pct" value="4.8" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Imposto (%)</label><input type="number" id="calc-imp-pct" value="6" oninput="window.updateCat()"></div>
+                    </div>
+
+                    <!-- Custos Diretos (R$) — insumos ficam desabilitados no combo, comissões ficam ativas -->
+                    <div>
+                        <h4 id="dir-costs-header" style="margin-bottom: 1rem; color:var(--text-secondary);">Custos Diretos (R$)</h4>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Insumo Principal</label><input type="number" id="calc-ins-prin" value="0" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Insumos Medicações</label><input type="number" id="calc-ins-med" value="0" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Insumos Gerais</label><input type="number" id="calc-ins-geral" value="0" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Alimentação / Deteriorização</label><input type="number" id="calc-ali-det" value="0" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:0.75rem;"><label>Comissão Vet <span style="font-size:0.62rem; color:var(--color-success); font-weight:700; opacity:0.8;">sempre ativo</span></label><input type="number" id="calc-com-vet" value="0" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Comissão Extra (Recepção) <span style="font-size:0.62rem; color:var(--color-success); font-weight:700; opacity:0.8;">sempre ativo</span></label><input type="number" id="calc-com-ext" value="0" oninput="window.updateCat()"></div>
+                    </div>
+
+                    <!-- Custos Extras (R$) — sempre ativos -->
+                    <div>
+                        <h4 style="margin-bottom: 1rem; color:var(--text-secondary);">Custos Extras (R$) <span style="font-size:0.62rem; color:var(--color-success); font-weight:700; opacity:0.7;">sempre ativos</span></h4>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Deslocamento</label><input type="number" id="calc-ext-des" value="0" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Petisco / Gaze / Avental</label><input type="number" id="calc-ext-kit" value="0" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Outros Extras</label><input type="number" id="calc-ext-out" value="0" oninput="window.updateCat()"></div>
+                    </div>
+                </div>
+
+                <div id="calc-result" style="margin-top: 3rem; padding: 3rem 2rem; background: linear-gradient(135deg, rgba(20,20,20,1) 0%, rgba(40,40,40,1) 100%); border-radius: 16px; border: 1px solid rgba(212,175,55,0.3); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <h3 style="color:var(--text-secondary); letter-spacing:1px;">Margem de Lucro Projetada</h3>
+                    <div id="calc-lucro-val" style="font-size: 4rem; font-weight: 800; margin: 1rem 0; text-shadow: 0 0 20px rgba(212,175,55,0.2);">0%</div>
+                    <div id="calc-lucro-status" style="font-size: 1.3rem; font-weight: 700; letter-spacing: 2px;">AGUARDANDO VALORES</div>
+                    <div style="margin-top: 1rem; color: var(--text-secondary); font-size:1.1rem;" id="calc-lucro-rs">Lucro Líquido: R$ 0.00</div>
+                    <button onclick="window.salvarServico()" class="btn-primary" style="margin-top:2rem; padding:1.2rem 3rem; font-size:1.1rem; box-shadow: 0 4px 15px rgba(10,132,255,0.3);">Salvar Precificação no Catálogo</button>
+                </div>
+            </div>
+
+            <!-- TAB 2: Serviços Salvos -->
+            <div id="cat-tab-salvos" class="card" style="margin-bottom: 2rem; display:none;">
+                <h3 style="margin-bottom:1rem; color:var(--accent-gold);">Serviços Salvos e Precificados</h3>
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:1.5rem;">Gerencie as margens dos serviços que já foram cadastrados no catálogo da clínica.</p>
+                <div id="servicos-salvos"></div>
+            </div>
+        </section>
+
+        <!-- Relatórios -->
+        <section id="aba-relatorios" style="display:none;">
+            <!-- Header -->
+            <div style="margin-bottom:1.5rem;">
+                <h2 class="text-accent" style="margin:0 0 4px 0;">Central de Relatórios</h2>
+                <p style="color:var(--text-secondary); margin:0; font-size:0.875rem;">Histórico, exportações e inteligência analítica consolidada.</p>
+            </div>
+
+            <!-- Sub-tab navigation -->
+            <div style="display:flex; gap:3px; margin-bottom:1.5rem; background:rgba(0,0,0,0.3); border-radius:10px; padding:4px; flex-wrap:wrap;">
+                <button id="rel-tab-visao-geral" onclick="window.switchRelTab('visao-geral')"
+                    style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:var(--accent-blue); color:#fff;">Visão Geral</button>
+                <button id="rel-tab-fluxo-caixa" onclick="window.switchRelTab('fluxo-caixa')"
+                    style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Fluxo de Caixa</button>
+                <button id="rel-tab-dre" onclick="window.switchRelTab('dre')"
+                    style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">DRE</button>
+                <button id="rel-tab-custos" onclick="window.switchRelTab('custos')"
+                    style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Custos</button>
+                <button id="rel-tab-servicos" onclick="window.switchRelTab('servicos')"
+                    style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Serviços</button>
+                <button id="rel-tab-exportacao" onclick="window.switchRelTab('exportacao')"
+                    style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Exportação</button>
+            </div>
+
+            <!-- Tab panels (content rendered by JS) -->
+            <div id="rel-panel-visao-geral"></div>
+            <div id="rel-panel-fluxo-caixa" style="display:none;"></div>
+            <div id="rel-panel-dre" style="display:none;"></div>
+            <div id="rel-panel-custos" style="display:none;"></div>
+            <div id="rel-panel-servicos" style="display:none;"></div>
+            <div id="rel-panel-exportacao" style="display:none;"></div>
+        </section>
+
+        <!-- Simulador What-If -->
+        <section id="aba-simulacao" style="display:none;">
+            <div class="card">
+                <h3 class="text-accent" style="margin-bottom:1.5rem;">Simulador de Cenários (What-If)</h3>
+                <p style="color:var(--text-secondary); margin-bottom:2rem; font-size:0.9rem;">Ajuste os sliders para projetar cenários alternativos baseados nos seus últimos dados.</p>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:2rem;">
+                    <div class="input-group">
+                        <label>Faturamento Realizado/Previsto (R$)</label>
+                        <input type="number" id="sim-fat" value="0" oninput="window.runSimulation()" style="font-size:1.5rem; font-weight:bold; color:var(--accent-blue); padding:1rem; border-radius:8px;">
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button onclick="window.adjustSimValue('sim-fat', 'pct', -10)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">-10%</button>
+                            <button onclick="window.adjustSimValue('sim-fat', 'pct', 10)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">+10%</button>
+                            <button onclick="window.adjustSimValue('sim-fat', 'abs', 1000)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(10,132,255,0.15); color:var(--accent-blue); border:1px solid rgba(10,132,255,0.3); cursor:pointer;">+ R$ 1k</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Custos Fixos Totais (R$)</label>
+                        <input type="number" id="sim-fix" value="0" oninput="window.runSimulation()" style="font-size:1.5rem; font-weight:bold; color:#ff453a; padding:1rem; border-radius:8px;">
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button onclick="window.adjustSimValue('sim-fix', 'pct', -5)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">-5%</button>
+                            <button onclick="window.adjustSimValue('sim-fix', 'pct', 5)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">+5%</button>
+                            <button onclick="window.adjustSimValue('sim-fix', 'abs', -500)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(255,69,58,0.15); color:#ff453a; border:1px solid rgba(255,69,58,0.3); cursor:pointer;">- R$ 500</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Custos Variáveis Totais (R$)</label>
+                        <input type="number" id="sim-var" value="0" oninput="window.runSimulation()" style="font-size:1.5rem; font-weight:bold; color:#ffd60a; padding:1rem; border-radius:8px;">
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button onclick="window.adjustSimValue('sim-var', 'pct', -5)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">-5%</button>
+                            <button onclick="window.adjustSimValue('sim-var', 'pct', 5)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">+5%</button>
+                            <button onclick="window.adjustSimValue('sim-var', 'abs', -500)" style="flex:1; padding:8px; border-radius:6px; font-weight:bold; font-size:0.8rem; background:rgba(255,214,10,0.15); color:#ffd60a; border:1px solid rgba(255,214,10,0.3); cursor:pointer;">- R$ 500</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="sim-result" style="margin-top:2.5rem; display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1rem;"></div>
+                <div style="margin-top:2rem;"><canvas id="sim-chart" style="max-height:250px;"></canvas></div>
+            </div>
+
+            <div class="card" style="margin-top:2rem;">
+                <h3 class="text-gold" style="margin-bottom:1.5rem;">Simulador RH (Custo de Contratação CLT)</h3>
+                <p style="color:var(--text-secondary); margin-bottom:1.5rem; font-size:0.9rem;">Descubra o custo real mensal da clínica ao assinar a carteira (CLT) com provisões.</p>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:2rem;">
+                    <div>
+                        <div class="input-group">
+                            <label>Salário Bruto na Carteira (R$)</label>
+                            <input type="number" id="rh-salario" placeholder="Ex: 2500" oninput="window.simularRH()">
+                        </div>
+                        <div class="input-group" style="margin-top:1rem;">
+                            <label>Tributação da Empresa</label>
+                            <select id="rh-tributacao" onchange="window.simularRH()" style="width:100%; padding:0.8rem; border-radius:8px; background:var(--bg-card); color:#fff; border:1px solid var(--border);">
+                                <option value="simples">Simples Nacional (Anexos Clínicas)</option>
+                                <option value="lucro">Lucro Presumido (INSS Patronal 20%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="rh-resultado" style="padding:2.5rem 1.5rem; background:linear-gradient(145deg, rgba(255,69,58,0.1) 0%, rgba(20,20,20,1) 100%); border-radius:16px; border:1px solid rgba(255,69,58,0.3); text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                        <div style="font-size:0.9rem; color:var(--text-secondary); font-weight:800; margin-bottom:1rem; letter-spacing:1px;">CUSTO TOTAL MENSAL (EMPRESA)</div>
+                        <div style="font-size:3.5rem; font-weight:800; color:#ff453a; text-shadow: 0 0 20px rgba(255,69,58,0.4);" id="rh-custo-total">R$ 0,00</div>
+                        <div style="margin-top:1.5rem; font-size:1rem; color:var(--text-secondary); line-height:1.6;" id="rh-detalhes">
+                            Aguardando valor do salário base...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Configurações -->
+        <section id="aba-config" style="display:none;">
+            <!-- Card de Status da Assinatura -->
+            <div id="config-subscription-card" class="card" style="margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+                    <div>
+                        <h3 style="margin-bottom:0.25rem;">Minha Assinatura</h3>
+                        <p style="color:var(--text-secondary); font-size:0.85rem;">Status atual do seu plano PAVE.</p>
+                    </div>
+                    <a href="planos.html" id="cfg-sub-upgrade-btn" style="display:none; background:linear-gradient(135deg,#0a84ff,#5ac8fa); color:#fff; padding:10px 20px; border-radius:10px; font-weight:700; font-size:0.85rem; text-decoration:none; white-space:nowrap;">Fazer Upgrade</a>
+                </div>
+                <div id="cfg-sub-body" style="margin-top:1.25rem; display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;">
+                    <!-- Preenchido por renderConfig() -->
+                    <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:14px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-secondary); font-weight:700; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;">Plano</div>
+                        <div id="cfg-sub-plan" style="font-size:1.05rem; font-weight:800; color:var(--accent-gold);">—</div>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:14px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-secondary); font-weight:700; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;">Status</div>
+                        <div id="cfg-sub-status" style="font-size:1.05rem; font-weight:800;">—</div>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:14px; text-align:center;">
+                        <div style="font-size:0.7rem; color:var(--text-secondary); font-weight:700; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;">Dias Restantes</div>
+                        <div id="cfg-sub-days" style="font-size:1.05rem; font-weight:800; color:var(--accent-blue);">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banner de Modo Demo -->
+            <div id="config-demo-banner" style="display:none; grid-column:1/-1; padding:1rem 1.5rem; background:rgba(255,214,10,0.08); border:1px solid rgba(255,214,10,0.3); border-radius:14px; margin-bottom:1.5rem; justify-content:space-between; align-items:center;">
+                <div>
+                    <span style="font-weight:700; color:var(--accent-gold);">Modo Demonstração Ativo</span>
+                    <span style="font-size:0.85rem; color:var(--text-secondary); margin-left:1rem;">Os dados exibidos são fictícios para fins de demonstração.</span>
+                </div>
+                <button onclick="window.clearDemoData()" style="background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.3); color:#ff453a; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.8rem;">Limpar Dados Demo</button>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+
+                <!-- Card 1: Perfil da Clínica -->
+                <div class="card">
+                    <h3 style="margin-bottom:1.5rem;">Perfil da Clínica</h3>
+                    <div style="display:flex; flex-direction:column; gap:1rem;">
+                        <div class="input-group">
+                            <label>Nome da Clínica / Estabelecimento</label>
+                            <input type="text" id="cfg-nome" placeholder="Ex: Clínica Veterinária Exemplo">
+                        </div>
+                        <div class="input-group">
+                            <label>Responsável Técnico (Veterinário)</label>
+                            <input type="text" id="cfg-resp" placeholder="Dr(a). Nome Completo">
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div class="input-group">
+                                <label>CNPJ</label>
+                                <input type="text" id="cfg-cnpj" placeholder="00.000.000/0001-00" maxlength="18">
+                            </div>
+                            <div class="input-group">
+                                <label>CRMV</label>
+                                <input type="text" id="cfg-crmv" placeholder="Ex: CRMV-BA 12345">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                            <div class="input-group">
+                                <label>Telefone / WhatsApp</label>
+                                <input type="text" id="cfg-tel" placeholder="(00) 90000-0000">
+                            </div>
+                            <div class="input-group">
+                                <label>Regime Tributário</label>
+                                <select id="cfg-regime" style="background:var(--bg-card); color:var(--text-primary); border:1px solid var(--border); border-radius:8px; padding:12px; font-family:inherit; font-size:0.9rem;">
+                                    <option value="simples">Simples Nacional</option>
+                                    <option value="lucro_presumido">Lucro Presumido</option>
+                                    <option value="lucro_real">Lucro Real</option>
+                                    <option value="mei">MEI</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Endereço (opcional)</label>
+                            <input type="text" id="cfg-end" placeholder="Rua, número, cidade – Estado">
+                        </div>
+                        <button class="btn-primary" onclick="window.salvarConfiguracoes(this)" style="margin-top:0.5rem;">Salvar Perfil</button>
+                    </div>
+                </div>
+
+                <!-- Card 2: Divisão do Lucro -->
+                <div class="card">
+                    <h3 style="margin-bottom:0.5rem;">Divisão do Lucro Gerencial</h3>
+                    <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:1.5rem;">Configure como o lucro líquido é distribuído no dashboard. A soma deve ser 100%.</p>
+                    <div style="display:flex; flex-direction:column; gap:1rem;">
+                        <div class="input-group">
+                            <label style="display:flex; justify-content:space-between;"><span>Pró-Labore (Retirada do Sócio)</span><span id="lbl-proLabore" style="color:var(--accent-gold); font-weight:700;">50%</span></label>
+                            <input type="range" id="cfg-proLabore" min="0" max="100" step="5" value="50" oninput="window.updateDivisaoPreview()" style="width:100%; accent-color:var(--accent-gold);">
+                        </div>
+                        <div class="input-group">
+                            <label style="display:flex; justify-content:space-between;"><span>Reinvestimento</span><span id="lbl-invest" style="color:var(--accent-blue); font-weight:700;">30%</span></label>
+                            <input type="range" id="cfg-invest" min="0" max="100" step="5" value="30" oninput="window.updateDivisaoPreview()" style="width:100%; accent-color:var(--accent-blue);">
+                        </div>
+                        <div class="input-group">
+                            <label style="display:flex; justify-content:space-between;"><span>Reserva de Emergência</span><span id="lbl-reserva" style="color:#30d158; font-weight:700;">20%</span></label>
+                            <input type="range" id="cfg-reserva" min="0" max="100" step="5" value="20" oninput="window.updateDivisaoPreview()" style="width:100%; accent-color:#30d158;">
+                        </div>
+                        <div id="divisao-status" style="padding:12px; border-radius:10px; text-align:center; font-weight:700; font-size:0.9rem; background:rgba(48,209,88,0.1); border:1px solid rgba(48,209,88,0.3); color:#30d158;">
+                            Total: 100% — Distribuição válida
+                        </div>
+                        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:0.5rem;">
+                            <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:14px; text-align:center;">
+                                <div style="font-size:0.7rem; color:var(--text-secondary); font-weight:700; margin-bottom:6px;">PRÓ-LABORE</div>
+                                <div id="prev-proLabore" style="font-size:1.1rem; font-weight:800; color:var(--accent-gold);">50%</div>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:14px; text-align:center;">
+                                <div style="font-size:0.7rem; color:var(--text-secondary); font-weight:700; margin-bottom:6px;">REINVESTIMENTO</div>
+                                <div id="prev-invest" style="font-size:1.1rem; font-weight:800; color:var(--accent-blue);">30%</div>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.3); border-radius:10px; padding:14px; text-align:center;">
+                                <div style="font-size:0.7rem; color:var(--text-secondary); font-weight:700; margin-bottom:6px;">RESERVA</div>
+                                <div id="prev-reserva" style="font-size:1.1rem; font-weight:800; color:#30d158;">20%</div>
+                            </div>
+                        </div>
+                        <button class="btn-primary" id="btn-salvar-divisao" onclick="window.salvarDivisao(this)" style="margin-top:0.5rem;">Salvar Divisão</button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Dados de Demonstração -->
+                <div class="card" style="grid-column:1/-1;">
+                    <h3 style="margin-bottom:0.5rem;">Dados de Demonstração</h3>
+                    <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:1.5rem;">Carregue uma clínica fictícia com dados reais para explorar todas as funcionalidades do sistema sem precisar preencher nada.</p>
+                    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                        <button class="btn-primary" onclick="window.loadDemoData(this)">Carregar Dados de Demonstração</button>
+                        <button onclick="window.clearDemoData()" style="background:rgba(255,69,58,0.1); border:1px solid rgba(255,69,58,0.3); color:#ff453a; padding:12px 24px; border-radius:10px; cursor:pointer; font-weight:700;">Limpar Todos os Dados</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Banner de Trial -->
+    <div id="trial-banner" style="display:none; position:fixed; top:52px; left:0; right:0; z-index:9000; background:var(--brand-surface); border-bottom:1px solid var(--brand-border); padding:0.5rem 1.5rem; align-items:center; justify-content:center; gap:1rem;">
+        <span id="trial-banner-text" style="font-size:0.82rem; font-weight:600; color:var(--brand-primary);"></span>
+        <a href="planos.html" style="background:var(--brand-cta); color:#fff; padding:3px 12px; border-radius:99px; font-size:0.75rem; font-weight:700; text-decoration:none; white-space:nowrap;">Assinar agora</a>
+        <button onclick="document.getElementById('trial-banner').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-left:0.5rem; display:flex; align-items:center; padding:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+
+    <!-- Gate de Assinatura Expirada (cobre o app inteiro) -->
+    <div id="subscription-gate" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); align-items:center; justify-content:center; flex-direction:column; gap:0;">
+        <div style="max-width:460px; width:90%; background:var(--bg-card); border:1px solid var(--border); border-radius:24px; padding:2.5rem 2rem; text-align:center; box-shadow:0 40px 80px rgba(0,0,0,0.6);">
+            <div style="width:64px; height:64px; background:rgba(255,69,58,0.12); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 1.5rem;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff453a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:0.75rem; color:var(--text-primary);" id="gate-title">Acesso Bloqueado</h2>
+            <p style="color:var(--text-secondary); font-size:0.9rem; line-height:1.6; margin-bottom:2rem;" id="gate-message">Seu período de trial expirou. Escolha um plano para continuar usando o PAVE.</p>
+            <a href="planos.html" style="display:block; background:var(--brand-cta); color:#fff; padding:14px 24px; border-radius:8px; font-weight:700; font-size:1rem; text-decoration:none; margin-bottom:0.75rem;">Ver Planos e Assinar</a>
+            <button onclick="Auth.logout().then(()=>window.location.href='login.html')" style="background:transparent; border:none; color:var(--text-muted); font-size:0.8rem; cursor:pointer; text-decoration:underline;">Sair da conta</button>
+        </div>
+    </div>
+
+    <!-- Banner de Notificação de Resumo (aparece ao abrir) -->
+    <div id="resumo-banner" style="display:none; position:fixed; bottom:24px; right:24px; z-index:9999; max-width:360px; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:1.25rem 1.5rem; box-shadow:0 20px 60px rgba(0,0,0,0.5); animation: slideInRight 0.4s ease;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+            <div>
+                <div id="resumo-banner-title" style="font-weight:800; font-size:0.95rem; margin-bottom:6px;"></div>
+                <div id="resumo-banner-body" style="font-size:0.82rem; color:var(--text-secondary); line-height:1.5;"></div>
+            </div>
+            <button onclick="document.getElementById('resumo-banner').style.display='none'" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; flex-shrink:0; margin-top:-2px; display:flex; align-items:center;" title="Fechar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div style="margin-top:1rem; display:flex; gap:8px;">
+            <button id="resumo-banner-cta" class="btn-primary" style="flex:1; padding:8px 12px; font-size:0.82rem;"></button>
+            <button onclick="document.getElementById('resumo-banner').style.display='none'" style="padding:8px 12px; background:transparent; border:1px solid var(--border); color:var(--text-secondary); border-radius:8px; cursor:pointer; font-size:0.82rem;">Fechar</button>
+        </div>
+    </div>
+
+    <script>
+    // ── Dark Mode ──────────────────────────────────────────────
+    (function() {
+        const saved = localStorage.getItem('pav_theme') || 'light';
+        if (saved === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('theme-icon-sun').style.display  = 'none';
+            document.getElementById('theme-icon-moon').style.display = '';
+        }
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const next   = isDark ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('pav_theme', next);
+            document.getElementById('theme-icon-sun').style.display  = isDark ? '' : 'none';
+            document.getElementById('theme-icon-moon').style.display = isDark ? 'none' : '';
+        });
+    })();
+
+    // ── Sidebar Toggle ─────────────────────────────────────────
+    document.getElementById('sidebar-toggle').addEventListener('click', function() {
+        document.body.classList.toggle('sidebar-collapsed');
+        const collapsed = document.body.classList.contains('sidebar-collapsed');
+        localStorage.setItem('pav_sidebar_collapsed', collapsed ? '1' : '0');
+    });
+    if (localStorage.getItem('pav_sidebar_collapsed') === '1') {
+        document.body.classList.add('sidebar-collapsed');
+    }
+
+    // ── Bottom Nav ─────────────────────────────────────────────
+    document.querySelectorAll('.bottom-nav-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const tabId = this.getAttribute('data-tab');
+            if (tabId && window.showTab) {
+                window.showTab(tabId.replace('tab-', ''));
+            } else if (tabId) {
+                document.getElementById(tabId)?.click();
+            }
+            document.querySelectorAll('.bottom-nav-btn').forEach(function(b) { b.classList.remove('active'); });
+            this.classList.add('active');
+        });
+    });
+
+    // ── Topbar: clinic name + avatar ───────────────────────────
+    (function() {
+        const nome = localStorage.getItem('pav_brand_nome');
+        if (nome) {
+            const el = document.getElementById('topbar-clinic-name');
+            if (el) el.textContent = nome;
+        }
+        const user = JSON.parse(localStorage.getItem('pav_user') || '{}');
+        const av   = document.getElementById('user-avatar-btn');
+        if (av && user.email) {
+            av.textContent = user.email.charAt(0).toUpperCase();
+            av.title = user.email;
+        }
+    })();
+    </script>
+
+    <script src="js/calculos.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/caixa-premium.js"></script>
+    <script src="js/dashboard-premium.js"></script>
+    <script src="js/catalogo-premium.js"></script>
+    <script src="js/simulador-premium.js"></script>
+    <script src="js/configuracoes-premium.js"></script>
+    <script src="js/tabs-premium.js"></script>
+
+    <script>
+    // ── PAVE: Inicialização, Auth Guard, Trial Banner, Sync ──
+    (async function paveInit() {
+
+        // 0) Modo Visitante — acesso sem conta, dados de demonstração
+        if (localStorage.getItem('pav_guest_mode') === 'true') {
+            // Ativar também o demo_mode para que configuracoes-premium saiba
+            localStorage.setItem('pav_demo_mode', 'true');
+
+            // Banner de aviso
+            const banner   = document.getElementById('trial-banner');
+            const bannerTx = document.getElementById('trial-banner-text');
+            if (banner && bannerTx) {
+                bannerTx.innerHTML =
+                    'Você está em <strong>Modo Visitante</strong> — dados fictícios de demonstração. ' +
+                    '<a href="login.html#register" style="color:var(--brand-primary);font-weight:700;text-decoration:underline;">Criar conta grátis</a> ' +
+                    'ou <a href="login.html" style="color:var(--brand-primary);font-weight:700;text-decoration:underline;">fazer login</a>.';
+                banner.style.display = 'flex';
+            }
+
+            // Preencher topbar com identidade de visitante
+            const elClinic = document.getElementById('topbar-clinic-name');
+            if (elClinic) elClinic.textContent = 'Clínica Demo';
+            const elAvatar = document.getElementById('user-avatar-btn');
+            if (elAvatar) { elAvatar.textContent = 'V'; elAvatar.title = 'Visitante'; }
+
+            // Logout do modo visitante: limpa flags e volta ao login
+            const btnLogout = document.getElementById('btn-logout');
+            if (btnLogout) {
+                btnLogout.addEventListener('click', function() {
+                    localStorage.removeItem('pav_guest_mode');
+                    localStorage.removeItem('pav_demo_mode');
+                    window.location.href = 'login.html';
+                });
+            }
+            return; // pular verificação de sessão Supabase
+        }
+
+        // 1) Verificar sessão Supabase real
+        const session = await Auth.getSession();
+
+        if (!session) {
+            // Sem sessão ativa → limpa cache local e vai para login
+            localStorage.removeItem('pav_user');
+            localStorage.removeItem('pav_org_id');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Garante que o cache local está atualizado
+        if (!Auth.getUser()) {
+            localStorage.setItem('pav_user', JSON.stringify({
+                id:    session.user.id,
+                email: session.user.email
+            }));
+        }
+
+        // 2) Verificar assinatura — trial banner OU gate de bloqueio
+        try {
+            const sub = await SubscriptionAPI.getStatus();
+            // Salvar no window para uso nas abas (Configurações)
+            window._pavSubStatus = sub;
+
+            const banner   = document.getElementById('trial-banner');
+            const bannerTx = document.getElementById('trial-banner-text');
+            const gate     = document.getElementById('subscription-gate');
+            const gateMsg  = document.getElementById('gate-message');
+            const gateTitle = document.getElementById('gate-title');
+
+            const isExpired = (
+                sub.status === 'expired' ||
+                sub.status === 'canceled' ||
+                sub.status === 'past_due' ||
+                (sub.status === 'trial' && sub.daysLeft === 0)
+            );
+
+            if (isExpired) {
+                // Mostrar gate de bloqueio — impede uso do app
+                if (gate) {
+                    if (sub.status === 'past_due') {
+                        gateTitle.textContent = 'Pagamento em Atraso';
+                        gateMsg.textContent = 'Há uma fatura em aberto na sua assinatura. Regularize para continuar usando o PAVE.';
+                    } else if (sub.status === 'canceled') {
+                        gateTitle.textContent = 'Assinatura Cancelada';
+                        gateMsg.textContent = 'Sua assinatura foi cancelada. Escolha um plano para reativar o acesso ao PAVE.';
+                    } else {
+                        gateTitle.textContent = 'Trial Expirado';
+                        gateMsg.textContent = 'Seu período gratuito de 14 dias encerrou. Assine um plano para continuar usando todas as funcionalidades do PAVE.';
+                    }
+                    gate.style.display = 'flex';
+                }
+            } else if (sub.status === 'trial' && sub.daysLeft !== undefined && banner && bannerTx) {
+                // Trial ativo — mostrar banner informativo (não bloqueia)
+                bannerTx.textContent = sub.daysLeft > 3
+                    ? `Você tem ${sub.daysLeft} dia${sub.daysLeft !== 1 ? 's' : ''} de trial gratuito. Assine para manter o acesso.`
+                    : `Apenas ${sub.daysLeft} dia${sub.daysLeft !== 1 ? 's' : ''} de trial restante${sub.daysLeft !== 1 ? 's' : ''}! Assine agora para não perder o acesso.`;
+                banner.style.display = 'flex';
+            }
+        } catch (e) { /* não bloqueia o app */ }
+
+        // 3) Sincronizar dados locais com Supabase (primeira vez)
+        try {
+            await SyncHelper.run();
+        } catch (e) { /* não bloqueia o app */ }
+
+        // 4) Ouvir mudanças de auth (logout em outra aba, token expirado)
+        Auth.onAuthStateChange((event) => {
+            if (event === 'SIGNED_OUT') window.location.href = 'login.html';
+        });
+
+        // 5) Botão de logout da sidebar
+        const btnLogout = document.getElementById('btn-logout');
+        if (btnLogout) {
+            btnLogout.addEventListener('click', async function() {
+                await Auth.logout();
+                window.location.href = 'login.html';
+            });
+        }
+    })();
+    </script>
+
+</body>
+
+</html>
