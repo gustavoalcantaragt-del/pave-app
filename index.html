@@ -1053,40 +1053,6 @@
     // ── PAVE: Inicialização, Auth Guard, Trial Banner, Sync ──
     (async function paveInit() {
 
-        // 0) Modo Visitante — acesso sem conta, dados de demonstração
-        if (localStorage.getItem('pav_guest_mode') === 'true') {
-            // Ativar também o demo_mode para que configuracoes-premium saiba
-            localStorage.setItem('pav_demo_mode', 'true');
-
-            // Banner de aviso
-            const banner   = document.getElementById('trial-banner');
-            const bannerTx = document.getElementById('trial-banner-text');
-            if (banner && bannerTx) {
-                bannerTx.innerHTML =
-                    'Você está em <strong>Modo Visitante</strong> — dados fictícios de demonstração. ' +
-                    '<a href="login.html#register" style="color:var(--brand-primary);font-weight:700;text-decoration:underline;">Criar conta grátis</a> ' +
-                    'ou <a href="login.html" style="color:var(--brand-primary);font-weight:700;text-decoration:underline;">fazer login</a>.';
-                banner.style.display = 'flex';
-            }
-
-            // Preencher topbar com identidade de visitante
-            const elClinic = document.getElementById('topbar-clinic-name');
-            if (elClinic) elClinic.textContent = 'Clínica Demo';
-            const elAvatar = document.getElementById('user-avatar-btn');
-            if (elAvatar) { elAvatar.textContent = 'V'; elAvatar.title = 'Visitante'; }
-
-            // Logout do modo visitante: limpa flags e volta ao login
-            const btnLogout = document.getElementById('btn-logout');
-            if (btnLogout) {
-                btnLogout.addEventListener('click', function() {
-                    localStorage.removeItem('pav_guest_mode');
-                    localStorage.removeItem('pav_demo_mode');
-                    window.location.href = 'login.html';
-                });
-            }
-            return; // pular verificação de sessão Supabase
-        }
-
         // 1) Verificar sessão Supabase real
         const session = await Auth.getSession();
 

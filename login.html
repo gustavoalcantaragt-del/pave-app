@@ -612,14 +612,6 @@
                 <a href="landing.html">← Voltar para o site</a>
             </div>
 
-            <!-- Modo Visitante -->
-            <div class="guest-demo-wrap">
-                <button class="guest-demo-btn" onclick="enterGuestMode()">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                    Explorar como visitante
-                </button>
-                <p class="guest-demo-note">Dados fictícios · Sem cadastro · Sem cartão</p>
-            </div>
 
         </div>
     </div>
@@ -629,17 +621,5 @@
     <script src="js/calculos.js"></script>
     <script src="js/api.js"></script>
     <script src="js/login.js"></script>
-    <script>
-    function enterGuestMode() {
-        localStorage.setItem('pav_guest_mode', 'true');
-        localStorage.setItem('pav_demo_mode', 'true');
-        // Pré-popular dados de demo se ainda não existirem
-        if (!localStorage.getItem('pav_brand_nome')) {
-            localStorage.setItem('pav_brand_nome', 'Clínica Vet Demo');
-            localStorage.setItem('pav_brand_resp', 'Dr. Visitante');
-        }
-        window.location.href = 'index.html';
-    }
-    </script>
 </body>
 </html>
