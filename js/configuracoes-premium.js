@@ -1,4 +1,4 @@
-// configuracoes-premium.js — Página de Configurações + Demo + Notificação de Resumo
+// configuracoes-premium.js — Página de Configurações + Notificação de Resumo
 
 // ── 1. RENDERIZAR CONFIGURAÇÕES ─────────────────────────────────────────────
 window.renderConfig = function() {
@@ -21,10 +21,6 @@ window.renderConfig = function() {
     setRange('cfg-invest',    div.investimentos, 30);
     setRange('cfg-reserva',   div.reserva,       20);
     window.updateDivisaoPreview();
-
-    // Banner de demo
-    const demoEl = document.getElementById('config-demo-banner');
-    if (demoEl) demoEl.style.display = localStorage.getItem('pav_demo_mode') === 'true' ? 'flex' : 'none';
 
     // Card de assinatura
     _renderSubscriptionCard();
@@ -183,56 +179,7 @@ window.salvarDivisao = function(btn) {
     }, 300);
 };
 
-// ── 5. DADOS DE DEMONSTRAÇÃO ─────────────────────────────────────────────────
-const DEMO_DATA = {
-    clinica: {
-        nome: 'Clínica Vet Exemplo', responsavel: 'Dr. Tiago Alemão',
-        cnpj: '12.345.678/0001-99', crmv: 'CRMV-BA 9876', tel: '(71) 98888-7777',
-        end: 'Av. Paralela, 1000 – Salvador, BA', regime: 'simples'
-    },
-    balanco: {
-        faturamento: 42000, metaFaturamento: 45000, metaLucro: 8000,
-        reembolsoInadimplencia: 500, impostos: 2100, taxasCartao: 840,
-        insumos: 3500, boletosFornecedores: 1200, terceirizadosVar: 0,
-        labTerceirizado: 2200, comissoes: 1800, plantoes: 800,
-        escritorioLimpezaVar: 300, estorno: 100, outrosVariaveis: 200,
-        folha: 9500, agua: 200, luz: 600, sistemas: 350, aluguel: 3500,
-        telecom: 250, contabilidade: 600, marketing: 800, esocial: 180,
-        taxasAdmin: 120, crmv: 90, lixoContaminante: 150, iptu: 300,
-        limpezaFixa: 400, terceirizadosFixos: 0, outrosFixos: 500
-    },
-    historico: [
-        { mes: 'Jan/25', faturamento: 38000, lucroGerencial: 5200, margemContribuicao: 28100, totalFixos: 22900, totalVariaveis: 9900 },
-        { mes: 'Fev/25', faturamento: 35000, lucroGerencial: 3800, margemContribuicao: 25800, totalFixos: 22000, totalVariaveis: 9200 },
-        { mes: 'Mar/25', faturamento: 41000, lucroGerencial: 6500, margemContribuicao: 29600, totalFixos: 23100, totalVariaveis: 11400 },
-        { mes: 'Abr/25', faturamento: 42000, lucroGerencial: 7120, margemContribuicao: 30800, totalFixos: 23680, totalVariaveis: 11200 },
-    ]
-};
-
-window.loadDemoData = function(btn) {
-    Utils.confirm(
-        'Isso irá substituir qualquer dado existente com dados fictícios da "Clínica Vet Exemplo". Use para explorar o sistema.',
-        'Carregar dados de demonstração?',
-        () => {
-            if (btn) Utils.setLoading(btn, true);
-
-            localStorage.setItem('pav_clinica',       JSON.stringify(DEMO_DATA.clinica));
-            localStorage.setItem('pav_brand_nome',    DEMO_DATA.clinica.nome);
-            localStorage.setItem('pav_brand_resp',    DEMO_DATA.clinica.responsavel);
-            localStorage.setItem('pav_ultimos_dados', JSON.stringify(DEMO_DATA.balanco));
-            localStorage.setItem('pav_historico',     JSON.stringify(DEMO_DATA.historico));
-            localStorage.setItem('pav_demo_mode',     'true');
-
-            setTimeout(() => {
-                if (btn) Utils.setLoading(btn, false);
-                Utils.showToast('Dados de demonstração carregados! Explore à vontade.', 'success');
-                window.renderConfig();
-                if (window.renderDashboard) window.renderDashboard();
-            }, 400);
-        }
-    );
-};
-
+// ── 5. LIMPAR DADOS ──────────────────────────────────────────────────────────
 window.clearDemoData = function() {
     Utils.confirm(
         'Todos os dados salvos (balanço, caixa, serviços, configurações) serão apagados permanentemente.',
