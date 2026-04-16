@@ -20,18 +20,27 @@
         body {
             display: flex;
             min-height: 100vh;
-            background: #F8F8F6;
+            background: #F9FAFB;
         }
 
         /* Painel esquerdo — visual/marketing */
         .auth-left {
-            width: 420px;
+            width: 440px;
             flex-shrink: 0;
-            background: #0F4D3F;
+            background: linear-gradient(160deg, #022C22 0%, #064E3B 45%, #065F46 100%);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 70% 60% at 80% 20%, rgba(5,150,105,0.18) 0%, transparent 65%);
+            pointer-events: none;
         }
 
         .auth-left-brand {
@@ -51,6 +60,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
         .auth-left-headline {
@@ -58,10 +68,11 @@
         }
 
         .auth-left-headline h2 {
-            font-size: 1.625rem;
+            font-size: 1.75rem;
             font-weight: 800;
-            line-height: 1.3;
+            line-height: 1.25;
             margin-bottom: 1rem;
+            letter-spacing: -0.5px;
         }
 
         .auth-left-headline p {
@@ -88,13 +99,14 @@
         .auth-left-feature-icon {
             width: 28px;
             height: 28px;
-            background: rgba(255,255,255,0.12);
+            background: rgba(5,150,105,0.25);
             border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            color: #1D9E75;
+            color: #6EE7B7;
+            border: 1px solid rgba(110,231,183,0.2);
         }
 
         .auth-left-bottom {
@@ -109,6 +121,7 @@
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            background: #F9FAFB;
         }
 
         .auth-form-wrap {
@@ -117,16 +130,18 @@
         }
 
         .auth-form-title {
-            font-size: 1.375rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: #1A1A2E;
+            color: #111827;
             margin-bottom: 0.375rem;
+            letter-spacing: -0.4px;
         }
 
         .auth-form-sub {
             font-size: 0.875rem;
             color: #6B7280;
             margin-bottom: 2rem;
+            line-height: 1.5;
         }
 
         /* Tabs */
@@ -155,9 +170,9 @@
 
         .auth-tab.active {
             background: #fff;
-            color: #1A1A2E;
-            font-weight: 600;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            color: #064E3B;
+            font-weight: 700;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
         }
 
         .tab-pane { display: none; animation: fadeIn 0.2s ease; }
@@ -179,21 +194,21 @@
         .field input,
         .field select {
             width: 100%;
-            padding: 0.625rem 0.875rem;
+            padding: 0.65rem 0.9rem;
             background: #fff;
-            border: 1px solid rgba(0,0,0,0.12);
+            border: 1.5px solid #E5E7EB;
             border-radius: 8px;
-            color: #1A1A2E;
+            color: #111827;
             font-size: 0.875rem;
             font-family: var(--font-family);
             outline: none;
-            transition: border-color 0.15s;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
 
         .field input:focus,
         .field select:focus {
-            border-color: #1D9E75;
-            outline: 2px solid rgba(29,158,117,0.15);
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
         }
 
         .field-row {
@@ -205,8 +220,8 @@
         /* Botão de ação */
         .auth-btn {
             width: 100%;
-            padding: 0.75rem;
-            background: #1D9E75;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
             color: #fff;
             border: none;
             border-radius: 8px;
@@ -214,12 +229,17 @@
             font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.15s, transform 0.15s;
+            transition: all 0.15s;
             margin-top: 0.375rem;
+            box-shadow: 0 2px 8px rgba(5,150,105,0.3);
         }
 
-        .auth-btn:hover { background: #178a65; transform: translateY(-1px); }
-        .auth-btn:active { transform: scale(0.98); }
+        .auth-btn:hover {
+            background: linear-gradient(135deg, #047857 0%, #064E3B 100%);
+            box-shadow: 0 4px 14px rgba(5,150,105,0.35);
+            transform: translateY(-1px);
+        }
+        .auth-btn:active { transform: scale(0.98); box-shadow: none; }
 
         .auth-btn-outline {
             width: 100%;
@@ -253,7 +273,7 @@
         .forgot-link {
             background: none;
             border: none;
-            color: #1D9E75;
+            color: #059669;
             font-size: 0.78rem;
             cursor: pointer;
             padding: 0;
@@ -290,14 +310,14 @@
         }
 
         .step-dot.active {
-            border-color: #1D9E75;
-            color: #1D9E75;
-            background: rgba(29,158,117,0.08);
+            border-color: #059669;
+            color: #059669;
+            background: rgba(5,150,105,0.08);
         }
 
         .step-dot.done {
-            border-color: #1D9E75;
-            background: #1D9E75;
+            border-color: #059669;
+            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
             color: #fff;
         }
 

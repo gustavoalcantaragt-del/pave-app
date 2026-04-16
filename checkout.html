@@ -21,9 +21,15 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+        :root {
+            --brand:    #064E3B;
+            --cta:      #059669;
+            --cta-dark: #047857;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background: #F8F8F6;
+            background: #F5F7F5;
             color: #1A1A2E;
             min-height: 100vh;
             display: flex;
@@ -50,10 +56,11 @@
             width: 32px;
             height: 32px;
             border-radius: 7px;
-            background: #0F4D3F;
+            background: linear-gradient(135deg, #059669 0%, #064E3B 100%);
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 6px rgba(5,150,105,0.3);
         }
         .co-topbar-name {
             font-size: 0.95rem;
@@ -104,14 +111,15 @@
             transition: all 0.2s;
         }
         .co-step-circle.active {
-            border-color: #1D9E75;
-            background: #1D9E75;
+            border-color: #059669;
+            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
             color: #fff;
+            box-shadow: 0 0 0 3px rgba(5,150,105,0.15);
         }
         .co-step-circle.done {
-            border-color: #1D9E75;
-            background: #E1F5EE;
-            color: #0F4D3F;
+            border-color: #059669;
+            background: #ECFDF5;
+            color: #064E3B;
         }
         .co-step-label {
             font-size: 0.78rem;
@@ -126,7 +134,7 @@
             background: #E5E7EB;
             margin: 0 8px;
         }
-        .co-step-connector.done { background: #1D9E75; }
+        .co-step-connector.done { background: #059669; }
         @media (max-width: 520px) {
             .co-step-label { display: none; }
             .co-step-connector { width: 24px; }
@@ -195,7 +203,10 @@
             transition: border-color 0.15s;
             outline: none;
         }
-        .field input:focus { border-color: #1D9E75; }
+        .field input:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
+        }
         .field input.error { border-color: #E24B4A; }
         .field-error {
             display: none;
@@ -228,19 +239,20 @@
         }
         .pay-method:hover { border-color: rgba(0,0,0,0.2); }
         .pay-method.selected {
-            border-color: #1D9E75;
-            background: #E1F5EE;
+            border-color: #059669;
+            background: #ECFDF5;
+            box-shadow: 0 0 0 2px rgba(5,150,105,0.12);
         }
         .pay-method-icon { font-size: 1.3rem; margin-bottom: 4px; }
         .pay-method-name { font-size: 0.75rem; font-weight: 600; color: #6B7280; }
-        .pay-method.selected .pay-method-name { color: #0F4D3F; }
+        .pay-method.selected .pay-method-name { color: #064E3B; font-weight: 700; }
 
         /* ── Submit button ── */
         #btn-submit {
             width: 100%;
             padding: 14px;
             border-radius: 8px;
-            background: #1D9E75;
+            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
             color: #fff;
             font-size: 0.9rem;
             font-weight: 700;
@@ -251,11 +263,17 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: background 0.15s;
+            transition: all 0.15s;
             margin-top: 8px;
+            box-shadow: 0 3px 12px rgba(5,150,105,0.35);
         }
-        #btn-submit:hover { background: #178A65; }
-        #btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        #btn-submit:hover {
+            background: linear-gradient(135deg, #047857 0%, #064E3B 100%);
+            box-shadow: 0 5px 18px rgba(5,150,105,0.4);
+            transform: translateY(-1px);
+        }
+        #btn-submit:active { transform: scale(0.98); }
+        #btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         .secure-badge {
             display: flex;
@@ -300,21 +318,28 @@
             display: inline-block;
             padding: 12px 28px;
             border-radius: 8px;
-            background: #1D9E75;
+            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
             color: #fff;
             font-weight: 700;
             font-size: 0.875rem;
             text-decoration: none;
+            box-shadow: 0 2px 10px rgba(5,150,105,0.3);
+            transition: all 0.15s;
+        }
+        .success-back-btn:hover {
+            box-shadow: 0 4px 16px rgba(5,150,105,0.4);
+            transform: translateY(-1px);
         }
 
         /* ── Order summary ── */
         .co-summary {
             background: #fff;
-            border-radius: 12px;
-            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.07);
             padding: 24px;
             position: sticky;
             top: 80px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
         }
         .co-summary h2 {
             font-size: 0.85rem;
@@ -327,7 +352,7 @@
         .order-plan-name {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #0F4D3F;
+            color: var(--brand);
             letter-spacing: -0.4px;
             margin-bottom: 4px;
         }
@@ -362,16 +387,16 @@
         .order-total-value {
             font-size: 1.4rem;
             font-weight: 700;
-            color: #0F4D3F;
+            color: var(--brand);
             letter-spacing: -0.5px;
         }
         .order-guarantee {
             margin-top: 16px;
             padding: 12px;
-            background: #E1F5EE;
+            background: #ECFDF5;
             border-radius: 8px;
             font-size: 0.78rem;
-            color: #0F4D3F;
+            color: var(--brand);
             line-height: 1.5;
         }
 
@@ -411,7 +436,7 @@
             width: 36px;
             height: 36px;
             border: 3px solid rgba(0,0,0,0.08);
-            border-top-color: #1D9E75;
+            border-top-color: #059669;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }

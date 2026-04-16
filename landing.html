@@ -22,18 +22,23 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --brand:      #0F4D3F;
-            --cta:        #1D9E75;
-            --cta-dark:   #178A65;
-            --surface:    #E1F5EE;
-            --bg:         #F8F8F6;
+            --brand:      #064E3B;
+            --brand-mid:  #065F46;
+            --cta:        #059669;
+            --cta-dark:   #047857;
+            --surface:    #ECFDF5;
+            --bg:         #F9FAFB;
             --card:       #FFFFFF;
-            --text:       #1A1A2E;
-            --muted:      #6B7280;
+            --text:       #111827;
+            --muted:      #4B5563;
             --faint:      #9CA3AF;
-            --border:     rgba(0,0,0,0.08);
-            --danger:     #E24B4A;
-            --warning:    #EF9F27;
+            --border:     #E5E7EB;
+            --border-faint: rgba(0,0,0,0.06);
+            --danger:     #DC2626;
+            --warning:    #D97706;
+            --shadow-sm:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md:  0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+            --shadow-lg:  0 8px 32px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06);
         }
 
         html { scroll-behavior: smooth; }
@@ -73,22 +78,29 @@
             white-space: nowrap;
         }
         .btn-primary {
-            background: var(--cta);
+            background: linear-gradient(135deg, var(--cta) 0%, var(--brand-mid) 100%);
             color: #fff;
+            box-shadow: 0 2px 8px rgba(5,150,105,0.35);
         }
-        .btn-primary:hover { background: var(--cta-dark); }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--cta-dark) 0%, var(--brand) 100%);
+            box-shadow: 0 4px 14px rgba(5,150,105,0.4);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active { transform: scale(0.98); box-shadow: none; }
         .btn-ghost {
             background: transparent;
             color: var(--muted);
-            border: 1px solid var(--border);
+            border: 1.5px solid var(--border);
         }
-        .btn-ghost:hover { border-color: rgba(0,0,0,0.2); color: var(--text); }
+        .btn-ghost:hover { border-color: #9CA3AF; color: var(--text); background: #F3F4F6; }
         .btn-outline-white {
-            background: transparent;
+            background: rgba(255,255,255,0.1);
             color: #fff;
-            border: 1.5px solid rgba(255,255,255,0.5);
+            border: 1.5px solid rgba(255,255,255,0.4);
+            backdrop-filter: blur(4px);
         }
-        .btn-outline-white:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+        .btn-outline-white:hover { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.7); }
 
         .section-label {
             font-size: 0.72rem;
@@ -120,14 +132,16 @@
             position: sticky;
             top: 0;
             z-index: 200;
-            background: rgba(255,255,255,0.92);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid #E5E7EB;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.04);
         }
         .nav-inner {
             display: flex;
             align-items: center;
-            height: 60px;
+            height: 64px;
             gap: 2rem;
         }
         .nav-brand {
@@ -196,43 +210,69 @@
            2. HERO
         ───────────────────────────────────────────── */
         .hero {
-            padding: 80px 0 72px;
+            padding: 96px 0 80px;
             text-align: center;
+            background: linear-gradient(160deg, #f0fdf9 0%, #f9fafb 55%, #f9fafb 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(5,150,105,0.06) 0%, transparent 70%);
+            pointer-events: none;
         }
         .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 5px 14px;
+            padding: 5px 14px 5px 10px;
             border-radius: 99px;
             font-size: 0.75rem;
             font-weight: 600;
-            background: var(--surface);
-            color: var(--brand);
-            border: 1px solid rgba(29,158,117,0.25);
-            margin-bottom: 24px;
+            background: #fff;
+            color: var(--brand-mid);
+            border: 1.5px solid rgba(5,150,105,0.22);
+            margin-bottom: 28px;
+            box-shadow: 0 2px 8px rgba(5,150,105,0.1);
+        }
+        .hero-badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--cta);
+            display: inline-block;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.8); }
         }
         .hero h1 {
-            font-size: clamp(2rem, 5vw, 3rem);
+            font-size: clamp(2.2rem, 5.5vw, 3.4rem);
             font-weight: 800;
-            line-height: 1.15;
-            letter-spacing: -1px;
+            line-height: 1.12;
+            letter-spacing: -1.5px;
             color: var(--text);
-            margin-bottom: 20px;
-            max-width: 700px;
+            margin-bottom: 22px;
+            max-width: 720px;
             margin-left: auto;
             margin-right: auto;
         }
         .hero h1 em {
             font-style: normal;
-            color: var(--cta);
+            background: linear-gradient(135deg, var(--cta) 0%, var(--brand-mid) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .hero-sub {
-            font-size: 1.05rem;
+            font-size: 1.08rem;
             color: var(--muted);
-            line-height: 1.65;
-            max-width: 560px;
-            margin: 0 auto 36px;
+            line-height: 1.7;
+            max-width: 540px;
+            margin: 0 auto 40px;
         }
         .hero-actions {
             display: flex;
@@ -242,11 +282,20 @@
             flex-wrap: wrap;
         }
         .hero-note {
-            margin-top: 16px;
+            margin-top: 20px;
             font-size: 0.78rem;
             color: var(--faint);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
         }
-        .hero-note svg { vertical-align: middle; margin-right: 4px; }
+        .hero-note-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .hero-note svg { flex-shrink: 0; }
 
         /* ─────────────────────────────────────────────
            3. SOCIAL PROOF BAR
@@ -255,26 +304,38 @@
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
             background: var(--card);
-            padding: 20px 0;
+            padding: 24px 0;
         }
         .proof-bar-inner {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 40px;
+            gap: 0;
             flex-wrap: wrap;
         }
         .proof-stat {
             text-align: center;
+            padding: 8px 40px;
+            position: relative;
+        }
+        .proof-stat + .proof-stat::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 32px;
+            background: var(--border);
         }
         .proof-stat-number {
-            font-size: 1.5rem;
+            font-size: 1.625rem;
             font-weight: 800;
             color: var(--text);
-            letter-spacing: -0.5px;
+            letter-spacing: -0.8px;
         }
         .proof-stat-label {
-            font-size: 0.75rem;
+            font-size: 0.73rem;
             color: var(--faint);
             font-weight: 500;
             margin-top: 2px;
@@ -535,11 +596,17 @@
         }
         .testimonial-card {
             background: var(--card);
-            border-radius: 12px;
+            border-radius: 14px;
             border: 1px solid var(--border);
-            padding: 24px;
+            padding: 28px 24px;
             display: flex;
             flex-direction: column;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .testimonial-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
         .testimonial-stars {
             display: flex;
@@ -585,8 +652,17 @@
            7. CTA BANNER
         ───────────────────────────────────────────── */
         .cta-banner {
-            background: var(--brand);
-            padding: 64px 0;
+            background: linear-gradient(135deg, var(--brand) 0%, #065F46 50%, #047857 100%);
+            padding: 72px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .cta-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(255,255,255,0.05) 0%, transparent 70%);
+            pointer-events: none;
         }
         .cta-banner-inner {
             display: flex;
@@ -636,16 +712,25 @@
             .plans-mini-grid { grid-template-columns: 1fr; max-width: 380px; margin: 0 auto; }
         }
         .plan-mini-card {
-            border-radius: 12px;
+            border-radius: 14px;
             border: 1px solid var(--border);
             background: var(--bg);
-            padding: 24px;
+            padding: 28px 24px;
             position: relative;
             text-align: center;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .plan-mini-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
         .plan-mini-card.featured {
             border: 2px solid var(--cta);
             background: var(--card);
+            box-shadow: 0 4px 20px rgba(5,150,105,0.15);
+        }
+        .plan-mini-card.featured:hover {
+            box-shadow: 0 8px 32px rgba(5,150,105,0.2);
         }
         .plan-mini-badge {
             position: absolute;
@@ -719,8 +804,15 @@
             transition: all 0.15s;
             cursor: pointer;
         }
-        .plan-mini-cta.primary { background: var(--cta); color: #fff; }
-        .plan-mini-cta.primary:hover { background: var(--cta-dark); }
+        .plan-mini-cta.primary {
+            background: linear-gradient(135deg, var(--cta) 0%, var(--brand-mid) 100%);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(5,150,105,0.3);
+        }
+        .plan-mini-cta.primary:hover {
+            background: linear-gradient(135deg, var(--cta-dark) 0%, var(--brand) 100%);
+            box-shadow: 0 4px 12px rgba(5,150,105,0.35);
+        }
         .plan-mini-cta.ghost { border: 1px solid var(--border); color: var(--muted); background: transparent; }
         .plan-mini-cta.ghost:hover { border-color: rgba(0,0,0,0.2); color: var(--text); }
         .plans-summary-link {
@@ -786,9 +878,9 @@
            10. FOOTER
         ───────────────────────────────────────────── */
         .footer {
-            background: var(--brand);
-            color: rgba(255,255,255,0.7);
-            padding: 48px 0 32px;
+            background: linear-gradient(160deg, #022C22 0%, var(--brand) 100%);
+            color: rgba(255,255,255,0.65);
+            padding: 56px 0 32px;
         }
         .footer-grid {
             display: grid;
@@ -893,21 +985,32 @@
 <section class="hero">
     <div class="container--narrow">
         <span class="hero-badge">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span class="hero-badge-dot"></span>
             14 dias grátis — sem cartão de crédito
         </span>
         <h1>Sua clínica lucrando,<br>não apenas <em>faturando</em></h1>
-        <p class="hero-sub">PAVE é o sistema de gestão financeira feito para veterinários. Dashboard, caixa diário, precificação com margem real e relatórios que você consegue ler.</p>
+        <p class="hero-sub">PAVE é o sistema de gestão financeira feito para veterinários. Dashboard, caixa, precificação com margem real e alertas automáticos de vencimento.</p>
         <div class="hero-actions">
-            <a href="login.html#register" class="btn btn-primary">
+            <a href="login.html#register" class="btn btn-primary" style="padding:14px 28px; font-size:0.95rem;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
                 Começar agora — é grátis
             </a>
+            <a href="planos.html" class="btn btn-ghost">Ver planos e preços</a>
         </div>
-        <p class="hero-note">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Sem cartão · Cancele quando quiser · Dados seguros
-        </p>
+        <div class="hero-note">
+            <span class="hero-note-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                SSL 256-bit
+            </span>
+            <span class="hero-note-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Sem cartão de crédito
+            </span>
+            <span class="hero-note-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                Cancele quando quiser
+            </span>
+        </div>
     </div>
 </section>
 
