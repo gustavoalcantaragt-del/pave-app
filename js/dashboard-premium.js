@@ -1,5 +1,13 @@
 // dashboard-premium.js
 
+// ── THEME HELPERS ────────────────────────────────────────────────────────────
+function _isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+function _chartGrid() { return _isDark() ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'; }
+function _chartTick() { return _isDark() ? '#94a3b8' : '#6b7280'; }
+function _rowBg()     { return _isDark() ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)'; }
+function _statBg()    { return _isDark() ? 'rgba(255,255,255,0.04)' : 'var(--bg-elevated)'; }
+function _statBor()   { return _isDark() ? '1px solid rgba(255,255,255,0.07)' : '1px solid var(--border)'; }
+
 // ── ÍCONES SVG (Lucide-style, monochrome) ───────────────────────────────────
 const IC = {
     revenue:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
@@ -24,25 +32,29 @@ const ZERO_DATA = {
     totalVariaveis: 0, margemContribuicao: 0
 };
 
-window.renderDashboard = function(forceData = null) {
+let _dashboardDebounce = null;
+function _renderDashboardImpl(forceData) {
     const statsContainer  = document.getElementById('dashboard-stats');
     const chartsContainer = document.getElementById('dashboard-charts');
     if (!statsContainer || !chartsContainer) return;
 
-    const data      = forceData || JSON.parse(localStorage.getItem('pav_ultimos_dados'));
+    let data;
+    try { data = forceData || JSON.parse(localStorage.getItem('pav_ultimos_dados')); }
+    catch(e) { console.error('[Dashboard] localStorage corrompido:', e); data = null; }
+
     const hasData   = !!data;
     const totais    = hasData
         ? (window.calcularTotais ? window.calcularTotais(data) : ZERO_DATA)
         : ZERO_DATA;
 
-    const fat       = totais.faturamento || 1;
-    const pctFix    = ((totais.totalFixos / fat) * 100).toFixed(1);
-    const margemPct = totais.margemContribuicao / fat;
-    const lucroPct  = ((totais.lucroGerencial / fat) * 100).toFixed(1);
+    const fat       = hasData && totais.faturamento > 0 ? totais.faturamento : 0;
+    const pctFix    = fat > 0 ? ((totais.totalFixos / fat) * 100).toFixed(1) : '0.0';
+    const margemPct = fat > 0 ? totais.margemContribuicao / fat : 0;
+    const lucroPct  = fat > 0 ? ((totais.lucroGerencial / fat) * 100).toFixed(1) : '0.0';
     const pe        = margemPct > 0 ? (totais.totalFixos / margemPct).toFixed(2) : 0;
     const metaLucro = data?.metaLucro || 0;
     const metaFat   = data?.metaFaturamento || 0;
-    const qtdAtend  = parseFloat(data?.qtdAtendimentos) || 0;
+    const qtdAtend  = Math.round(parseFloat(data?.qtdAtendimentos) || 0);
     const ticketMed = qtdAtend > 0 ? (totais.faturamento / qtdAtend) : 0;
 
     // ── PERÍODO ──────────────────────────────────────────────────────────────
@@ -59,7 +71,7 @@ window.renderDashboard = function(forceData = null) {
     }
 
     // ── YTD ──────────────────────────────────────────────────────────────────
-    const historicoAll       = JSON.parse(localStorage.getItem('pav_historico') || '[]');
+    let historicoAll; try { historicoAll = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historicoAll = []; }
     const currentYear        = new Date().getFullYear().toString();
     const anoAtual           = historicoAll.filter(h => h.mesRef?.startsWith(currentYear));
     const ytdLucro           = anoAtual.reduce((a, h) => a + (parseFloat(h.lucro) || 0), 0);
@@ -81,7 +93,11 @@ window.renderDashboard = function(forceData = null) {
         ? historicoAll[idxAtual - 1]
         : (historicoAll.length > 0 && idxAtual === -1 ? historicoAll[historicoAll.length - 1] : null);
 
-    const calcDelta = (atual, prev) => (!prev || prev === 0) ? null : ((atual - prev) / Math.abs(prev)) * 100;
+    const calcDelta = (atual, prev) => {
+        if (prev === null || prev === undefined || !isFinite(prev)) return null;
+        if (prev === 0) return atual > 0 ? null : null; // sem base → sem delta
+        return ((atual - prev) / Math.abs(prev)) * 100;
+    };
 
     const deltaHTML = (pct, inverter = false) => {
         if (pct === null || !hasData) return '';
@@ -115,8 +131,8 @@ window.renderDashboard = function(forceData = null) {
         { label: 'Receita Operacional', value: totais.faturamento,    color: 'var(--accent-blue)', icon: IC.revenue,  delta: dFat,   inverter: false },
         { label: 'Margem Líquida',      value: totais.lucroGerencial, color: totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A', icon: IC.profit, delta: dLucro, inverter: false },
         { label: 'Custos Fixos',        value: totais.totalFixos,     color: '#E24B4A',            icon: IC.fixed,    delta: dFix,   inverter: true  },
-        { label: 'Custos Variáveis',    value: totais.totalVariaveis, color: '#ffd60a',            icon: IC.variable, delta: dVar,   inverter: true  },
-        { label: 'Ticket Médio',        value: ticketMed,             color: '#5ac8fa',            icon: ticketIcon,  delta: null,   inverter: false,
+        { label: 'Custos Variáveis',    value: totais.totalVariaveis, color: 'var(--color-warning)', icon: IC.variable, delta: dVar,   inverter: true  },
+        { label: 'Ticket Médio',        value: ticketMed,             color: 'var(--color-info)',  icon: ticketIcon,  delta: null,   inverter: false,
           sub: qtdAtend > 0 ? `${qtdAtend} atendimentos` : 'Sem atendimentos' }
     ];
 
@@ -151,7 +167,7 @@ window.renderDashboard = function(forceData = null) {
             <!-- Termômetro -->
             <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
                 <h3 style="margin-bottom:1.5rem; color:var(--text-secondary); display:flex; align-items:center; gap:6px; justify-content:center;" data-tooltip="Percentual do faturamento comprometido com custos fixos. Abaixo de 35%: saudável · 35–50%: atenção · Acima de 50%: crítico.">Índice de Custo Fixo <span style="opacity:0.6; color:var(--text-muted);">${IC.info}</span></h3>
-                <div style="position:relative; width:150px; height:150px; border-radius:50%; background:conic-gradient(${healthColor} ${healthScore}%, rgba(255,255,255,0.05) 0%); display:flex; align-items:center; justify-content:center;">
+                <div style="position:relative; width:150px; height:150px; border-radius:50%; background:conic-gradient(${healthColor} ${healthScore}%, ${_isDark()?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.07)'} 0%); display:flex; align-items:center; justify-content:center;">
                     <div style="width:118px; height:118px; border-radius:50%; background:var(--bg-card); display:flex; flex-direction:column; align-items:center; justify-content:center;">
                         <span style="font-size:2rem; font-weight:900; color:${healthColor};">${hasData ? healthScore + '%' : '—'}</span>
                         <span style="font-size:0.6rem; color:var(--text-secondary); text-transform:uppercase; font-weight:700; letter-spacing:1px;">Comprometido</span>
@@ -177,17 +193,17 @@ window.renderDashboard = function(forceData = null) {
                         <span class="kpi-row-label">Margem Líquida</span>
                         <span class="kpi-row-value" style="color:${totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A'};">${hasData ? lucroPct + '%' : '—'}</span>
                     </div>
-                    <div class="kpi-row" style="border-left-color:#5ac8fa;">
+                    <div class="kpi-row" style="border-left-color:var(--color-info);">
                         <span class="kpi-row-label">Margem de Contribuição</span>
-                        <span class="kpi-row-value" style="color:#5ac8fa;">${hasData ? ((totais.margemContribuicao / fat) * 100).toFixed(1) + '%' : '—'}</span>
+                        <span class="kpi-row-value" style="color:var(--color-info);">${hasData && fat > 0 ? ((totais.margemContribuicao / fat) * 100).toFixed(1) + '%' : '—'}</span>
                     </div>
                     <div class="kpi-row">
                         <span class="kpi-row-label">Margem de Contribuição (R$)</span>
-                        <span class="kpi-row-value" style="color:#5ac8fa;">${hasData ? fmt(totais.margemContribuicao) : '—'}</span>
+                        <span class="kpi-row-value" style="color:var(--color-info);">${hasData ? fmt(totais.margemContribuicao) : '—'}</span>
                     </div>
                     <div class="kpi-row" style="border-left-color:var(--accent-gold);">
                         <span class="kpi-row-label">Ponto de Equilíbrio</span>
-                        <span class="kpi-row-value" style="color:var(--accent-gold);">${hasData ? fmt(parseFloat(pe)) : '—'}</span>
+                        <span class="kpi-row-value" style="color:var(--accent-gold);">${hasData && parseFloat(pe) > 0 ? fmt(parseFloat(pe)) : '—'}</span>
                     </div>
                 </div>
             </div>
@@ -231,10 +247,10 @@ window.renderDashboard = function(forceData = null) {
             </div>
             <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem;">
                 ${[
-                    { label: 'Pró-Labore',   val: divisao.proLabore,     ref: '40–60%', color: '#fff' },
-                    { label: `Empréstimos (${empPct}%)`, val: emp, ref: '0–20%', color: emp > 0 ? '#ff9500' : '#fff' },
-                    { label: 'Reinvestimento', val: divisao.investimentos, ref: '20–40%', color: '#fff' },
-                    { label: 'Reserva de Caixa', val: divisao.reserva, ref: '20–40%', color: '#fff' }
+                    { label: 'Pró-Labore',   val: divisao.proLabore,     ref: '40–60%', color: 'var(--pave-green)' },
+                    { label: `Empréstimos (${empPct}%)`, val: emp, ref: '0–20%', color: emp > 0 ? 'var(--color-warning)' : 'var(--text-primary)' },
+                    { label: 'Reinvestimento', val: divisao.investimentos, ref: '20–40%', color: 'var(--pave-blue)' },
+                    { label: 'Reserva de Caixa', val: divisao.reserva, ref: '20–40%', color: 'var(--color-info)' }
                 ].map(d => `
                     <div style="padding:1.1rem; border:1px solid var(--border); border-radius:var(--radius-card); text-align:center;">
                         <div style="color:var(--text-secondary); font-size:0.72rem; font-weight:700; margin-bottom:0.6rem; text-transform:uppercase; letter-spacing:0.5px;">${d.label}</div>
@@ -288,9 +304,9 @@ window.renderDashboard = function(forceData = null) {
                 type: 'doughnut',
                 data: {
                     labels: ['Aguardando dados'],
-                    datasets: [{ data: [1], backgroundColor: ['rgba(255,255,255,0.05)'], borderWidth: 0 }]
+                    datasets: [{ data: [1], backgroundColor: [_isDark()?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)'], borderWidth: 0 }]
                 },
-                options: { plugins: { legend: { labels: { color: '#8e8e93', font: { family: 'Montserrat' } } } }, cutout: '72%' }
+                options: { plugins: { legend: { labels: { color: _chartTick(), font: { family: 'Montserrat' } } } }, cutout: '72%' }
             });
         } else {
             window.chartCostsDeepObj = new Chart(chartEl, {
@@ -299,13 +315,13 @@ window.renderDashboard = function(forceData = null) {
                     labels: top5.map(e => e.name),
                     datasets: [{ data: top5.map(e => e.val), backgroundColor: ['#E24B4A','#ff9f0a','#ffd60a','#ffb340','#ffc67b','#b0b0b5','#1D9E75'].slice(0, top5.length), borderWidth: 0, spacing: 4 }]
                 },
-                options: { plugins: { legend: { position: 'bottom', labels: { color: '#8e8e93', font: { family: 'Montserrat', weight: '600' }, padding: 12 } } }, cutout: '72%' }
+                options: { plugins: { legend: { position: 'bottom', labels: { color: _chartTick(), font: { family: 'Montserrat', weight: '600' }, padding: 12 } } }, cutout: '72%' }
             });
         }
     }
 
     // ── GRÁFICO DE EVOLUÇÃO ───────────────────────────────────────────────────
-    const historico = JSON.parse(localStorage.getItem('pav_historico') || '[]');
+    let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
     const last6     = historico.slice(-6);
     const evoEl     = document.getElementById('chart-evolution');
     if (evoEl) {
@@ -323,10 +339,10 @@ window.renderDashboard = function(forceData = null) {
                 ]
             },
             options: {
-                plugins: { legend: { labels: { color: '#8e8e93', font: { family: 'Montserrat' } } } },
+                plugins: { legend: { labels: { color: _chartTick(), font: { family: 'Montserrat' } } } },
                 scales: {
-                    x: { ticks: { color: '#8e8e93', font: { family: 'Montserrat' } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                    y: { ticks: { color: '#8e8e93', font: { family: 'Montserrat' } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                    x: { ticks: { color: _chartTick(), font: { family: 'Montserrat' } }, grid: { color: _chartGrid() } },
+                    y: { ticks: { color: _chartTick(), font: { family: 'Montserrat' } }, grid: { color: _chartGrid() } }
                 }
             }
         });
@@ -383,12 +399,18 @@ window.renderDashboard = function(forceData = null) {
     } else if (alertEl) {
         alertEl.innerHTML = '';
     }
+}
+
+// Wrapper público com debounce — evita memory leaks por renders concorrentes
+window.renderDashboard = function(forceData) {
+    clearTimeout(_dashboardDebounce);
+    _dashboardDebounce = setTimeout(() => _renderDashboardImpl(forceData || null), 80);
 };
 
 // ── HISTÓRICO ──────────────────────────────────────────────────────────────
 window.deleteHistorico = function(idx) {
     Utils.confirm('Este registro será removido do histórico de consolidações.', 'Remover consolidação?', () => {
-        const hist = JSON.parse(localStorage.getItem('pav_historico') || '[]');
+        let hist; try { hist = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { hist = []; }
         hist.splice(idx, 1);
         localStorage.setItem('pav_historico', JSON.stringify(hist));
         window.renderDashboard();
@@ -410,6 +432,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const getVal = id => parseFloat(document.getElementById(id)?.value) || 0;
         const mesStr = document.getElementById('mesReferencia')?.value || 'N/A';
 
+        // Validação inline: faturamento e data são obrigatórios
+        const _markBad = (id, msg) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.borderColor = 'var(--color-danger)';
+                el.style.animation   = 'pav-shake 0.3s ease';
+                el.addEventListener('input', () => { el.style.borderColor = ''; el.style.animation = ''; }, { once: true });
+            }
+            if (submitBtn) Utils.setLoading(submitBtn, false);
+            Utils.showToast(msg, 'error');
+        };
+        if (getVal('faturamento') <= 0) { _markBad('faturamento', 'Informe o faturamento do mês'); return; }
+        if (!mesStr || mesStr === 'N/A') { _markBad('mesReferencia', 'Informe a data de referência'); return; }
+
         const dados = {
             mesReferencia: mesStr,
             faturamento: getVal('faturamento'), qtdAtendimentos: getVal('qtdAtendimentos'),
@@ -429,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('pav_ultimos_dados', JSON.stringify(dados));
 
         const totais  = window.calcularTotais ? window.calcularTotais(dados) : {};
-        const historico = JSON.parse(localStorage.getItem('pav_historico') || '[]');
+        let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
         let label = mesStr;
         if (label?.includes('-')) { const p = label.split('-'); label = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : label; }
         historico.push({ mesRef: mesStr, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() });
@@ -441,6 +477,46 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('tab-dashboard').click();
         window.scrollTo(0, 0);
     });
+
+    // ── Sugestão de Impostos baseada no Regime Tributário ──────────────────────
+    // Alíquotas estimadas (faixa inicial de cada regime — referência, não cálculo exato)
+    const _taxRates = { simples: 0.06, lucro_presumido: 0.1133, lucro_real: 0.15 };
+
+    function _injectTaxHint() {
+        const impostoEl = document.getElementById('impostos');
+        if (!impostoEl || document.getElementById('_tax-hint-btn')) return;
+
+        const wrapper = impostoEl.closest('.input-group');
+        if (!wrapper) return;
+
+        const hint = document.createElement('button');
+        hint.type = 'button';
+        hint.id   = '_tax-hint-btn';
+        hint.title = 'Preenche com estimativa baseada no regime tributário configurado';
+        hint.style.cssText = 'margin-top:4px; font-size:0.72rem; background:none; border:none; color:var(--accent-blue); cursor:pointer; padding:0; text-decoration:underline;';
+        hint.textContent = 'Sugerir pelo regime';
+
+        hint.addEventListener('click', () => {
+            const fat    = parseFloat(document.getElementById('faturamento')?.value) || 0;
+            const clinica = (() => { try { return JSON.parse(localStorage.getItem('pav_clinica') || '{}'); } catch { return {}; } })();
+            const regime  = clinica.regime || 'simples';
+            const rate    = _taxRates[regime] ?? _taxRates.simples;
+            const sugest  = (fat * rate).toFixed(2);
+            impostoEl.value = sugest;
+            Utils.showToast(`Estimativa ${(rate * 100).toFixed(2)}% (${regime.replace('_', ' ')}) aplicada ao campo Impostos.`, 'info');
+        });
+
+        wrapper.appendChild(hint);
+    }
+
+    // Injeta o hint quando a aba Balanço for aberta (seção pode estar oculta no DOMContentLoaded)
+    const _balancoSection = document.getElementById('aba-balanco');
+    if (_balancoSection) {
+        new MutationObserver(() => {
+            if (_balancoSection.style.display !== 'none') _injectTaxHint();
+        }).observe(_balancoSection, { attributes: true, attributeFilter: ['style'] });
+    }
+    _injectTaxHint(); // tenta logo no boot caso já esteja visível
 });
 
 // ── RELATÓRIOS — TAB SYSTEM ───────────────────────────────────────────────────
@@ -448,7 +524,7 @@ let _relActiveTab = 'visao-geral';
 
 window.switchRelTab = function(tab) {
     _relActiveTab = tab;
-    const tabs = ['visao-geral','fluxo-caixa','dre','custos','servicos','exportacao'];
+    const tabs = ['visao-geral','fluxo-caixa','dre','custos','servicos','exportacao','ranking','comparativo'];
     tabs.forEach(t => {
         const btn   = document.getElementById('rel-tab-' + t);
         const panel = document.getElementById('rel-panel-' + t);
@@ -463,12 +539,14 @@ window.switchRelTab = function(tab) {
 
 function _renderRelActiveTab() {
     switch (_relActiveTab) {
-        case 'visao-geral':  _relVisaoGeral();  break;
-        case 'fluxo-caixa': _relFluxoCaixa();  break;
-        case 'dre':         _relDRE();          break;
-        case 'custos':      _relCustos();       break;
-        case 'servicos':    _relServicos();     break;
-        case 'exportacao':  _relExportacao();   break;
+        case 'visao-geral':   _relVisaoGeral();    break;
+        case 'fluxo-caixa':  _relFluxoCaixa();    break;
+        case 'dre':          _relDRE();            break;
+        case 'custos':       _relCustos();         break;
+        case 'servicos':     _relServicos();       break;
+        case 'exportacao':   _relExportacao();     break;
+        case 'ranking':      _relRanking();        break;
+        case 'comparativo':  _relComparativo();    break;
     }
 }
 
@@ -482,7 +560,7 @@ function _relVisaoGeral() {
     const panel = document.getElementById('rel-panel-visao-geral');
     if (!panel) return;
 
-    const historico   = JSON.parse(localStorage.getItem('pav_historico') || '[]');
+    let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
     const data        = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
     const totais      = data && window.calcularTotais ? window.calcularTotais(data) : {};
     const fmt         = v => `R$ ${(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
@@ -502,7 +580,7 @@ function _relVisaoGeral() {
                 { label: 'Custos Fixos (último)',  val: fmt(totais.totalFixos),    color: '#E24B4A' },
                 { label: 'Lucro Acumulado (Ano)',  val: fmt(lucroAno),             color: lucroAno >= 0 ? '#1D9E75' : '#E24B4A' }
             ].map(k => `
-                <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:var(--radius-card); text-align:center;">
+                <div style="padding:1.25rem 1rem; background:${_statBg()}; border:${_statBor()}; border-radius:var(--radius-card); text-align:center;">
                     <div style="font-size:0.68rem; font-weight:700; color:var(--text-secondary); margin-bottom:6px; letter-spacing:0.8px; text-transform:uppercase;">${k.label}</div>
                     <div style="font-size:1.5rem; font-weight:800; color:${k.color};">${k.val}</div>
                 </div>`).join('')}
@@ -538,7 +616,7 @@ function _relVisaoGeral() {
                         <tbody>
                             ${historico.slice().reverse().map(h => {
                                 const margem = h.faturamento > 0 ? ((h.lucro / h.faturamento) * 100).toFixed(1) : '—';
-                                return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                                return `<tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='${_rowBg()}'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:0.625rem 0.875rem; font-weight:700;">${h.label || h.mesRef || 'N/A'}</td>
                                     <td style="padding:0.625rem 0.875rem; text-align:right; color:var(--accent-blue);">${fmt(h.faturamento)}</td>
                                     <td style="padding:0.625rem 0.875rem; text-align:right; color:${(h.lucro||0)>=0?'#1D9E75':'#E24B4A'}; font-weight:700;">${fmt(h.lucro)}</td>
@@ -571,10 +649,10 @@ function _relVisaoGeral() {
             },
             options: {
                 responsive: true,
-                plugins: { legend: { labels: { color: '#8e8e93', font: { family: 'Montserrat', size: 11 } } } },
+                plugins: { legend: { labels: { color: _chartTick(), font: { family: 'Montserrat', size: 11 } } } },
                 scales: {
-                    x: { ticks: { color: '#8e8e93', font: { family: 'Montserrat', size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                    y: { ticks: { color: '#8e8e93', font: { family: 'Montserrat', size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                    x: { ticks: { color: _chartTick(), font: { family: 'Montserrat', size: 10 } }, grid: { color: _chartGrid() } },
+                    y: { ticks: { color: _chartTick(), font: { family: 'Montserrat', size: 10 } }, grid: { color: _chartGrid() } }
                 }
             }
         });
@@ -601,8 +679,8 @@ function _relVisaoGeral() {
                 responsive: true,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#8e8e93', font: { family: 'Montserrat', size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                    y: { ticks: { color: '#8e8e93', font: { family: 'Montserrat', size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                    x: { ticks: { color: _chartTick(), font: { family: 'Montserrat', size: 10 } }, grid: { color: _chartGrid() } },
+                    y: { ticks: { color: _chartTick(), font: { family: 'Montserrat', size: 10 } }, grid: { color: _chartGrid() } }
                 }
             }
         });
@@ -678,9 +756,9 @@ window._relFluxoCaixaRender = function() {
             { label: 'Entradas Pagas',   val: fmt(recPago), color: '#1D9E75' },
             { label: 'Saídas Pagas',     val: fmt(desPago), color: '#E24B4A' },
             { label: 'Saldo Confirmado', val: fmt(recPago - desPago), color: (recPago - desPago) >= 0 ? '#1D9E75' : '#E24B4A' },
-            { label: 'Saldo Projetado',  val: fmt(recPago + recPend - desPago - desPend), color: (recPago + recPend - desPago - desPend) >= 0 ? '#5ac8fa' : '#ff9500' }
+            { label: 'Saldo Projetado',  val: fmt(recPago + recPend - desPago - desPend), color: (recPago + recPend - desPago - desPend) >= 0 ? 'var(--color-info)' : 'var(--color-warning)' }
         ].map(k => `
-            <div style="padding:1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:var(--radius-card); text-align:center;">
+            <div style="padding:1rem; background:${_statBg()}; border:${_statBor()}; border-radius:var(--radius-card); text-align:center;">
                 <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:5px; letter-spacing:0.6px; text-transform:uppercase;">${k.label}</div>
                 <div style="font-size:1.2rem; font-weight:800; color:${k.color};">${k.val}</div>
             </div>`).join('');
@@ -709,7 +787,7 @@ window._relFluxoCaixaRender = function() {
                     const isR  = c.tipo === 'receita';
                     const cor  = isR ? '#1D9E75' : '#E24B4A';
                     const dt   = c.vencimento.split('-').reverse().join('/');
-                    return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                    return `<tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='${_rowBg()}'" onmouseout="this.style.background='transparent'">
                         <td style="padding:0.625rem 1rem; font-weight:600;">${c.descricao}</td>
                         <td style="padding:0.625rem 1rem; color:var(--text-secondary);">${dt}</td>
                         <td style="padding:0.625rem 1rem; color:var(--text-muted); font-size:0.78rem; text-transform:uppercase;">${c.categoria || '—'}</td>
@@ -745,7 +823,7 @@ function _relDRE() {
     const panel = document.getElementById('rel-panel-dre');
     if (!panel) return;
 
-    const historico = JSON.parse(localStorage.getItem('pav_historico') || '[]');
+    let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
     const data      = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
     const fmt       = v => `R$ ${(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
@@ -755,24 +833,24 @@ function _relDRE() {
         const lucro = t.lucroGerencial || 0;
         const fat   = d.faturamento || 1;
         return `
-            <div style="display:flex; justify-content:space-between; padding:0.75rem 0; border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="display:flex; justify-content:space-between; padding:0.75rem 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:600; color:var(--text-secondary); font-size:0.85rem;">Receita Bruta</span>
                 <span style="font-weight:800; color:var(--accent-blue);">${fmt(d.faturamento)}</span>
             </div>
-            <div style="display:flex; justify-content:space-between; padding:0.75rem 0; border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="display:flex; justify-content:space-between; padding:0.75rem 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:600; color:var(--text-secondary); font-size:0.85rem;">(−) Custos Variáveis</span>
-                <span style="font-weight:800; color:#ffd60a;">${fmt(t.totalVariaveis)}</span>
+                <span style="font-weight:800; color:var(--color-warning);">${fmt(t.totalVariaveis)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; padding:0.75rem 0.875rem; background:var(--bg-elevated); border-radius:var(--radius-sm); margin:4px 0;">
                 <span style="font-weight:700; color:var(--accent-gold); font-size:0.85rem;">(=) Margem Contribuição</span>
                 <span style="font-weight:800; color:var(--accent-gold);">${fmt(t.margemContribuicao)}</span>
             </div>
-            <div style="display:flex; justify-content:space-between; padding:0.75rem 0; border-bottom:1px solid rgba(255,255,255,0.07);">
+            <div style="display:flex; justify-content:space-between; padding:0.75rem 0; border-bottom:1px solid var(--border);">
                 <span style="font-weight:600; color:var(--text-secondary); font-size:0.85rem;">(−) Despesas Fixas</span>
                 <span style="font-weight:800; color:#E24B4A;">${fmt(t.totalFixos)}</span>
             </div>
             <div style="display:flex; justify-content:space-between; padding:0.875rem 0 0 0; margin-top:4px; border-top:2px solid var(--border);">
-                <span style="font-weight:800; color:#fff;">(=) Lucro Líquido</span>
+                <span style="font-weight:800; color:var(--text-primary);">(=) Lucro Líquido</span>
                 <span style="font-weight:900; font-size:1.05rem; color:${lucro>=0?'#1D9E75':'#E24B4A'};">${fmt(lucro)}</span>
             </div>
             <div style="color:var(--text-secondary); font-size:0.75rem; text-align:right; margin-top:0.625rem;">
@@ -816,7 +894,7 @@ function _relDRE() {
                         return rows.map(r => {
                             const d = delta(r.cur, r.prev);
                             return `
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.875rem 0; border-bottom:1px solid rgba(255,255,255,0.06);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.875rem 0; border-bottom:1px solid var(--border);">
                                 <span style="color:var(--text-secondary); font-size:0.875rem; font-weight:600;">${r.label}</span>
                                 <div style="text-align:right;">
                                     <div style="font-weight:800; font-size:0.95rem;">R$ ${r.cur.toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
@@ -896,11 +974,11 @@ function _relCustos() {
         <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem;">
             ${[
                 { label: 'Total Custos Fixos',     val: fmt(totais.totalFixos),     color: '#E24B4A' },
-                { label: 'Total Custos Variáveis', val: fmt(totais.totalVariaveis), color: '#ffd60a' },
+                { label: 'Total Custos Variáveis', val: fmt(totais.totalVariaveis), color: 'var(--color-warning)' },
                 { label: 'Custo Total',            val: fmt((totais.totalFixos||0)+(totais.totalVariaveis||0)), color: '#ff9500' },
                 { label: 'Ponto de Equilíbrio',    val: fmt(parseFloat(pe)),        color: 'var(--accent-gold)' }
             ].map(k => `
-                <div style="padding:1.25rem 1rem; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:var(--radius-card); text-align:center;">
+                <div style="padding:1.25rem 1rem; background:${_statBg()}; border:${_statBor()}; border-radius:var(--radius-card); text-align:center;">
                     <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:5px; letter-spacing:0.6px; text-transform:uppercase;">${k.label}</div>
                     <div style="font-size:1.25rem; font-weight:800; color:${k.color};">${k.val}</div>
                 </div>`).join('')}
@@ -915,7 +993,7 @@ function _relCustos() {
                     : `${custos.map((c, i) => {
                         const pct = ((c.val / fat) * 100).toFixed(1);
                         return `
-                        <div style="display:flex; align-items:center; gap:0.875rem; padding:0.75rem 0; border-bottom:1px solid rgba(255,255,255,0.05);">
+                        <div style="display:flex; align-items:center; gap:0.875rem; padding:0.75rem 0; border-bottom:1px solid var(--border);">
                             <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); width:20px; flex-shrink:0; text-align:right;">${i+1}</span>
                             <div style="flex:1; min-width:0;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -923,7 +1001,7 @@ function _relCustos() {
                                     <span style="font-size:0.78rem; font-weight:800; color:${c.badge}; margin-left:1rem; flex-shrink:0;">${fmt(c.val)}</span>
                                 </div>
                                 <div style="display:flex; align-items:center; gap:0.5rem;">
-                                    <div style="flex:1; height:4px; border-radius:2px; background:rgba(255,255,255,0.06); overflow:hidden;">
+                                    <div style="flex:1; height:4px; border-radius:2px; background:var(--border); overflow:hidden;">
                                         <div style="height:100%; width:${Math.min(100,parseFloat(pct))}%; background:${c.badge}; border-radius:2px;"></div>
                                     </div>
                                     <span style="font-size:0.68rem; color:var(--text-muted); flex-shrink:0;">${pct}% fat.</span>
@@ -958,7 +1036,7 @@ function _relCustos() {
             },
             options: {
                 cutout: '70%',
-                plugins: { legend: { position: 'bottom', labels: { color: '#8e8e93', font: { family: 'Montserrat', size: 10 }, padding: 10 } } }
+                plugins: { legend: { position: 'bottom', labels: { color: _chartTick(), font: { family: 'Montserrat', size: 10 }, padding: 10 } } }
             }
         });
     }
@@ -1001,7 +1079,7 @@ function _relServicos() {
                             const health  = margem >= 30 ? { label: 'Ótima',   color: '#1D9E75' }
                                           : margem >= 15 ? { label: 'Regular', color: '#ff9500' }
                                           :                { label: 'Crítica', color: '#E24B4A' };
-                            return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                            return `<tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='${_rowBg()}'" onmouseout="this.style.background='transparent'">
                                 <td style="padding:0.625rem 0.875rem; color:var(--text-muted); font-size:0.8rem;">${i+1}</td>
                                 <td style="padding:0.625rem 0.875rem; font-weight:700;">${s.nome || '—'}</td>
                                 <td style="padding:0.625rem 0.875rem; text-align:right; color:var(--accent-blue); font-weight:700;">${fmt(s.preco)}</td>
@@ -1151,5 +1229,1169 @@ window.updateLiveBalanco = function() {
         } else {
             chipFix.style.display = 'none';
         }
+    }
+};
+
+// ============================================================
+// FEATURE 1.5 — DRE EM PDF
+// Fase 1 — adicionado ao final do arquivo, não altera código existente
+// ============================================================
+
+window.generateDREPdf = function(financialData, clinicInfo, period) {
+    // financialData: objeto com campos do balanço calculados (window.calcularTotais)
+    // clinicInfo: { nome, cnpj, responsavel, regime }
+    // period: string legível, ex: 'Março/2025'
+
+    if (typeof window.jspdf === 'undefined') {
+        Utils.showToast('Biblioteca PDF não carregada. Recarregue a página.', 'error');
+        return;
+    }
+
+    const { jsPDF }  = window.jspdf;
+    const doc        = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW      = doc.internal.pageSize.getWidth();
+    const pageH      = doc.internal.pageSize.getHeight();
+    const margin     = 14;
+    const colW       = pageW - 2 * margin;
+
+    const fmtBRL = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+    const pct    = (v, total) => total > 0 ? ((v / total) * 100).toFixed(1) + '%' : '0%';
+
+    // ── Calcular linhas do DRE ──────────────────────────────────────────
+    const t = window.calcularTotais ? window.calcularTotais(financialData) : {};
+    const receitaBruta   = financialData.faturamento    || 0;
+    const deducoes       = Math.abs(financialData.deducoes || 0);
+    const receitaLiquida = receitaBruta - deducoes;
+    const custoVariavel  = t.totalVariaveis             || 0;
+    const margemContrib  = t.margemContribuicao         || (receitaLiquida - custoVariavel);
+    const custoFixo      = t.totalFixos                 || 0;
+    const ebitda         = margemContrib - custoFixo;
+    const proLabore      = parseFloat(financialData.proLabore || 0);
+    const lucroLiquido   = t.lucroGerencial             || (ebitda - proLabore);
+    const qtdAtend       = parseFloat(financialData.qtdAtendimentos) || 0;
+    const ticketMedio    = qtdAtend > 0 ? receitaBruta / qtdAtend : 0;
+    const pe             = margemContrib > 0 ? (custoFixo / (margemContrib / receitaBruta)) : 0;
+
+    // ── Cabeçalho ──────────────────────────────────────────────────────
+    doc.setFillColor(15, 77, 63); // --brand-primary
+    doc.rect(0, 0, pageW, 30, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16).setFont('helvetica', 'bold');
+    doc.text('PAVE', margin, 11);
+
+    doc.setFontSize(10).setFont('helvetica', 'normal');
+    doc.text('Demonstrativo de Resultado do Exercício (DRE)', margin, 18);
+    doc.text(period, margin, 24);
+
+    doc.setFontSize(9);
+    doc.text(clinicInfo.nome || '', pageW - margin, 11, { align: 'right' });
+    doc.text('CNPJ: ' + (clinicInfo.cnpj || 'Não informado'), pageW - margin, 18, { align: 'right' });
+    doc.text('Regime: ' + (clinicInfo.regime || 'Não informado'), pageW - margin, 24, { align: 'right' });
+
+    // ── Tabela DRE ─────────────────────────────────────────────────────
+    const rows = [
+        { desc: 'Receita Bruta',               val: fmtBRL(receitaBruta),   pctVal: pct(receitaBruta,  receitaBruta), style: 'section'    },
+        { desc: '(-) Deduções / Impostos',     val: fmtBRL(deducoes),       pctVal: pct(deducoes,      receitaBruta), style: 'normal'     },
+        { desc: '(=) Receita Líquida',         val: fmtBRL(receitaLiquida), pctVal: pct(receitaLiquida, receitaBruta), style: 'total'     },
+        { desc: '(-) Custos Variáveis',        val: fmtBRL(custoVariavel),  pctVal: pct(custoVariavel,  receitaBruta), style: 'normal'    },
+        { desc: '(=) Margem de Contribuição',  val: fmtBRL(margemContrib),  pctVal: pct(margemContrib,  receitaBruta), style: 'total'     },
+        { desc: '(-) Custos Fixos',            val: fmtBRL(custoFixo),      pctVal: pct(custoFixo,      receitaBruta), style: 'normal'    },
+        { desc: '(=) EBITDA',                  val: fmtBRL(ebitda),         pctVal: pct(ebitda,         receitaBruta), style: 'total'     },
+        { desc: '(-) Pró-labore',              val: fmtBRL(proLabore),      pctVal: pct(proLabore,      receitaBruta), style: 'normal'    },
+        { desc: '(=) Lucro Líquido',           val: fmtBRL(lucroLiquido),   pctVal: pct(lucroLiquido,   receitaBruta), style: 'highlight' },
+    ];
+
+    doc.autoTable({
+        startY: 36,
+        head: [['Descrição', 'Valor', '% Receita']],
+        body: rows.map(r => [r.desc, r.val, r.pctVal]),
+        columnStyles: {
+            0: { cellWidth: colW * 0.55 },
+            1: { cellWidth: colW * 0.25, halign: 'right' },
+            2: { cellWidth: colW * 0.20, halign: 'right' },
+        },
+        styles:     { fontSize: 10, font: 'helvetica', cellPadding: 4 },
+        headStyles: { fillColor: [15, 77, 63], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [244, 247, 245] },
+        didParseCell: data => {
+            if (data.section !== 'body') return;
+            const style = rows[data.row.index]?.style;
+            if (style === 'total') {
+                data.cell.styles.fontStyle  = 'bold';
+                data.cell.styles.fillColor  = [225, 245, 238];
+            }
+            if (style === 'section') {
+                data.cell.styles.fillColor  = [15, 77, 63];
+                data.cell.styles.textColor  = 255;
+                data.cell.styles.fontStyle  = 'bold';
+            }
+            if (style === 'highlight') {
+                const isPos = lucroLiquido >= 0;
+                data.cell.styles.fillColor  = isPos ? [29, 158, 117] : [226, 75, 74];
+                data.cell.styles.textColor  = 255;
+                data.cell.styles.fontStyle  = 'bold';
+                data.cell.styles.fontSize   = 11;
+            }
+        },
+    });
+
+    // ── Indicadores ────────────────────────────────────────────────────
+    let nextY = doc.lastAutoTable.finalY + 10;
+    if (nextY > pageH - 70) { doc.addPage(); nextY = 20; }
+    doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+    doc.text('Indicadores do Período', margin, nextY);
+
+    const metaFat   = parseFloat(financialData.metaFaturamento) || 0;
+    const metaLucro = parseFloat(financialData.metaLucro)       || 0;
+
+    doc.autoTable({
+        startY: nextY + 4,
+        head: [['Indicador', 'Valor', 'Observação']],
+        body: [
+            ['Margem de Lucro Líquido',  pct(lucroLiquido, receitaBruta),   lucroLiquido >= 0 ? 'Resultado positivo' : 'Resultado negativo — atenção'],
+            ['Margem de Contribuição',   pct(margemContrib, receitaBruta),  margemContrib >= custoFixo ? 'Cobre custos fixos' : 'Abaixo dos custos fixos'],
+            ['Ponto de Equilíbrio',      fmtBRL(pe),                        receitaBruta > 0 ? (receitaBruta >= pe ? 'Atingido' : 'Não atingido') : '—'],
+            ['Ticket Médio',             fmtBRL(ticketMedio),               qtdAtend > 0 ? qtdAtend + ' atendimentos' : 'Sem dados de atendimentos'],
+            ['Meta Faturamento',         fmtBRL(metaFat),                   metaFat > 0 ? pct(receitaBruta, metaFat) + ' realizado' : 'Não definida'],
+            ['Meta Lucro',               fmtBRL(metaLucro),                 metaLucro > 0 ? pct(lucroLiquido, metaLucro) + ' realizado' : 'Não definida'],
+        ],
+        columnStyles: {
+            0: { cellWidth: colW * 0.35 },
+            1: { cellWidth: colW * 0.25, halign: 'right' },
+            2: { cellWidth: colW * 0.40 },
+        },
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [41, 98, 155], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [244, 247, 253] },
+    });
+
+    // ── Divisão do Lucro ───────────────────────────────────────────────
+    nextY = doc.lastAutoTable.finalY + 10;
+    if (nextY > pageH - 60) { doc.addPage(); nextY = 20; }
+    doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+    doc.text('Divisão do Lucro', margin, nextY);
+
+    let divConfig = { proLaborePerc: 50, investimentoPerc: 30, reservaPerc: 20 };
+    try {
+        const saved = JSON.parse(localStorage.getItem('pav_divisao_lucro') || '{}');
+        if (saved.proLaborePerc) divConfig = saved;
+    } catch(e) {}
+
+    const vlPL  = lucroLiquido * (divConfig.proLaborePerc   / 100);
+    const vlInv = lucroLiquido * (divConfig.investimentoPerc / 100);
+    const vlRes = lucroLiquido * (divConfig.reservaPerc     / 100);
+
+    doc.autoTable({
+        startY: nextY + 4,
+        head: [['Destinação', 'Percentual', 'Valor']],
+        body: [
+            ['Pró-labore',       divConfig.proLaborePerc   + '%', fmtBRL(vlPL)],
+            ['Reinvestimento',   divConfig.investimentoPerc + '%', fmtBRL(vlInv)],
+            ['Reserva de Caixa', divConfig.reservaPerc     + '%', fmtBRL(vlRes)],
+            ['Lucro Líquido',    '100%',                          fmtBRL(lucroLiquido)],
+        ],
+        columnStyles: {
+            0: { cellWidth: colW * 0.45 },
+            1: { cellWidth: colW * 0.25, halign: 'center' },
+            2: { cellWidth: colW * 0.30, halign: 'right' },
+        },
+        styles: { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [15, 77, 63], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [244, 247, 245] },
+        didParseCell: (d) => {
+            if (d.section === 'body' && d.row.index === 3) {
+                d.cell.styles.fontStyle = 'bold';
+                d.cell.styles.fillColor = lucroLiquido >= 0 ? [29, 158, 117] : [226, 75, 74];
+                d.cell.styles.textColor = 255;
+            }
+        },
+    });
+
+    // ── Rodapé em todas as páginas ─────────────────────────────────────
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setDrawColor(200);
+        doc.line(margin, pageH - 13, pageW - margin, pageH - 13);
+        doc.setFontSize(7).setFont('helvetica', 'normal').setTextColor(140);
+        doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} · PAVE Financial`, margin, pageH - 7);
+        doc.text('Este documento é informativo. Consulte um contador para fins fiscais.', pageW / 2, pageH - 7, { align: 'center' });
+        doc.text(`Pág. ${i}/${pageCount}`, pageW - margin, pageH - 7, { align: 'right' });
+    }
+
+    const filename = `DRE_${period.replace('/', '-')}.pdf`;
+    doc.save(filename);
+    return filename;
+};
+
+// ── FEATURE 1.2 — FLUXO DE CAIXA PROJETADO ───────────────────────────────────
+
+window.loadProjectedCashflow = async function() {
+    const container = document.getElementById('projected-cashflow-chart');
+    if (!container) return;
+
+    const orgId = await OrgAPI.getOrgId();
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const deadline = new Date(today.getTime() + 30 * 86400000).toISOString().split('T')[0];
+
+    // Saldo atual a partir dos movimentos locais
+    const movimentos = JSON.parse(localStorage.getItem('pav_caixa_movimentos') || '[]');
+    const currentBalance = movimentos.reduce((acc, m) => {
+        return acc + (m.tipo === 'receita' ? (m.valor || 0) : -(m.valor || 0));
+    }, 0);
+
+    // Bills futuros (requer orgId e tabela bills)
+    let futureBills = [];
+    if (orgId) {
+        try {
+            const { data } = await _supabase
+                .from('bills')
+                .select('type, amount, due_date, description')
+                .eq('organization_id', orgId)
+                .in('status', ['open', 'overdue'])
+                .gte('due_date', todayStr)
+                .lte('due_date', deadline);
+            futureBills = data || [];
+        } catch (e) { /* silencioso */ }
+    }
+
+    // Recorrências do caixa local
+    const recurrents = movimentos.filter(m => m.isRecurring || m.recorrencia === 'mensal');
+
+    const projection = _buildDailyProjection(currentBalance, futureBills, recurrents, 30);
+    _renderProjectionChart(container, projection);
+};
+
+function _buildDailyProjection(startBalance, bills, recurrents, days) {
+    const result = [];
+    const today  = new Date();
+    let balance  = startBalance;
+
+    for (let i = 0; i <= days; i++) {
+        const date    = new Date(today.getTime() + i * 86400000);
+        const dateStr = date.toISOString().split('T')[0];
+        let dailyDelta = 0;
+        const sources  = [];
+
+        // Bills agendados para este dia
+        bills.filter(b => b.due_date === dateStr).forEach(b => {
+            const sign = b.type === 'receivable' ? 1 : -1;
+            dailyDelta += sign * parseFloat(b.amount);
+            sources.push({ label: b.description || b.type, amount: sign * parseFloat(b.amount) });
+        });
+
+        // Recorrências mensais que caem neste dia do mês
+        recurrents.forEach(r => {
+            const origDate = new Date(r.vencimento || r.date || '');
+            if (!isNaN(origDate) && origDate.getDate() === date.getDate()) {
+                const sign = r.tipo === 'receita' ? 1 : -1;
+                dailyDelta += sign * (r.valor || 0);
+            }
+        });
+
+        balance += dailyDelta;
+        result.push({ date: dateStr, balance, delta: dailyDelta, sources });
+    }
+    return result;
+}
+
+function _renderProjectionChart(canvas, projection) {
+    if (typeof Chart === 'undefined') return;
+
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+
+    const fmtBRL = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+    const labels   = projection.map(p => p.date.slice(5).replace('-', '/'));
+    const balances = projection.map(p => p.balance);
+    const minValue = Math.min(...balances, 0);
+    const hasNeg   = minValue < 0;
+
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Saldo Projetado',
+                data: balances,
+                borderColor: '#1D9E75',
+                backgroundColor: 'rgba(29,158,117,0.08)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    min: hasNeg ? minValue * 1.15 : 0,
+                    grid: { color: _chartGrid() },
+                    ticks: {
+                        color: 'var(--text-secondary)',
+                        callback: v => new Intl.NumberFormat('pt-BR', { notation: 'compact', style: 'currency', currency: 'BRL' }).format(v),
+                    },
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: 'var(--text-secondary)', maxTicksLimit: 10 },
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: ctx => `${ctx[0].label}`,
+                        label: ctx => {
+                            const point = projection[ctx.dataIndex];
+                            const lines = [`Saldo: ${fmtBRL(ctx.parsed.y)}`];
+                            if (point.sources.length) {
+                                lines.push('─');
+                                point.sources.forEach(s => lines.push(`${s.label}: ${fmtBRL(s.amount)}`));
+                            }
+                            return lines;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Alerta de saldo negativo
+    const negDays = projection.filter(p => p.balance < 0).length;
+    const alertEl = document.getElementById('projected-cashflow-alert');
+    if (alertEl) {
+        if (negDays > 0) {
+            alertEl.textContent = `⚠ Saldo projetado negativo em ${negDays} dia(s) dos próximos 30. Revise as contas a pagar.`;
+            alertEl.style.display = 'block';
+        } else {
+            alertEl.style.display = 'none';
+        }
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FASE 2 — FEATURES 2.1, 2.2, 2.3, 2.4
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── FEATURE 2.1 — SCORE DE SAÚDE FINANCEIRA ──────────────────────────────────
+
+window.renderHealthScore = function() {
+    const el = document.getElementById('health-score-widget');
+    if (!el) return;
+
+    const data   = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
+    if (!data) { el.innerHTML = ''; return; }
+
+    const totais = window.calcularTotais ? window.calcularTotais(data) : {};
+    const fat    = totais.faturamento || 0;
+    if (fat <= 0) { el.innerHTML = ''; return; }
+
+    const lucroPct   = fat > 0 ? (totais.lucroGerencial / fat) * 100 : 0;
+    const fixosPct   = fat > 0 ? (totais.totalFixos / fat) * 100 : 100;
+    const movs       = JSON.parse(localStorage.getItem('pav_caixa_movimentos') || '[]');
+    const saldo      = movs.reduce((a, m) => a + (m.tipo === 'receita' ? (m.valor||0) : -(m.valor||0)), 0);
+    let historicoAll; try { historicoAll = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historicoAll = []; }
+
+    // Score components (each 0–100):
+    // 1. Margem líquida  (≥20% → 100, 0% → 0)
+    const scoreMargem = Math.max(0, Math.min(100, lucroPct * 5));
+    // 2. Controle de fixos (≤40% → 100, ≥80% → 0)
+    const scoreFixos  = Math.max(0, Math.min(100, (80 - fixosPct) * 2.5));
+    // 3. Liquidez (saldo ≥ 1 mês de fixos → 100)
+    const metaReserva = totais.totalFixos || 1;
+    const scoreLiq    = Math.max(0, Math.min(100, (saldo / metaReserva) * 100));
+    // 4. Tendência (lucro crescente vs mês anterior → bônus)
+    const idxAtual   = data ? historicoAll.findIndex(h => h.mesRef === data.mesReferencia) : -1;
+    const anterior   = idxAtual > 0 ? historicoAll[idxAtual - 1] : null;
+    const crescimento = anterior ? totais.lucroGerencial - (parseFloat(anterior.lucro) || 0) : 0;
+    const scoreTend  = Math.max(0, Math.min(100, 50 + crescimento / (metaReserva * 0.1)));
+
+    const score = Math.round((scoreMargem * 0.35 + scoreFixos * 0.25 + scoreLiq * 0.25 + scoreTend * 0.15));
+    const clamp = Math.max(0, Math.min(100, score));
+
+    let grade, color, bg, desc;
+    if (clamp >= 80)      { grade = 'A'; color = '#1D9E75'; bg = 'rgba(29,158,117,0.08)'; desc = 'Excelente'; }
+    else if (clamp >= 65) { grade = 'B'; color = '#4db6ac'; bg = 'rgba(77,182,172,0.08)'; desc = 'Bom'; }
+    else if (clamp >= 50) { grade = 'C'; color = '#ff9500'; bg = 'rgba(255,149,0,0.08)';   desc = 'Regular'; }
+    else if (clamp >= 35) { grade = 'D'; color = '#ff6b35'; bg = 'rgba(255,107,53,0.08)';  desc = 'Atenção'; }
+    else                  { grade = 'E'; color = '#E24B4A'; bg = 'rgba(226,75,74,0.08)';   desc = 'Crítico'; }
+
+    const arc = clamp / 100;
+    const r   = 40;  /* raio — viewBox 110x110, centro em 55,55 */
+    const circumference = 2 * Math.PI * r;
+    const dash = circumference * arc;
+
+    const components = [
+        { label: 'Margem Líquida',  val: Math.round(scoreMargem), detail: `${lucroPct.toFixed(1)}%` },
+        { label: 'Controle Fixos',  val: Math.round(scoreFixos),  detail: `${fixosPct.toFixed(1)}% da receita` },
+        { label: 'Liquidez',        val: Math.round(scoreLiq),    detail: saldo >= 0 ? `R$ ${saldo.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : 'Negativo' },
+        { label: 'Tendência',       val: Math.round(Math.max(0, Math.min(100, scoreTend))), detail: crescimento >= 0 ? '↑ Crescendo' : '↓ Queda' },
+    ];
+
+    el.innerHTML = `
+    <div style="background:${bg}; border:1px solid ${color}33; border-radius:var(--radius-card); padding:1.25rem 1.5rem; display:flex; align-items:center; gap:1.75rem; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+            <svg width="110" height="110" viewBox="0 0 110 110">
+                <circle cx="55" cy="55" r="${r}" fill="none" stroke="rgba(128,128,128,0.18)" stroke-width="8"/>
+                <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color}" stroke-width="8"
+                    stroke-dasharray="${dash} ${circumference}"
+                    stroke-dashoffset="${circumference * 0.25}"
+                    stroke-linecap="round"
+                    style="transition: stroke-dasharray 0.6s ease;"/>
+                <text x="55" y="51" text-anchor="middle" fill="${color}" font-size="24" font-weight="800" font-family="Montserrat,system-ui,sans-serif">${clamp}</text>
+                <text x="55" y="65" text-anchor="middle" fill="${color}" font-size="10" font-weight="700" font-family="Montserrat,system-ui,sans-serif">${grade} · ${desc}</text>
+            </svg>
+            <span style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Score de Saúde</span>
+        </div>
+        <div style="flex:1; min-width:220px;">
+            <div style="font-weight:700; color:var(--text-primary); margin-bottom:0.75rem; font-size:0.9rem;">Componentes do Score</div>
+            ${components.map(c => {
+                const cpct = c.val;
+                const cc   = cpct >= 70 ? '#1D9E75' : cpct >= 45 ? '#ff9500' : '#E24B4A';
+                return `<div style="margin-bottom:0.7rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline; font-size:0.75rem; margin-bottom:4px; gap:0.5rem;">
+                        <span style="color:var(--text-secondary); white-space:nowrap;">${c.label}</span>
+                        <span style="color:${cc}; font-weight:700; white-space:nowrap; flex-shrink:0;">${c.val}/100 <span style="color:var(--text-muted); font-weight:400;">(${c.detail})</span></span>
+                    </div>
+                    <div style="height:6px; border-radius:4px; background:rgba(128,128,128,0.15); overflow:hidden;">
+                        <div style="height:100%; width:${cpct}%; background:${cc}; border-radius:4px; transition:width 0.6s ease;"></div>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>
+    </div>`;
+};
+
+// ── FEATURE 2.2 — ALERTAS INTELIGENTES PROATIVOS ─────────────────────────────
+
+window.renderSmartAlerts = function() {
+    const container = document.getElementById('smart-alerts-container');
+    if (!container) return;
+
+    const data    = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
+    const totais  = data && window.calcularTotais ? window.calcularTotais(data) : {};
+    const fat     = totais.faturamento || 0;
+
+    const dismissKey = `pav_dismissed_alerts_${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+    const dismissed  = JSON.parse(localStorage.getItem(dismissKey) || '[]');
+
+    const alerts = [];
+
+    // 1. Margem líquida baixa
+    if (fat > 0) {
+        const lucroPct = (totais.lucroGerencial / fat) * 100;
+        if (lucroPct < 10) {
+            alerts.push({ id: 'low-margin', type: 'danger',
+                title: 'Margem Líquida Crítica',
+                msg: `Seu lucro líquido é apenas ${lucroPct.toFixed(1)}% da receita. Revise custos ou reajuste preços.` });
+        }
+    }
+
+    // 2. Custos fixos elevados
+    if (fat > 0) {
+        const fixosPct = (totais.totalFixos / fat) * 100;
+        if (fixosPct > 60) {
+            alerts.push({ id: 'high-fixed', type: 'warning',
+                title: 'Custos Fixos Elevados',
+                msg: `Custos fixos representam ${fixosPct.toFixed(1)}% da receita (referência: <40%). Avalie cortes.` });
+        }
+    }
+
+    // 3. Saldo de caixa negativo
+    const movs  = JSON.parse(localStorage.getItem('pav_caixa_movimentos') || '[]');
+    const saldo = movs.reduce((a, m) => a + (m.tipo === 'receita' ? (m.valor||0) : -(m.valor||0)), 0);
+    if (saldo < 0) {
+        alerts.push({ id: 'neg-cash', type: 'danger',
+            title: 'Saldo de Caixa Negativo',
+            msg: `Saldo atual: R$ ${saldo.toLocaleString('pt-BR',{minimumFractionDigits:2})}. Revise entradas e saídas pendentes.` });
+    }
+
+    // 4. Queda de faturamento vs mês anterior
+    let hist; try { hist = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { hist = []; }
+    if (data && hist.length >= 2) {
+        const idx = hist.findIndex(h => h.mesRef === data.mesReferencia);
+        if (idx > 0) {
+            const prevFat = parseFloat(hist[idx-1].faturamento) || 0;
+            if (prevFat > 0 && fat < prevFat * 0.8) {
+                const queda = ((prevFat - fat) / prevFat * 100).toFixed(1);
+                alerts.push({ id: 'revenue-drop', type: 'warning',
+                    title: 'Queda de Faturamento',
+                    msg: `Faturamento caiu ${queda}% em relação ao mês anterior. Avalie estratégias de captação.` });
+            }
+        }
+    }
+
+    // 5. Sem balanço no mês atual
+    const mesAtual = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+    const temMesAtual = hist.some(h => h.mesRef && h.mesRef.startsWith(mesAtual));
+    if (!temMesAtual && hist.length > 0) {
+        alerts.push({ id: 'missing-month', type: 'info',
+            title: 'Balanço do Mês Não Lançado',
+            msg: 'Nenhum balanço consolidado para o mês atual. Lance os dados para manter as análises atualizadas.' });
+    }
+
+    const visible = alerts.filter(a => !dismissed.includes(a.id)).slice(0, 2);
+    if (visible.length === 0) { container.innerHTML = ''; return; }
+
+    const colorMap = {
+        danger:  { border: '#E24B4A', bg: 'rgba(226,75,74,0.07)', icon: '#E24B4A', iconBg: 'rgba(226,75,74,0.12)' },
+        warning: { border: '#ff9500', bg: 'rgba(255,149,0,0.07)',  icon: '#ff9500', iconBg: 'rgba(255,149,0,0.12)' },
+        info:    { border: 'var(--accent-blue)', bg: 'rgba(10,132,255,0.07)', icon: 'var(--accent-blue)', iconBg: 'rgba(10,132,255,0.12)' },
+    };
+
+    container.innerHTML = visible.map(a => {
+        const c = colorMap[a.type];
+        return `<div id="smart-alert-${a.id}" style="display:flex; align-items:flex-start; gap:0.875rem; padding:0.875rem 1rem; background:${c.bg}; border:1px solid ${c.border}33; border-left:3px solid ${c.border}; border-radius:var(--radius-md); margin-bottom:0.625rem;">
+            <span style="flex-shrink:0; width:28px; height:28px; border-radius:50%; background:${c.iconBg}; display:flex; align-items:center; justify-content:center; color:${c.icon};">${IC.alert}</span>
+            <div style="flex:1; min-width:0;">
+                <div style="font-weight:700; font-size:0.85rem; color:var(--text-primary); margin-bottom:2px;">${a.title}</div>
+                <div style="font-size:0.78rem; color:var(--text-secondary);">${a.msg}</div>
+            </div>
+            <button onclick="window._dismissAlert('${a.id}')" style="flex-shrink:0; background:none; border:none; cursor:pointer; color:var(--text-muted); padding:2px 4px; border-radius:4px; font-size:1rem; line-height:1;" title="Dispensar">✕</button>
+        </div>`;
+    }).join('');
+};
+
+window._dismissAlert = function(id) {
+    const dismissKey = `pav_dismissed_alerts_${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
+    const dismissed  = JSON.parse(localStorage.getItem(dismissKey) || '[]');
+    if (!dismissed.includes(id)) dismissed.push(id);
+    localStorage.setItem(dismissKey, JSON.stringify(dismissed));
+    document.getElementById('smart-alert-' + id)?.remove();
+};
+
+// ── FEATURE 2.4 — RANKING DE SERVIÇOS ────────────────────────────────────────
+
+function _relRanking() {
+    const panel = document.getElementById('rel-panel-ranking');
+    if (!panel) return;
+
+    const servicos = JSON.parse(localStorage.getItem('pav_servicos') || '[]');
+    const fmt      = v => `R$ ${parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+
+    const monthKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+    const prog     = JSON.parse(localStorage.getItem(`pav_svc_prog_${monthKey}`) || '{}');
+
+    if (servicos.length === 0) {
+        panel.innerHTML = `<div class="card"><p style="color:var(--text-muted); text-align:center; padding:2rem;">Nenhum serviço cadastrado no catálogo.</p></div>`;
+        return;
+    }
+
+    // Sort by monthly revenue (qty × price) desc, fallback margin
+    const ranked = [...servicos].map(s => {
+        const p = prog[s.id] || { qty: 0, revenue: 0 };
+        return { ...s, monthQty: p.qty, monthRevenue: p.qty * parseFloat(s.preco||0) };
+    }).sort((a, b) => {
+        if (b.monthRevenue !== a.monthRevenue) return b.monthRevenue - a.monthRevenue;
+        return parseFloat(b.margem) - parseFloat(a.margem);
+    });
+
+    const maxRev  = ranked[0]?.monthRevenue || 1;
+
+    panel.innerHTML = `
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem;">
+            <div>
+                <h3 style="margin:0; color:var(--text-primary);">Ranking de Serviços</h3>
+                <p style="margin:4px 0 0; font-size:0.8rem; color:var(--text-muted);">Por receita gerada no mês atual · use +1 no catálogo para registrar atendimentos</p>
+            </div>
+            <button onclick="window._rankingExportCSV()" style="padding:0.45rem 1rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.8rem; cursor:pointer; font-family:var(--font-family); font-weight:600;">↓ CSV</button>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                <thead>
+                    <tr style="border-bottom:2px solid var(--border);">
+                        <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">#</th>
+                        <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Serviço</th>
+                        <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Atend.</th>
+                        <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Receita Mês</th>
+                        <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Margem</th>
+                        <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Participação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${ranked.slice(0,10).map((s, i) => {
+                        const margem = parseFloat(s.margem) || 0;
+                        const mc = margem >= 30 ? '#1D9E75' : margem >= 15 ? '#ff9500' : '#E24B4A';
+                        const barW = maxRev > 0 ? Math.round((s.monthRevenue / maxRev) * 100) : 0;
+                        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+                        return `<tr style="border-bottom:1px solid var(--border); transition:background 0.12s;" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">
+                            <td style="padding:0.625rem 0.75rem; font-weight:700;">${medal}</td>
+                            <td style="padding:0.625rem 0.75rem; font-weight:600; color:var(--text-primary);">${s.nome}</td>
+                            <td style="padding:0.625rem 0.75rem; text-align:right; color:var(--text-secondary);">${s.monthQty}</td>
+                            <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:var(--accent-blue);">${fmt(s.monthRevenue)}</td>
+                            <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:${mc};">${margem.toFixed(1)}%</td>
+                            <td style="padding:0.625rem 0.75rem; min-width:100px;">
+                                <div style="height:6px; border-radius:4px; background:var(--border); overflow:hidden;">
+                                    <div style="height:100%; width:${barW}%; background:var(--accent-blue); transition:width 0.4s;"></div>
+                                </div>
+                            </td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>`;
+}
+
+window._rankingExportCSV = function() {
+    const servicos = JSON.parse(localStorage.getItem('pav_servicos') || '[]');
+    const monthKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+    const prog     = JSON.parse(localStorage.getItem(`pav_svc_prog_${monthKey}`) || '{}');
+
+    const rows = [['Posição','Serviço','Preço','Custo Total','Lucro','Margem %','Atendimentos Mês','Receita Mês']];
+    [...servicos].map(s => {
+        const p = prog[s.id] || { qty: 0 };
+        return { ...s, monthQty: p.qty, monthRevenue: p.qty * parseFloat(s.preco||0) };
+    }).sort((a, b) => b.monthRevenue - a.monthRevenue).slice(0, 10).forEach((s, i) => {
+        rows.push([i+1, s.nome, s.preco, s.custoTotal, s.lucro, s.margem, s.monthQty, s.monthRevenue.toFixed(2)]);
+    });
+
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url; a.download = `ranking_servicos_${monthKey}.csv`; a.click();
+    URL.revokeObjectURL(url);
+};
+
+// ── FEATURE 2.3 — COMPARATIVO DE PERÍODO ─────────────────────────────────────
+
+function _relComparativo() {
+    const panel = document.getElementById('rel-panel-comparativo');
+    if (!panel) return;
+
+    let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
+    const data      = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
+
+    if (!data || historico.length < 2) {
+        panel.innerHTML = `<div class="card"><p style="color:var(--text-muted); text-align:center; padding:2rem;">Consolidações insuficientes para comparativo. É necessário ter ao menos 2 meses no histórico.</p></div>`;
+        return;
+    }
+
+    const fmt   = v  => `R$ ${(parseFloat(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    const pct   = v  => `${(parseFloat(v)||0).toFixed(1)}%`;
+    const delta = (curr, prev) => {
+        if (!prev || parseFloat(prev) === 0) return { txt: '—', color: 'var(--text-muted)' };
+        const d = ((parseFloat(curr) - parseFloat(prev)) / Math.abs(parseFloat(prev))) * 100;
+        const color = d >= 0 ? '#1D9E75' : '#E24B4A';
+        return { txt: `${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}%`, color };
+    };
+
+    // Periods: current, previous month, same month last year
+    const sortedHist = [...historico].sort((a, b) => (a.mesRef||'').localeCompare(b.mesRef||''));
+    const currMes    = data.mesReferencia;
+    const currIdx    = sortedHist.findIndex(h => h.mesRef === currMes);
+    const prevEntry  = currIdx > 0 ? sortedHist[currIdx - 1] : null;
+
+    // Same month last year
+    let sameMthLastYear = null;
+    if (currMes && currMes.length >= 7) {
+        const [y, m] = currMes.split('-');
+        const prevYear = `${parseInt(y)-1}-${m}`;
+        sameMthLastYear = sortedHist.find(h => h.mesRef && h.mesRef.startsWith(prevYear)) || null;
+    }
+
+    const totaisCurr  = window.calcularTotais ? window.calcularTotais(data) : {};
+    const curr = {
+        fat:    totaisCurr.faturamento || 0,
+        lucro:  totaisCurr.lucroGerencial || 0,
+        fixos:  totaisCurr.totalFixos || 0,
+        varCosts: totaisCurr.totalVariaveis || 0,
+        margem: totaisCurr.faturamento > 0 ? (totaisCurr.lucroGerencial / totaisCurr.faturamento * 100) : 0,
+    };
+
+    const extractHist = h => ({
+        fat:    parseFloat(h?.faturamento) || 0,
+        lucro:  parseFloat(h?.lucro) || 0,
+        fixos:  parseFloat(h?.totalFixos) || 0,
+        varCosts: parseFloat(h?.totalVariaveis) || 0,
+        margem: parseFloat(h?.faturamento) > 0 ? (parseFloat(h.lucro) / parseFloat(h.faturamento) * 100) : 0,
+    });
+
+    const prev  = prevEntry ? extractHist(prevEntry) : null;
+    const sameY = sameMthLastYear ? extractHist(sameMthLastYear) : null;
+
+    const fmtMes = m => {
+        if (!m || !m.includes('-')) return m || '—';
+        const [y, mo] = m.split('-');
+        const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+        return `${meses[parseInt(mo)-1] || mo}/${y}`;
+    };
+
+    const rows = [
+        { label: 'Faturamento',      curr: fmt(curr.fat),      prev: fmt(prev?.fat),      sameY: fmt(sameY?.fat),      deltaPrev: delta(curr.fat, prev?.fat),      deltaY: delta(curr.fat, sameY?.fat) },
+        { label: 'Lucro Gerencial',  curr: fmt(curr.lucro),    prev: fmt(prev?.lucro),    sameY: fmt(sameY?.lucro),    deltaPrev: delta(curr.lucro, prev?.lucro),    deltaY: delta(curr.lucro, sameY?.lucro) },
+        { label: 'Custos Fixos',     curr: fmt(curr.fixos),    prev: fmt(prev?.fixos),    sameY: fmt(sameY?.fixos),    deltaPrev: delta(curr.fixos, prev?.fixos),    deltaY: delta(curr.fixos, sameY?.fixos) },
+        { label: 'Custos Variáveis', curr: fmt(curr.varCosts), prev: fmt(prev?.varCosts), sameY: fmt(sameY?.varCosts), deltaPrev: delta(curr.varCosts, prev?.varCosts), deltaY: delta(curr.varCosts, sameY?.varCosts) },
+        { label: 'Margem Líquida',   curr: pct(curr.margem),   prev: pct(prev?.margem),   sameY: pct(sameY?.margem),   deltaPrev: delta(curr.margem, prev?.margem),   deltaY: delta(curr.margem, sameY?.margem) },
+    ];
+
+    panel.innerHTML = `
+    <div class="card">
+        <h3 style="margin:0 0 0.25rem; color:var(--text-primary);">Comparativo de Período</h3>
+        <p style="margin:0 0 1.5rem; font-size:0.8rem; color:var(--text-muted);">Comparação entre o mês consolidado mais recente, o mês anterior e o mesmo mês do ano anterior.</p>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                <thead>
+                    <tr style="border-bottom:2px solid var(--border);">
+                        <th style="text-align:left; padding:0.625rem 0.75rem; color:var(--text-muted); font-weight:700;">Indicador</th>
+                        <th style="text-align:right; padding:0.625rem 0.75rem; color:var(--accent-blue); font-weight:700;">${fmtMes(currMes)}</th>
+                        <th style="text-align:right; padding:0.625rem 0.75rem; color:var(--text-muted); font-weight:700;">${prevEntry ? fmtMes(prevEntry.mesRef) : '—'}</th>
+                        <th style="text-align:right; padding:0.625rem 0.75rem; color:var(--text-muted); font-weight:700;">vs Anterior</th>
+                        <th style="text-align:right; padding:0.625rem 0.75rem; color:var(--text-muted); font-weight:700;">${sameMthLastYear ? fmtMes(sameMthLastYear.mesRef) : 'Ano Ant.'}</th>
+                        <th style="text-align:right; padding:0.625rem 0.75rem; color:var(--text-muted); font-weight:700;">vs Ano Ant.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(r => `
+                    <tr style="border-bottom:1px solid var(--border); transition:background 0.12s;" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">
+                        <td style="padding:0.625rem 0.75rem; font-weight:600; color:var(--text-primary);">${r.label}</td>
+                        <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:var(--text-primary);">${r.curr}</td>
+                        <td style="padding:0.625rem 0.75rem; text-align:right; color:var(--text-secondary);">${r.prev || '—'}</td>
+                        <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:${r.deltaPrev.color};">${r.deltaPrev.txt}</td>
+                        <td style="padding:0.625rem 0.75rem; text-align:right; color:var(--text-secondary);">${r.sameY || '—'}</td>
+                        <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:${r.deltaY.color};">${r.deltaY.txt}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>
+    </div>`;
+}
+
+// ── HOOK: renderDashboard → renderHealthScore + renderSmartAlerts ─────────────
+// Redefine com debounce para que HealthScore e SmartAlerts rodem DEPOIS do render
+
+window.renderDashboard = function(forceData) {
+    clearTimeout(_dashboardDebounce);
+    _dashboardDebounce = setTimeout(() => {
+        _renderDashboardImpl(forceData || null);
+        try { window.renderHealthScore?.(); } catch(e) { /* silencioso */ }
+        try { window.renderSmartAlerts?.(); } catch(e) { /* silencioso */ }
+    }, 80);
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// FASE 3 — FEATURE 3.5: CARTA PARA O CONTADOR + 3.2: CLIENTES EM RELATÓRIOS
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── TAX RATES ────────────────────────────────────────────────────────────────
+
+const TAX_RATES = {
+    simples:          { rate: 0.06,   label: 'Simples Nacional (~6%)' },
+    simples_nacional: { rate: 0.06,   label: 'Simples Nacional (~6%)' },
+    presumido:        { rate: 0.1150, label: 'Lucro Presumido (~11,5%)' },
+    lucro_presumido:  { rate: 0.1150, label: 'Lucro Presumido (~11,5%)' },
+    real:             { rate: null,   label: 'Lucro Real' },
+    lucro_real:       { rate: null,   label: 'Lucro Real' },
+};
+
+// ── FEATURE 3.5 — CARTA PARA O CONTADOR ──────────────────────────────────────
+
+function _relCartaContador() {
+    const panel = document.getElementById('rel-panel-carta');
+    if (!panel) return;
+
+    const now    = new Date();
+    const defMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    panel.innerHTML = `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start; flex-wrap:wrap;">
+        <div>
+            <h3 style="margin:0 0 0.5rem; color:var(--text-primary);">Carta para o Contador</h3>
+            <p style="margin:0 0 1rem; font-size:0.82rem; color:var(--text-secondary); line-height:1.6;">
+                Documento completo com DRE, receitas por categoria, despesas por categoria
+                e estimativa de impostos — pronto para enviar ao contador mensalmente.
+            </p>
+            <ul style="font-size:0.78rem; color:var(--text-muted); list-style:none; padding:0; margin:0; line-height:2;">
+                <li>📊 Seção 1: DRE (Demonstrativo de Resultado)</li>
+                <li>📈 Seção 2: Receitas por Categoria</li>
+                <li>📉 Seção 3: Despesas por Categoria</li>
+                <li>🧾 Seção 4: Estimativa de Impostos</li>
+                <li>💬 Seção 5: Observações (opcional)</li>
+            </ul>
+        </div>
+        <div style="background:var(--bg-elevated); border-radius:var(--radius-card); border:1px solid var(--border); padding:1.25rem;">
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; font-size:0.78rem; color:var(--text-secondary); font-weight:600; margin-bottom:4px;">Mês de referência</label>
+                <input type="month" id="carta-period" value="${defMonth}" max="${defMonth}"
+                    style="width:100%; padding:0.5rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.875rem; font-family:var(--font-family); outline:none; box-sizing:border-box;">
+            </div>
+            <div style="margin-bottom:1.25rem;">
+                <label style="display:block; font-size:0.78rem; color:var(--text-secondary); font-weight:600; margin-bottom:4px;">Observações para o contador (opcional)</label>
+                <textarea id="carta-obs" rows="3"
+                    placeholder="Ex: Houve reforma em janeiro — despesas de obra em custo variável..."
+                    style="width:100%; padding:0.5rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.875rem; font-family:var(--font-family); outline:none; resize:vertical; box-sizing:border-box;"></textarea>
+            </div>
+            <div id="carta-error" style="color:var(--color-danger); font-size:0.78rem; margin-bottom:0.75rem; display:none;"></div>
+            <button id="btn-generate-carta" style="width:100%; padding:0.75rem; border-radius:var(--radius-sm); border:none; background:var(--accent-blue); color:#fff; font-size:0.9rem; font-weight:700; cursor:pointer; font-family:var(--font-family);">
+                ↓ Gerar Carta para o Contador (PDF)
+            </button>
+        </div>
+    </div>`;
+
+    panel.querySelector('#btn-generate-carta').addEventListener('click', async () => {
+        const monthValue = panel.querySelector('#carta-period').value;
+        const obs        = panel.querySelector('#carta-obs').value;
+        const errEl      = panel.querySelector('#carta-error');
+        const btn        = panel.querySelector('#btn-generate-carta');
+        errEl.style.display = 'none';
+
+        if (!monthValue) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Gerando...';
+
+        try {
+            const orgId = await OrgAPI.getOrgId();
+            if (!orgId) throw new Error('Organização não configurada.');
+
+            // Dados consolidados do mês (financial_entries)
+            const { data: entry } = await _supabase
+                .from('financial_entries')
+                .select('data, totals')
+                .eq('organization_id', orgId)
+                .eq('reference_date', monthValue + '-01')
+                .single();
+
+            if (!entry?.data) {
+                // Fallback: pav_ultimos_dados e pav_historico
+                const local = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
+                if (!local || local.mesReferencia !== monthValue) {
+                    throw new Error('Sem dados consolidados para este mês. Finalize o balanço mensal primeiro.');
+                }
+                _generateCartaPDF(local, monthValue, [], obs, orgId);
+                return;
+            }
+
+            // Movimentos do período (para categorias)
+            const start = monthValue + '-01';
+            const end   = new Date(monthValue.slice(0,4), monthValue.slice(5), 0).toISOString().split('T')[0];
+            const { data: movs } = await _supabase
+                .from('cash_movements')
+                .select('type, amount, category, description')
+                .eq('organization_id', orgId)
+                .gte('due_date', start)
+                .lte('due_date', end);
+
+            _generateCartaPDF(entry.data, monthValue, movs || [], obs, orgId);
+
+        } catch (err) {
+            errEl.textContent = '⚠ ' + err.message;
+            errEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '↓ Gerar Carta para o Contador (PDF)';
+        }
+    });
+}
+
+async function _generateCartaPDF(financialData, monthValue, movimentos, observacoes, orgId) {
+    if (!window.jspdf?.jsPDF) {
+        if (window.Utils) Utils.showToast('jsPDF não disponível. Recarregue a página.', 'error');
+        return;
+    }
+
+    // Org info
+    let orgInfo = { name: localStorage.getItem('pav_brand_nome') || 'Clínica', cnpj: '', responsible: '', tax_regime: 'simples' };
+    try {
+        const { data: org } = await _supabase.from('organizations').select('name,cnpj,responsible,tax_regime').eq('id', orgId).single();
+        if (org) orgInfo = org;
+    } catch(e) { /* usa defaults */ }
+
+    const { jsPDF } = window.jspdf;
+    const doc    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW  = doc.internal.pageSize.getWidth();
+    const pageH  = doc.internal.pageSize.getHeight();
+    const margin = 14;
+    const colW   = pageW - 2 * margin;
+
+    const fmt = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+    const pct = (v, total) => total > 0 ? (((v || 0) / total) * 100).toFixed(1) + '%' : '—';
+
+    // Period label
+    const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const [y, m] = monthValue.split('-');
+    const periodLabel = `${meses[parseInt(m)-1]}/${y}`;
+
+    // DRE values from calcularTotais
+    const totais        = window.calcularTotais ? window.calcularTotais(financialData) : {};
+    const receitaBruta  = totais.faturamento || 0;
+    const deducoes      = (financialData.impostos || 0) + (financialData.taxasCartao || 0);
+    const receitaLiq    = receitaBruta - deducoes;
+    const custoVar      = totais.totalVariaveis || 0;
+    const margemContrib = receitaLiq - custoVar;
+    const custoFixo     = totais.totalFixos || 0;
+    const ebitda        = margemContrib - custoFixo;
+    const proLabore     = (financialData.proLabore || 0);
+    const lucroLiq      = totais.lucroGerencial || 0;
+
+    // Header
+    doc.setFillColor(15, 77, 63);
+    doc.rect(0, 0, pageW, 36, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18).setFont('helvetica', 'bold');
+    doc.text('PAVE', margin, 13);
+    doc.setFontSize(11).setFont('helvetica', 'normal');
+    doc.text('Carta para o Contador', margin, 20);
+    doc.text(periodLabel, margin, 26);
+    doc.setFontSize(9);
+    doc.text(orgInfo.name || '', pageW - margin, 13, { align: 'right' });
+    doc.text('CNPJ: ' + (orgInfo.cnpj || 'Não informado'), pageW - margin, 20, { align: 'right' });
+    doc.text('Responsável: ' + (orgInfo.responsible || '—'), pageW - margin, 26, { align: 'right' });
+    doc.text('Regime: ' + (orgInfo.tax_regime || 'Não informado'), pageW - margin, 32, { align: 'right' });
+
+    // Section 1: DRE
+    doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+    doc.text('1. Demonstrativo de Resultado', margin, 44);
+
+    doc.autoTable({
+        startY: 48,
+        head: [['Descrição', 'Valor', '% Receita']],
+        body: [
+            ['Receita Bruta',             fmt(receitaBruta),  pct(receitaBruta, receitaBruta)],
+            ['(-) Deduções / Impostos',   fmt(deducoes),       pct(deducoes, receitaBruta)],
+            ['(=) Receita Líquida',       fmt(receitaLiq),    pct(receitaLiq, receitaBruta)],
+            ['(-) Custos Variáveis',      fmt(custoVar),      pct(custoVar, receitaBruta)],
+            ['(=) Margem de Contribuição',fmt(margemContrib), pct(margemContrib, receitaBruta)],
+            ['(-) Custos Fixos',          fmt(custoFixo),     pct(custoFixo, receitaBruta)],
+            ['(=) EBITDA',                fmt(ebitda),        pct(ebitda, receitaBruta)],
+            ['(-) Pró-labore',            fmt(proLabore),     pct(proLabore, receitaBruta)],
+            ['(=) Lucro Líquido',         fmt(lucroLiq),      pct(lucroLiq, receitaBruta)],
+        ],
+        columnStyles: {
+            0: { cellWidth: colW * 0.55 },
+            1: { cellWidth: colW * 0.25, halign: 'right' },
+            2: { cellWidth: colW * 0.20, halign: 'right' },
+        },
+        styles:     { fontSize: 9, cellPadding: 3 },
+        headStyles: { fillColor: [15, 77, 63], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [244, 247, 245] },
+        didParseCell: (data) => {
+            if (data.section !== 'body') return;
+            if ([2, 4, 6].includes(data.row.index)) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [220, 235, 228];
+            }
+            if (data.row.index === 8) {
+                data.cell.styles.fillColor  = lucroLiq >= 0 ? [29, 158, 117] : [226, 75, 74];
+                data.cell.styles.textColor  = 255;
+                data.cell.styles.fontStyle  = 'bold';
+            }
+        },
+    });
+
+    // Section 2: Receitas por categoria
+    if (movimentos.length) {
+        const recMap = {};
+        movimentos.filter(m => m.type === 'receita').forEach(m => {
+            const cat = m.category || 'Sem categoria';
+            recMap[cat] = (recMap[cat] || 0) + parseFloat(m.amount || 0);
+        });
+        const recRows = Object.entries(recMap).sort((a,b) => b[1]-a[1]).map(([c,v]) => [c, fmt(v), pct(v, receitaBruta)]);
+
+        if (recRows.length) {
+            let nextY = doc.lastAutoTable.finalY + 10;
+            if (nextY > pageH - 70) { doc.addPage(); nextY = 20; }
+            doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+            doc.text('2. Receitas por Categoria', margin, nextY);
+            doc.autoTable({
+                startY: nextY + 4,
+                head: [['Categoria', 'Total', '% Receita']],
+                body: recRows,
+                columnStyles: { 0: { cellWidth: colW * 0.55 }, 1: { cellWidth: colW * 0.25, halign: 'right' }, 2: { cellWidth: colW * 0.20, halign: 'right' } },
+                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fillColor: [29, 158, 117], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [244, 247, 245] },
+            });
+        }
+
+        // Section 3: Despesas por categoria
+        const desMap = {};
+        movimentos.filter(m => m.type === 'despesa').forEach(m => {
+            const cat = m.category || 'Sem categoria';
+            desMap[cat] = (desMap[cat] || 0) + parseFloat(m.amount || 0);
+        });
+        const desRows = Object.entries(desMap).sort((a,b) => b[1]-a[1]).map(([c,v]) => [c, fmt(v), pct(v, receitaBruta)]);
+
+        if (desRows.length) {
+            let nextY = doc.lastAutoTable.finalY + 10;
+            if (nextY > pageH - 70) { doc.addPage(); nextY = 20; }
+            doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+            doc.text('3. Despesas por Categoria', margin, nextY);
+            doc.autoTable({
+                startY: nextY + 4,
+                head: [['Categoria', 'Total', '% Receita']],
+                body: desRows,
+                columnStyles: { 0: { cellWidth: colW * 0.55 }, 1: { cellWidth: colW * 0.25, halign: 'right' }, 2: { cellWidth: colW * 0.20, halign: 'right' } },
+                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fillColor: [226, 75, 74], textColor: 255, fontStyle: 'bold' },
+                alternateRowStyles: { fillColor: [253, 244, 244] },
+            });
+        }
+    }
+
+    // Section 4: Impostos
+    let nextY = (doc.lastAutoTable?.finalY || 120) + 10;
+    if (nextY > pageH - 60) { doc.addPage(); nextY = 20; }
+    doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+    doc.text('4. Estimativa de Impostos', margin, nextY);
+
+    const regime    = (orgInfo.tax_regime || '').toLowerCase().replace(' ', '_');
+    const taxConfig = TAX_RATES[regime];
+
+    if (taxConfig?.rate != null) {
+        const imposto = receitaLiq * taxConfig.rate;
+        doc.autoTable({
+            startY: nextY + 4,
+            head: [['Regime', 'Base de Cálculo', 'Alíquota Est.', 'Imposto Est.']],
+            body: [[taxConfig.label, fmt(receitaLiq), (taxConfig.rate * 100).toFixed(1) + '%', fmt(imposto)]],
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+        });
+    } else {
+        doc.setFontSize(9).setFont('helvetica', 'normal').setTextColor(80);
+        doc.text('Lucro Real: o cálculo requer análise contábil detalhada. Consulte seu contador.', margin, nextY + 8);
+    }
+
+    // Section 5: Observações
+    if (observacoes?.trim()) {
+        nextY = (doc.lastAutoTable?.finalY || nextY) + 10;
+        if (nextY > pageH - 50) { doc.addPage(); nextY = 20; }
+        doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+        doc.text('5. Observações', margin, nextY);
+        doc.setFontSize(9).setFont('helvetica', 'normal').setTextColor(50);
+        doc.text(observacoes.trim(), margin, nextY + 8, { maxWidth: colW });
+    }
+
+    // Disclaimer + footer on all pages
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setDrawColor(200);
+        doc.line(margin, pageH - 13, pageW - margin, pageH - 13);
+        doc.setFontSize(7).setFont('helvetica', 'normal').setTextColor(140);
+        doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} · PAVE Financial`, margin, pageH - 7);
+        doc.text('Documento informativo. Consulte um contador para fins fiscais e legais.', pageW / 2, pageH - 7, { align: 'center' });
+        doc.text(`Pág. ${i}/${pageCount}`, pageW - margin, pageH - 7, { align: 'right' });
+    }
+
+    doc.save(`Carta_Contador_${periodLabel.replace('/', '-')}.pdf`);
+    if (window.Utils) Utils.showToast('PDF gerado com sucesso!', 'success');
+}
+
+// ── FEATURE 3.2 — CLIENTES NO RELATÓRIO ──────────────────────────────────────
+
+async function _relClientes() {
+    const panel = document.getElementById('rel-panel-clientes');
+    if (!panel) return;
+
+    const now        = new Date();
+    const defStart   = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    const lastDay    = new Date(now.getFullYear(), now.getMonth()+1, 0);
+    const defEnd     = lastDay.toISOString().split('T')[0];
+
+    panel.innerHTML = `
+    <div class="card">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+            <span style="font-size:0.78rem; color:var(--text-muted);">De</span>
+            <input type="date" id="client-rev-start" value="${defStart}"
+                style="padding:0.4rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-size:0.82rem; font-family:var(--font-family); outline:none;">
+            <span style="font-size:0.78rem; color:var(--text-muted);">até</span>
+            <input type="date" id="client-rev-end" value="${defEnd}"
+                style="padding:0.4rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-size:0.82rem; font-family:var(--font-family); outline:none;">
+            <button id="btn-load-client-rev" style="padding:0.4rem 1rem; border-radius:var(--radius-sm); border:none; background:var(--accent-blue); color:#fff; font-size:0.82rem; font-weight:700; cursor:pointer; font-family:var(--font-family);">Carregar</button>
+        </div>
+        <div id="client-revenue-result"><p style="color:var(--text-muted); text-align:center; padding:1rem; font-size:0.85rem;">Clique em "Carregar" para ver o ranking de clientes.</p></div>
+    </div>`;
+
+    async function loadClientRevenue() {
+        const start  = panel.querySelector('#client-rev-start').value;
+        const end    = panel.querySelector('#client-rev-end').value;
+        const res    = panel.querySelector('#client-revenue-result');
+        const fmt    = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+        res.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:1rem; font-size:0.85rem;">Carregando...</p>`;
+
+        try {
+            if (!window.ClientesModule) throw new Error('Módulo de clientes não carregado.');
+            const orgId = await OrgAPI.getOrgId();
+            if (!orgId) throw new Error('Organização não encontrada.');
+            const data = await ClientesModule.fetchClientRevenue(orgId, start, end);
+
+            if (!data.length) {
+                res.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:2rem; font-size:0.85rem;">Nenhum lançamento vinculado a clientes no período.<br><span style="font-size:0.75rem;">Vincule clientes aos lançamentos do Caixa para habilitar esta visão.</span></p>`;
+                return;
+            }
+
+            res.innerHTML = `
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                    <thead>
+                        <tr style="border-bottom:2px solid var(--border);">
+                            <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">#</th>
+                            <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Cliente</th>
+                            <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Visitas</th>
+                            <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Faturamento</th>
+                            <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Ticket Médio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map((c, i) => `
+                        <tr style="border-bottom:1px solid var(--border); transition:background 0.1s;" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">
+                            <td style="padding:0.625rem 0.75rem; font-weight:700;">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</td>
+                            <td style="padding:0.625rem 0.75rem; font-weight:600; color:var(--text-primary);">${c.name}</td>
+                            <td style="padding:0.625rem 0.75rem; text-align:right; color:var(--text-secondary);">${c.qtd}</td>
+                            <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:var(--accent-blue);">${fmt(c.total)}</td>
+                            <td style="padding:0.625rem 0.75rem; text-align:right; color:var(--text-secondary);">${fmt(c.ticketMedio)}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+        } catch (err) {
+            res.innerHTML = `<p style="color:var(--color-danger); padding:1rem;">${err.message}</p>`;
+        }
+    }
+
+    panel.querySelector('#btn-load-client-rev').addEventListener('click', loadClientRevenue);
+}
+
+// ── PATCH switchRelTab to include carta + clientes ────────────────────────────
+
+const _origSwitchRelTab = window.switchRelTab;
+window.switchRelTab = function(tab) {
+    const extraTabs = ['carta', 'clientes'];
+    const isExtra = extraTabs.includes(tab);
+
+    // Always reset extra-tab visual state
+    extraTabs.forEach(t => {
+        const btn   = document.getElementById('rel-tab-' + t);
+        const panel = document.getElementById('rel-panel-' + t);
+        if (btn)   { btn.style.background = 'transparent'; btn.style.color = 'var(--text-secondary)'; }
+        if (panel) panel.style.display = 'none';
+    });
+
+    if (!isExtra) {
+        _origSwitchRelTab(tab);
+    } else {
+        // Hide all known panels
+        ['visao-geral','fluxo-caixa','dre','custos','servicos','exportacao','ranking','comparativo'].forEach(t => {
+            const btn   = document.getElementById('rel-tab-' + t);
+            const panel = document.getElementById('rel-panel-' + t);
+            if (btn)   { btn.style.background = 'transparent'; btn.style.color = 'var(--text-secondary)'; }
+            if (panel) panel.style.display = 'none';
+        });
+        // Activate the selected extra tab
+        const activeBtn   = document.getElementById('rel-tab-' + tab);
+        const activePanel = document.getElementById('rel-panel-' + tab);
+        if (activeBtn)   { activeBtn.style.background = 'var(--accent-blue)'; activeBtn.style.color = '#fff'; }
+        if (activePanel) activePanel.style.display = '';
+        if (tab === 'carta')    _relCartaContador();
+        if (tab === 'clientes') _relClientes();
     }
 };

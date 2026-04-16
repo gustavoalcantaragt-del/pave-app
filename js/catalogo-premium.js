@@ -150,16 +150,20 @@ window.salvarServico = function() {
     if (c.preco <= 0) return Utils.showToast('Informe o preço do serviço', 'error');
 
     const labelNome = c.isCombo ? `${nome} (Pacote)` : nome;
+    const goalQty   = parseInt(document.getElementById('goal-qty')?.value) || null;
+    const goalRev   = parseFloat(document.getElementById('goal-revenue')?.value) || null;
     const servicos  = JSON.parse(localStorage.getItem('pav_servicos') || '[]');
     servicos.push({
-        id:         Date.now(),
-        nome:       labelNome,
-        preco:      c.preco,
-        custoTotal: c.custoTotal.toFixed(2),
-        lucro:      c.lucroRS.toFixed(2),
-        margem:     c.lucroPct.toFixed(1),
-        isCombo:    c.isCombo,
-        comboItens: c.isCombo ? (window.comboItems || []).map(i => i.nome).filter(Boolean) : []
+        id:          Date.now(),
+        nome:        labelNome,
+        preco:       c.preco,
+        custoTotal:  c.custoTotal.toFixed(2),
+        lucro:       c.lucroRS.toFixed(2),
+        margem:      c.lucroPct.toFixed(1),
+        isCombo:     c.isCombo,
+        comboItens:  c.isCombo ? (window.comboItems || []).map(i => i.nome).filter(Boolean) : [],
+        goalQty:     goalQty,
+        goalRevenue: goalRev
     });
     localStorage.setItem('pav_servicos', JSON.stringify(servicos));
     Utils.showToast(`"${labelNome}" salvo no catálogo!`, 'success');
@@ -262,10 +266,12 @@ function renderServicosSalvos() {
                     &nbsp;·&nbsp; Custo: ${fmt(s.custoTotal)}
                 </div>
                 ${s.comboItens && s.comboItens.length > 0 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">${s.comboItens.join(' + ')}</div>` : ''}
+                ${_renderGoalProgress(s)}
             </div>
             <div style="text-align:right; flex-shrink:0; margin-left:1rem;">
                 <div style="font-weight:800; color:${lucro >= 0 ? '#1D9E75' : '#E24B4A'}; font-size:0.95rem;">${fmt(lucro)}</div>
                 <div style="font-size:0.65rem; color:var(--text-muted); margin-top:1px;">lucro</div>
+                ${s.goalQty ? `<button onclick="window.registerServiceSale(${s.id})" style="background:rgba(29,158,117,0.1); border:1px solid rgba(29,158,117,0.3); color:#1D9E75; padding:2px 8px; border-radius:6px; cursor:pointer; font-size:0.68rem; font-weight:700; margin-top:4px; display:block; margin-left:auto;" title="Registrar 1 atendimento">+1</button>` : ''}
                 <button onclick="window.deleteServico(${s.id})" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.7rem; margin-top:4px; display:block; margin-left:auto;" onmouseover="this.style.color='#E24B4A'" onmouseout="this.style.color='var(--text-muted)'">remover</button>
             </div>
         </div>`;
@@ -446,4 +452,68 @@ window.switchCatTab = function(tabName) {
         tabSalvos.style.display = 'none';
         window.updateCat();
     }
+};
+
+// ── FEATURE 2.5 — METAS POR SERVIÇO ─────────────────────────────────────────
+
+function _monthKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function _getServiceProgress(serviceId) {
+    const key  = `pav_svc_prog_${_monthKey()}`;
+    const data = JSON.parse(localStorage.getItem(key) || '{}');
+    return data[serviceId] || { qty: 0, revenue: 0 };
+}
+
+function _renderGoalProgress(s) {
+    if (!s.goalQty && !s.goalRevenue) return '';
+    const prog    = _getServiceProgress(s.id);
+    const fmt     = v => `R$ ${parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+    const lines   = [];
+
+    if (s.goalQty) {
+        const pct = Math.min(100, Math.round((prog.qty / s.goalQty) * 100));
+        const color = pct >= 100 ? '#1D9E75' : pct >= 60 ? '#ff9500' : '#E24B4A';
+        lines.push(`
+        <div style="margin-top:6px;">
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:2px;">
+                Meta: <b style="color:${color};">${prog.qty}/${s.goalQty}</b> atend.
+            </div>
+            <div style="height:4px; border-radius:4px; background:var(--border); overflow:hidden;">
+                <div style="height:100%; width:${pct}%; background:${color}; transition:width 0.4s;"></div>
+            </div>
+        </div>`);
+    }
+
+    if (s.goalRevenue) {
+        const rev  = prog.qty * parseFloat(s.preco);
+        const pct  = Math.min(100, Math.round((rev / s.goalRevenue) * 100));
+        const color = pct >= 100 ? '#1D9E75' : pct >= 60 ? '#ff9500' : '#E24B4A';
+        lines.push(`
+        <div style="margin-top:4px;">
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-bottom:2px;">
+                Receita: <b style="color:${color};">${fmt(rev)}/${fmt(s.goalRevenue)}</b>
+            </div>
+            <div style="height:4px; border-radius:4px; background:var(--border); overflow:hidden;">
+                <div style="height:100%; width:${pct}%; background:${color}; transition:width 0.4s;"></div>
+            </div>
+        </div>`);
+    }
+
+    return lines.join('');
+}
+
+window.registerServiceSale = function(serviceId) {
+    const key     = `pav_svc_prog_${_monthKey()}`;
+    const data    = JSON.parse(localStorage.getItem(key) || '{}');
+    const prog    = data[serviceId] || { qty: 0, revenue: 0 };
+    const servico = JSON.parse(localStorage.getItem('pav_servicos') || '[]').find(s => s.id === serviceId);
+    prog.qty++;
+    prog.revenue += parseFloat(servico?.preco || 0);
+    data[serviceId] = prog;
+    localStorage.setItem(key, JSON.stringify(data));
+    renderServicosSalvos();
+    if (window.Utils) Utils.showToast('Atendimento registrado!', 'success');
 };

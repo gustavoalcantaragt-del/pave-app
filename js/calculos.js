@@ -49,7 +49,8 @@ function calcularTotais(dados) {
 }
 
 function calcularDivisaoLucro(lucroGerencial) {
-  const totalLucro = lucroGerencial > 0 ? lucroGerencial : 1;
+  const lucro = lucroGerencial || 0;
+  const totalLucro = lucro > 0 ? lucro : 1;
 
   // Lê percentuais personalizados do localStorage (configurados na aba Configurações)
   let pProLabore = 0.5, pInvest = 0.3, pReserva = 0.2;
@@ -63,14 +64,14 @@ function calcularDivisaoLucro(lucroGerencial) {
   } catch(e) {}
 
   return {
-    proLabore:    lucroGerencial * pProLabore,
-    investimentos: lucroGerencial * pInvest,
-    reserva:      lucroGerencial * pReserva,
+    proLabore:    lucro * pProLabore,
+    investimentos: lucro * pInvest,
+    reserva:      lucro * pReserva,
     emprestimos:  0,
     percentuais: {
-      proLabore:    (lucroGerencial * pProLabore / totalLucro) * 100,
-      investimentos: (lucroGerencial * pInvest    / totalLucro) * 100,
-      reserva:      (lucroGerencial * pReserva   / totalLucro) * 100,
+      proLabore:    (lucro * pProLabore / totalLucro) * 100,
+      investimentos: (lucro * pInvest    / totalLucro) * 100,
+      reserva:      (lucro * pReserva   / totalLucro) * 100,
       emprestimos:  0
     }
   };

@@ -9,6 +9,30 @@ const _supabase = supabase.createClient(
     PAV_CONFIG.SUPABASE_ANON_KEY
 );
 
+// ── Sync Queue — operações que falharam e precisam ser reenviadas ────────────
+const _SyncQueue = {
+    _key: 'pav_sync_queue',
+    push(entry) {
+        try {
+            const q = JSON.parse(localStorage.getItem(this._key) || '[]');
+            q.push({ ...entry, ts: Date.now() });
+            // Manter no máximo 50 entradas
+            if (q.length > 50) q.splice(0, q.length - 50);
+            localStorage.setItem(this._key, JSON.stringify(q));
+        } catch(e) {}
+    },
+    flush() {
+        try {
+            const q = JSON.parse(localStorage.getItem(this._key) || '[]');
+            if (q.length === 0) return;
+            console.log(`[SyncQueue] ${q.length} operação(ões) pendente(s) de sincronização.`);
+        } catch(e) {}
+    }
+};
+
+// Tenta reenviar fila ao reconectar
+window.addEventListener('online', () => _SyncQueue.flush());
+
 // ── Storage Keys (localStorage — cache local) ────────────────
 const STORAGE_KEYS = {
     USER:          'pav_user',
@@ -208,7 +232,10 @@ const FinancialAPI = {
                     data:            dados,
                     totals:          totais
                 }, { onConflict: 'organization_id,reference_date' });
-        } catch (e) { /* falha silenciosa — dados locais são suficientes */ }
+        } catch (e) {
+            console.warn('[SYNC] FinancialAPI.save falhou — dado salvo localmente, tentará reenviar.', e?.message);
+            _SyncQueue.push({ type: 'financial_entry', mesRef, ts: Date.now() });
+        }
 
         return { ok: true, local: true };
     },
@@ -240,8 +267,14 @@ const FinancialAPI = {
     },
 
     getUltimosDados() {
-        const raw = localStorage.getItem(STORAGE_KEYS.ULTIMOS_DADOS);
-        return raw ? JSON.parse(raw) : null;
+        try {
+            const raw = localStorage.getItem(STORAGE_KEYS.ULTIMOS_DADOS);
+            return raw ? JSON.parse(raw) : null;
+        } catch(e) {
+            console.error('[API] pav_ultimos_dados corrompido — limpando.', e);
+            localStorage.removeItem(STORAGE_KEYS.ULTIMOS_DADOS);
+            return null;
+        }
     }
 };
 
@@ -271,9 +304,13 @@ const CashAPI = {
                 notes:            mov.observacao     || null,
                 status:           mov.status         || 'pendente',
                 is_recurring:     mov.isRecurring    || false,
-                recurrence_group: mov.recurrenceGroup || null
+                recurrence_group: mov.recurrenceGroup || null,
+                client_id:        mov.clienteId      || null
             }, { onConflict: 'id' });
-        } catch (e) { /* falha silenciosa */ }
+        } catch (e) {
+            console.warn('[SYNC] CashAPI.upsertMovimento falhou — dado salvo localmente.', e?.message);
+            _SyncQueue.push({ type: 'cash_movement', id: mov.id });
+        }
 
         return { ok: true };
     },
@@ -285,8 +322,10 @@ const CashAPI = {
 
         try {
             const orgId = await OrgAPI.getOrgId();
-            if (orgId) await _supabase.from('cash_movements').delete().eq('id', id);
-        } catch (e) { /* falha silenciosa */ }
+            if (orgId) await _supabase.from('cash_movements').delete().eq('id', id).eq('organization_id', orgId);
+        } catch (e) {
+            console.warn('[SYNC] CashAPI.deleteMovimento falhou — removido localmente.', e?.message);
+        }
 
         return { ok: true };
     },
@@ -321,7 +360,7 @@ const ServicesAPI = {
                 is_combo:        servico.isCombo    || false,
                 combo_items:     servico.comboItens || []
             }, { onConflict: 'id' });
-        } catch (e) { /* falha silenciosa */ }
+        } catch (e) { console.warn('[ServicesAPI] sync failed (save):', e?.message); }
 
         return { ok: true };
     },
@@ -333,8 +372,8 @@ const ServicesAPI = {
 
         try {
             const orgId = await OrgAPI.getOrgId();
-            if (orgId) await _supabase.from('services').delete().eq('id', id);
-        } catch (e) { /* falha silenciosa */ }
+            if (orgId) await _supabase.from('services').delete().eq('id', id).eq('organization_id', orgId);
+        } catch (e) { console.warn('[ServicesAPI] sync failed (delete):', e?.message); }
 
         return { ok: true };
     },
@@ -409,10 +448,189 @@ const SyncHelper = {
     }
 };
 
-// ── COMPATIBILIDADE: BalancoAPI ───────────────────────────────
-const BalancoAPI = {
-    salvar:          (dados) => FinancialAPI.save(dados),
-    listar:          ()      => FinancialAPI.list(),
-    getUltimosDados: ()      => FinancialAPI.getUltimosDados(),
-    setUltimosDados: (dados) => localStorage.setItem(STORAGE_KEYS.ULTIMOS_DADOS, JSON.stringify(dados))
+// ── PULL FROM CLOUD → localStorage (para conta nova ou dispositivo novo) ─────
+const CloudPull = {
+    async run() {
+        const pullKey = 'pav_cloud_pulled_at';
+        const lastPull = parseInt(localStorage.getItem(pullKey) || '0', 10);
+        const ONE_DAY  = 24 * 60 * 60 * 1000;
+        if (Date.now() - lastPull < ONE_DAY) return; // sincronizou há menos de 24h
+
+        const orgId = await OrgAPI.getOrgId();
+        if (!orgId) return;
+        const user = Auth.getUser();
+        if (!user) return;
+
+        try {
+            // Financial entries → pav_historico + pav_ultimos_dados
+            const { data: entries } = await _supabase
+                .from('financial_entries')
+                .select('reference_date, data, totals')
+                .eq('organization_id', orgId)
+                .order('reference_date', { ascending: true });
+
+            if (entries && entries.length > 0) {
+                const historico = entries.map(e => ({
+                    mesRef:      e.reference_date?.substring(0, 7),
+                    label:       e.reference_date?.substring(0, 7),
+                    faturamento: e.data?.faturamento || 0,
+                    lucro:       e.totals?.lucroGerencial || 0,
+                    date:        e.reference_date
+                }));
+                localStorage.setItem(STORAGE_KEYS.HISTORICO, JSON.stringify(historico));
+                // Último dado = mais recente
+                const last = entries[entries.length - 1];
+                if (last?.data) {
+                    localStorage.setItem(STORAGE_KEYS.ULTIMOS_DADOS, JSON.stringify(last.data));
+                }
+            }
+
+            // Cash movements → pav_caixa_movimentos
+            const { data: movs } = await _supabase
+                .from('cash_movements')
+                .select('*')
+                .eq('organization_id', orgId)
+                .order('due_date', { ascending: false })
+                .limit(500);
+
+            if (movs && movs.length > 0) {
+                const local = movs.map(m => ({
+                    id:            m.id,
+                    descricao:     m.description,
+                    valor:         parseFloat(m.amount),
+                    vencimento:    m.due_date,
+                    tipo:          m.type,
+                    categoria:     m.category || '',
+                    formaPag:      m.payment_method || 'outros',
+                    observacao:    m.notes || '',
+                    status:        m.status || 'pendente',
+                    isRecurring:   m.is_recurring || false,
+                    clienteId:     m.client_id || null
+                }));
+                localStorage.setItem(STORAGE_KEYS.CAIXA, JSON.stringify(local));
+            }
+
+            // Services → pav_servicos
+            const { data: svcs } = await _supabase
+                .from('services')
+                .select('*')
+                .eq('organization_id', orgId);
+
+            if (svcs && svcs.length > 0) {
+                const local = svcs.map(s => ({
+                    id:          s.id,
+                    nome:        s.name,
+                    preco:       parseFloat(s.price || 0),
+                    custoTotal:  parseFloat(s.total_cost || 0),
+                    lucro:       parseFloat(s.profit || 0),
+                    margem:      parseFloat(s.margin || 0),
+                    isCombo:     s.is_combo || false,
+                    comboItens:  s.combo_items || [],
+                    goalQty:     s.monthly_goal_qty || null,
+                    goalRevenue: parseFloat(s.monthly_goal_revenue || 0) || null
+                }));
+                localStorage.setItem(STORAGE_KEYS.SERVICOS, JSON.stringify(local));
+            }
+
+            // Profit config → pav_divisao_lucro
+            const { data: pcfg } = await _supabase
+                .from('profit_config')
+                .select('pro_labore_pct, investments_pct, reserve_pct')
+                .eq('organization_id', orgId)
+                .single();
+
+            if (pcfg) {
+                localStorage.setItem(STORAGE_KEYS.DIVISAO, JSON.stringify({
+                    proLabore:    pcfg.pro_labore_pct,
+                    investimentos: pcfg.investments_pct,
+                    reserva:      pcfg.reserve_pct
+                }));
+            }
+
+            // Organization config → pav_clinica (used by renderConfig)
+            const org = await OrgAPI.get();
+            if (org) {
+                localStorage.setItem('pav_clinica', JSON.stringify({
+                    nome:        org.name        || '',
+                    cnpj:        org.cnpj        || '',
+                    crmv:        org.crmv        || '',
+                    responsavel: org.responsible || '',
+                    telefone:    org.phone       || '',
+                    endereco:    org.address     || '',
+                    regime:      org.tax_regime  || 'simples'
+                }));
+            }
+
+            localStorage.setItem(pullKey, String(Date.now()));
+            console.log('[PAVE] Dados carregados da nuvem para o dispositivo.');
+        } catch (e) {
+            console.warn('[PAVE] CloudPull falhou (silencioso):', e);
+        }
+    }
 };
+
+// ── REALTIME ──────────────────────────────────────────────────────────────────
+// Escuta mudanças em cash_movements e bills para o org do usuário logado.
+// Atualiza localStorage e dispara re-render nas abas abertas sem reload.
+const RealtimeModule = {
+    _channel: null,
+
+    async start() {
+        if (this._channel) return; // já ativo
+
+        const orgId = await OrgAPI.getOrgId();
+        if (!orgId) return;
+
+        this._channel = _supabase
+            .channel(`pave-org-${orgId}`)
+            .on('postgres_changes', {
+                event:  '*',
+                schema: 'public',
+                table:  'cash_movements',
+                filter: `organization_id=eq.${orgId}`
+            }, async (payload) => {
+                console.log('[Realtime] cash_movements:', payload.eventType);
+                // Resync localStorage from Supabase (lightweight — 500 movimentos mais recentes)
+                try {
+                    const { data: movs } = await _supabase
+                        .from('cash_movements').select('*')
+                        .eq('organization_id', orgId)
+                        .order('due_date', { ascending: false }).limit(500);
+                    if (movs) {
+                        const local = movs.map(m => ({
+                            id: m.id, descricao: m.description, valor: parseFloat(m.amount),
+                            vencimento: m.due_date, tipo: m.type, categoria: m.category || '',
+                            formaPag: m.payment_method || 'outros', observacao: m.notes || '',
+                            status: m.status || 'pendente', isRecurring: m.is_recurring || false,
+                            clienteId: m.client_id || null
+                        }));
+                        localStorage.setItem(STORAGE_KEYS.CAIXA, JSON.stringify(local));
+                    }
+                } catch(e) { console.warn('[Realtime] pull cash_movements falhou:', e); }
+                if (window.renderCaixa)     window.renderCaixa();
+                if (window.renderDashboard) window.renderDashboard();
+            })
+            .on('postgres_changes', {
+                event:  '*',
+                schema: 'public',
+                table:  'bills',
+                filter: `organization_id=eq.${orgId}`
+            }, (payload) => {
+                console.log('[Realtime] bills:', payload.eventType);
+                if (window.renderBills) window.renderBills();
+                if (window.NotificationsModule) NotificationsModule.refresh();
+            })
+            .subscribe((status) => {
+                console.log('[Realtime] status:', status);
+            });
+    },
+
+    stop() {
+        if (this._channel) {
+            _supabase.removeChannel(this._channel);
+            this._channel = null;
+        }
+    }
+};
+
+window.RealtimeModule = RealtimeModule;

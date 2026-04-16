@@ -74,7 +74,13 @@ async function _renderSubscriptionCard() {
 }
 
 // ── 2. PREVIEW LIVE DOS SLIDERS ─────────────────────────────────────────────
+let _divisaoRafPending = false;
 window.updateDivisaoPreview = function() {
+    if (_divisaoRafPending) return;
+    _divisaoRafPending = true;
+    requestAnimationFrame(() => { _divisaoRafPending = false; _doDivisaoPreview(); });
+};
+function _doDivisaoPreview() {
     const pL = parseInt(document.getElementById('cfg-proLabore')?.value) || 0;
     const pI = parseInt(document.getElementById('cfg-invest')?.value)    || 0;
     const pR = parseInt(document.getElementById('cfg-reserva')?.value)   || 0;
@@ -135,25 +141,26 @@ window.salvarConfiguracoes = function(btn) {
     const elUser = document.getElementById('user-display');
     if (elUser) {
         const inicial = (resp || nome || 'U').charAt(0).toUpperCase();
-        const user = JSON.parse(localStorage.getItem('pav_user') || '{}');
-        elUser.innerHTML = `
-            <div class="sidebar-user-info">
-                <div class="sidebar-user-avatar">${inicial}</div>
-                <div style="overflow:hidden;">
-                    <div class="sidebar-user-name">${resp || nome}</div>
-                    <div class="sidebar-user-email">${user.email || ''}</div>
-                </div>
-            </div>`;
+        let userEmail = '';
+        try { userEmail = JSON.parse(localStorage.getItem('pav_user') || '{}').email || ''; } catch { userEmail = ''; }
+        // Monta com textContent para evitar XSS
+        elUser.innerHTML = '<div class="sidebar-user-info"><div class="sidebar-user-avatar"></div><div style="overflow:hidden;"><div class="sidebar-user-name"></div><div class="sidebar-user-email"></div></div></div>';
+        elUser.querySelector('.sidebar-user-avatar').textContent = inicial;
+        elUser.querySelector('.sidebar-user-name').textContent   = resp || nome;
+        elUser.querySelector('.sidebar-user-email').textContent  = userEmail;
     }
 
-    // Tentar sincronizar com backend (não bloqueia)
-    const token = localStorage.getItem('pav_token');
-    if (token && typeof PAV_CONFIG !== 'undefined') {
-        fetch(PAV_CONFIG.API_URL + '/clinica', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-            body: JSON.stringify(clinicaData)
-        }).catch(() => {}); // silencia erros de backend offline
+    // Sincronizar com Supabase (OrgAPI) — não bloqueia
+    if (typeof OrgAPI !== 'undefined') {
+        OrgAPI.update({
+            nome,
+            cnpj,
+            crmv,
+            responsavel: resp,
+            telefone:    tel,
+            endereco:    end,
+            regime
+        }).catch(e => console.warn('[CONFIG] OrgAPI.update falhou:', e?.message));
     }
 
     setTimeout(() => {

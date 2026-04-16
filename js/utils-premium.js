@@ -21,16 +21,27 @@ const Utils = {
     confirm(message, title = 'Confirmar ação', onConfirm) {
         const overlay = document.createElement('div');
         overlay.className = 'pav-confirm-overlay';
-        overlay.innerHTML = `
-            <div class="pav-confirm-box">
-                <h3>${title}</h3>
-                <p>${message}</p>
-                <div class="pav-confirm-actions">
-                    <button id="pav-confirm-cancel" class="btn-secondary" style="padding:0.6rem 1.2rem; font-size:0.85rem;">Cancelar</button>
-                    <button id="pav-confirm-ok" class="btn-danger" style="padding:0.6rem 1.2rem; font-size:0.85rem;">Excluir</button>
-                </div>
-            </div>
+
+        const box  = document.createElement('div');
+        box.className = 'pav-confirm-box';
+
+        const h3 = document.createElement('h3');
+        h3.textContent = title;   // textContent — sem risco XSS
+
+        const p = document.createElement('p');
+        p.textContent = message;  // textContent — sem risco XSS
+
+        const actions = document.createElement('div');
+        actions.className = 'pav-confirm-actions';
+        actions.innerHTML = `
+            <button id="pav-confirm-cancel" class="btn-secondary" style="padding:0.6rem 1.2rem; font-size:0.85rem;">Cancelar</button>
+            <button id="pav-confirm-ok" class="btn-danger" style="padding:0.6rem 1.2rem; font-size:0.85rem;">Excluir</button>
         `;
+
+        box.appendChild(h3);
+        box.appendChild(p);
+        box.appendChild(actions);
+        overlay.appendChild(box);
         document.body.appendChild(overlay);
 
         const close = () => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 200); };
@@ -56,83 +67,262 @@ const Utils = {
     exportPDF() {
         const data = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
         if (!data) return this.showToast('Nenhum dado para exportar. Preencha o Balanço primeiro.', 'error');
-        const totais = window.calcularTotais ? window.calcularTotais(data) : {};
+        if (!window.jspdf?.jsPDF) return this.showToast('Biblioteca PDF não carregada. Recarregue a página.', 'error');
+
+        const t    = window.calcularTotais ? window.calcularTotais(data) : {};
+        const fmt  = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+        const pct  = (v, base) => base > 0 ? ((v || 0) / base * 100).toFixed(1) + '%' : '—';
+
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const fmt = (v) => `R$ ${(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-        let y = 20;
-        const ln = (text, size = 10, bold = false) => { doc.setFontSize(size); doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.text(text, 14, y); y += size * 0.5 + 2; };
-        const row = (label, value) => { doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.text(label, 14, y); doc.text(String(value), 120, y); y += 6; };
+        const doc   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const margin = 14;
+        const colW  = pageW - 2 * margin;
 
-        const brandNome = localStorage.getItem('pav_brand_nome') || 'P.A.V. Premium';
-        const brandResp = localStorage.getItem('pav_brand_resp') || '';
-        
-        doc.setTextColor(218, 165, 32); // accent gold
-        ln(brandNome, 20, true);
-        doc.setTextColor(0, 0, 0); // back to black
-        if (brandResp) { ln(brandResp, 11, false); y += 2; }
-        
-        y += 4;
-        ln('Relatório Financeiro Gerencial', 15, true);
-        ln(`Referência do Período: ${data.mesReferencia || 'N/A'}`, 10); y += 4;
+        const orgNome = localStorage.getItem('pav_brand_nome') || 'Clínica';
+        const orgResp = localStorage.getItem('pav_brand_resp') || '';
+        const periodo = data.mesReferencia || 'N/A';
+        const fat     = data.faturamento  || 0;
 
-        ln('RECEITA', 13, true);
-        row('Faturamento Real', fmt(data.faturamento));
-        row('Meta de Faturamento', fmt(data.metaFaturamento));
-        row('Meta de Lucro Gerencial', fmt(data.metaLucro)); y += 4;
+        // ── Cabeçalho ──────────────────────────────────────────────────
+        doc.setFillColor(15, 77, 63);
+        doc.rect(0, 0, pageW, 36, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18).setFont('helvetica', 'bold');
+        doc.text('PAVE', margin, 13);
+        doc.setFontSize(11).setFont('helvetica', 'normal');
+        doc.text('Relatório Financeiro Gerencial', margin, 20);
+        doc.text('Período: ' + periodo, margin, 27);
+        doc.setFontSize(9);
+        doc.text(orgNome, pageW - margin, 13, { align: 'right' });
+        if (orgResp) doc.text(orgResp, pageW - margin, 20, { align: 'right' });
+        doc.text('Emitido em: ' + new Date().toLocaleDateString('pt-BR'), pageW - margin, 27, { align: 'right' });
 
-        ln('CUSTOS VARIÁVEIS', 13, true);
-        row('Reembolso/Inadimplência', fmt(data.reembolsoInadimplencia));
-        row('Impostos', fmt(data.impostos));
-        row('Taxas de Cartão', fmt(data.taxasCartao));
-        row('Insumos Diários', fmt(data.insumos));
-        row('Boletos Fornecedores', fmt(data.boletosFornecedores));
-        row('Serviços Terceirizados (Var)', fmt(data.terceirizadosVar));
-        row('Lab. Terceirizado', fmt(data.labTerceirizado));
-        row('Comissões', fmt(data.comissoes));
-        row('Plantões', fmt(data.plantoes));
-        row('Escritório/Limpeza (Var)', fmt(data.escritorioLimpezaVar));
-        row('Estorno', fmt(data.estorno));
-        row('Outros Variáveis', fmt(data.outrosVariaveis));
-        row('TOTAL VARIÁVEIS', fmt(totais.totalVariaveis)); y += 4;
+        // ── Seção 1: DRE ───────────────────────────────────────────────
+        const receitaLiq   = fat - ((data.impostos || 0) + (data.taxasCartao || 0));
+        const custoVar     = t.totalVariaveis    || 0;
+        const margemContr  = t.margemContribuicao || (receitaLiq - custoVar);
+        const custoFixo    = t.totalFixos        || 0;
+        const ebitda       = margemContr - custoFixo;
+        const proLabore    = data.proLabore      || 0;
+        const lucro        = t.lucroGerencial    || 0;
+        const deducoes     = (data.impostos || 0) + (data.taxasCartao || 0);
 
-        ln('CUSTOS FIXOS', 13, true);
-        row('Folha de Pagamento', fmt(data.folha));
-        row('Água', fmt(data.agua));
-        row('Luz', fmt(data.luz));
-        row('Sistemas', fmt(data.sistemas));
-        row('Aluguel', fmt(data.aluguel));
-        row('Telecom', fmt(data.telecom));
-        row('Contabilidade', fmt(data.contabilidade));
-        row('Marketing', fmt(data.marketing));
-        row('E-Social', fmt(data.esocial));
-        row('Taxas Admin', fmt(data.taxasAdmin));
-        row('CRMV', fmt(data.crmv));
-        row('Lixo Contaminante', fmt(data.lixoContaminante));
-        row('IPTU', fmt(data.iptu));
-        row('Limpeza Fixa', fmt(data.limpezaFixa));
-        row('Terceirizados Fixos', fmt(data.terceirizadosFixos));
-        row('Outros Fixos', fmt(data.outrosFixos));
-        row('TOTAL FIXOS', fmt(totais.totalFixos)); y += 6;
+        doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+        doc.text('1. Demonstrativo de Resultado (DRE)', margin, 44);
 
-        // New page for results
-        doc.addPage(); y = 20;
-        ln('RESULTADO', 16, true);
-        row('Margem de Contribuição', fmt(totais.margemContribuicao));
-        row('Lucro Gerencial', fmt(totais.lucroGerencial));
-        const fat = data.faturamento || 1;
-        row('Margem de Lucro', ((totais.lucroGerencial / fat) * 100).toFixed(1) + '%');
-        row('% Custo Fixo', ((totais.totalFixos / fat) * 100).toFixed(1) + '%');
-        const mc = totais.margemContribuicao / fat;
-        row('Ponto de Equilíbrio', mc > 0 ? fmt(totais.totalFixos / mc) : 'N/A'); y += 6;
+        const dreRows = [
+            ['Receita Bruta',              fmt(fat),         pct(fat, fat)],
+            ['(-) Deduções / Impostos',    fmt(deducoes),    pct(deducoes, fat)],
+            ['(=) Receita Líquida',        fmt(receitaLiq),  pct(receitaLiq, fat)],
+            ['(-) Custos Variáveis',       fmt(custoVar),    pct(custoVar, fat)],
+            ['(=) Margem de Contribuição', fmt(margemContr), pct(margemContr, fat)],
+            ['(-) Custos Fixos',           fmt(custoFixo),   pct(custoFixo, fat)],
+            ['(=) EBITDA',                 fmt(ebitda),      pct(ebitda, fat)],
+            ['(-) Pró-labore',             fmt(proLabore),   pct(proLabore, fat)],
+            ['(=) Lucro Líquido',          fmt(lucro),       pct(lucro, fat)],
+        ];
+        const dreStyles = ['section', 'normal', 'total', 'normal', 'total', 'normal', 'total', 'normal', 'highlight'];
 
-        ln('DIVISÃO IDEAL DO LUCRO', 13, true);
-        row('Pró-labore (50%)', fmt(totais.lucroGerencial * 0.5));
-        row('Empréstimos (0%)', fmt(0));
-        row('Investimentos (30%)', fmt(totais.lucroGerencial * 0.3));
-        row('Reserva de Caixa (20%)', fmt(totais.lucroGerencial * 0.2));
+        doc.autoTable({
+            startY: 48,
+            head: [['Descrição', 'Valor', '% Receita']],
+            body: dreRows,
+            columnStyles: {
+                0: { cellWidth: colW * 0.55 },
+                1: { cellWidth: colW * 0.25, halign: 'right' },
+                2: { cellWidth: colW * 0.20, halign: 'right' },
+            },
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [15, 77, 63], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [244, 247, 245] },
+            didParseCell: (d) => {
+                if (d.section !== 'body') return;
+                const s = dreStyles[d.row.index];
+                if (s === 'section')   { d.cell.styles.fillColor = [15, 77, 63]; d.cell.styles.textColor = 255; d.cell.styles.fontStyle = 'bold'; }
+                if (s === 'total')     { d.cell.styles.fillColor = [220, 237, 229]; d.cell.styles.fontStyle = 'bold'; }
+                if (s === 'highlight') { d.cell.styles.fillColor = lucro >= 0 ? [29, 158, 117] : [226, 75, 74]; d.cell.styles.textColor = 255; d.cell.styles.fontStyle = 'bold'; }
+            },
+        });
 
-        doc.save(`PAV_Relatorio_${data.mesReferencia || 'geral'}.pdf`);
+        // ── Seção 2: Indicadores ───────────────────────────────────────
+        let nextY = doc.lastAutoTable.finalY + 10;
+        if (nextY > pageH - 70) { doc.addPage(); nextY = 20; }
+        doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+        doc.text('2. Indicadores do Período', margin, nextY);
+
+        const pe      = margemContr > 0 ? custoFixo / (margemContr / (fat || 1)) : 0;
+        const qtdAt   = parseFloat(data.qtdAtendimentos) || 0;
+        const ticket  = qtdAt > 0 ? fat / qtdAt : 0;
+        const metaFat = data.metaFaturamento || 0;
+        const metaLucro = data.metaLucro    || 0;
+
+        doc.autoTable({
+            startY: nextY + 4,
+            head: [['Indicador', 'Valor', 'Observação']],
+            body: [
+                ['Margem de Lucro Líquido',  pct(lucro, fat),         lucro >= 0 ? 'Positivo' : 'Negativo — atenção'],
+                ['Margem de Contribuição',   pct(margemContr, fat),   margemContr >= custoFixo ? 'Cobre custos fixos' : 'Abaixo dos fixos'],
+                ['Ponto de Equilíbrio',      fmt(pe),                 fat > 0 ? (fat >= pe ? 'Atingido' : 'Não atingido') : '—'],
+                ['Ticket Médio',             fmt(ticket),             qtdAt > 0 ? qtdAt + ' atendimentos' : 'Sem dados'],
+                ['Meta Faturamento',         fmt(metaFat),            metaFat > 0 ? pct(fat, metaFat) + ' realizado' : 'Não definida'],
+                ['Meta Lucro',               fmt(metaLucro),          metaLucro > 0 ? pct(lucro, metaLucro) + ' realizado' : 'Não definida'],
+            ],
+            columnStyles: {
+                0: { cellWidth: colW * 0.38 },
+                1: { cellWidth: colW * 0.22, halign: 'right' },
+                2: { cellWidth: colW * 0.40 },
+            },
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [41, 98, 155], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [244, 247, 253] },
+        });
+
+        // ── Seção 3: Custos Variáveis detalhado ────────────────────────
+        nextY = doc.lastAutoTable.finalY + 10;
+        if (nextY > pageH - 60) { doc.addPage(); nextY = 20; }
+        doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+        doc.text('3. Detalhamento — Custos Variáveis', margin, nextY);
+
+        const varItems = [
+            ['Reembolso / Inadimplência', data.reembolsoInadimplencia],
+            ['Impostos',                  data.impostos],
+            ['Taxas de Cartão',           data.taxasCartao],
+            ['Insumos Diários',           data.insumos],
+            ['Boletos Fornecedores',      data.boletosFornecedores],
+            ['Serviços Terceirizados',    data.terceirizadosVar],
+            ['Lab. Terceirizado',         data.labTerceirizado],
+            ['Comissões',                 data.comissoes],
+            ['Plantões',                  data.plantoes],
+            ['Escritório / Limpeza',      data.escritorioLimpezaVar],
+            ['Estorno',                   data.estorno],
+            ['Outros Variáveis',          data.outrosVariaveis],
+        ].filter(r => parseFloat(r[1]) > 0);
+        varItems.push(['TOTAL VARIÁVEIS', custoVar]);
+
+        doc.autoTable({
+            startY: nextY + 4,
+            head: [['Item', 'Valor', '% Receita']],
+            body: varItems.map(([label, val]) => [label, fmt(val), pct(val, fat)]),
+            columnStyles: {
+                0: { cellWidth: colW * 0.55 },
+                1: { cellWidth: colW * 0.25, halign: 'right' },
+                2: { cellWidth: colW * 0.20, halign: 'right' },
+            },
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [226, 75, 74], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [253, 244, 244] },
+            didParseCell: (d) => {
+                if (d.section === 'body' && d.row.index === varItems.length - 1) {
+                    d.cell.styles.fontStyle = 'bold';
+                    d.cell.styles.fillColor = [240, 210, 210];
+                }
+            },
+        });
+
+        // ── Seção 4: Custos Fixos detalhado ───────────────────────────
+        nextY = doc.lastAutoTable.finalY + 10;
+        if (nextY > pageH - 60) { doc.addPage(); nextY = 20; }
+        doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+        doc.text('4. Detalhamento — Custos Fixos', margin, nextY);
+
+        const fixItems = [
+            ['Folha de Pagamento',    data.folha],
+            ['Água',                  data.agua],
+            ['Luz',                   data.luz],
+            ['Sistemas',              data.sistemas],
+            ['Aluguel',               data.aluguel],
+            ['Telecom',               data.telecom],
+            ['Contabilidade',         data.contabilidade],
+            ['Marketing',             data.marketing],
+            ['E-Social',              data.esocial],
+            ['Taxas Admin',           data.taxasAdmin],
+            ['CRMV',                  data.crmv],
+            ['Lixo Contaminante',     data.lixoContaminante],
+            ['IPTU',                  data.iptu],
+            ['Limpeza Fixa',          data.limpezaFixa],
+            ['Terceirizados Fixos',   data.terceirizadosFixos],
+            ['Outros Fixos',          data.outrosFixos],
+        ].filter(r => parseFloat(r[1]) > 0);
+        fixItems.push(['TOTAL FIXOS', custoFixo]);
+
+        doc.autoTable({
+            startY: nextY + 4,
+            head: [['Item', 'Valor', '% Receita']],
+            body: fixItems.map(([label, val]) => [label, fmt(val), pct(val, fat)]),
+            columnStyles: {
+                0: { cellWidth: colW * 0.55 },
+                1: { cellWidth: colW * 0.25, halign: 'right' },
+                2: { cellWidth: colW * 0.20, halign: 'right' },
+            },
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [80, 80, 80], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [247, 247, 247] },
+            didParseCell: (d) => {
+                if (d.section === 'body' && d.row.index === fixItems.length - 1) {
+                    d.cell.styles.fontStyle = 'bold';
+                    d.cell.styles.fillColor = [220, 220, 220];
+                }
+            },
+        });
+
+        // ── Seção 5: Divisão do Lucro ──────────────────────────────────
+        nextY = doc.lastAutoTable.finalY + 10;
+        if (nextY > pageH - 60) { doc.addPage(); nextY = 20; }
+        doc.setFontSize(11).setTextColor(15, 77, 63).setFont('helvetica', 'bold');
+        doc.text('5. Divisão do Lucro', margin, nextY);
+
+        // Tenta ler configuração salva, senão usa 50/30/20
+        let div = { proLaborePerc: 50, investimentoPerc: 30, reservaPerc: 20 };
+        try {
+            const saved = JSON.parse(localStorage.getItem('pav_divisao_lucro') || '{}');
+            if (saved.proLaborePerc) div = saved;
+        } catch(e) {}
+
+        const vlPL  = lucro * (div.proLaborePerc  / 100);
+        const vlInv = lucro * (div.investimentoPerc / 100);
+        const vlRes = lucro * (div.reservaPerc    / 100);
+
+        doc.autoTable({
+            startY: nextY + 4,
+            head: [['Destinação', 'Percentual', 'Valor']],
+            body: [
+                ['Pró-labore',       div.proLaborePerc   + '%', fmt(vlPL)],
+                ['Reinvestimento',   div.investimentoPerc + '%', fmt(vlInv)],
+                ['Reserva de Caixa', div.reservaPerc     + '%', fmt(vlRes)],
+                ['Lucro Líquido',    '100%',                    fmt(lucro)],
+            ],
+            columnStyles: {
+                0: { cellWidth: colW * 0.45 },
+                1: { cellWidth: colW * 0.25, halign: 'center' },
+                2: { cellWidth: colW * 0.30, halign: 'right' },
+            },
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [15, 77, 63], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [244, 247, 245] },
+            didParseCell: (d) => {
+                if (d.section === 'body' && d.row.index === 3) {
+                    d.cell.styles.fontStyle = 'bold';
+                    d.cell.styles.fillColor = lucro >= 0 ? [29, 158, 117] : [226, 75, 74];
+                    d.cell.styles.textColor = 255;
+                }
+            },
+        });
+
+        // ── Rodapé em todas as páginas ─────────────────────────────────
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setDrawColor(200);
+            doc.line(margin, pageH - 13, pageW - margin, pageH - 13);
+            doc.setFontSize(7).setFont('helvetica', 'normal').setTextColor(140);
+            doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} · PAVE Financial`, margin, pageH - 7);
+            doc.text('Documento informativo. Consulte um contador para fins fiscais e legais.', pageW / 2, pageH - 7, { align: 'center' });
+            doc.text(`Pág. ${i}/${pageCount}`, pageW - margin, pageH - 7, { align: 'right' });
+        }
+
+        doc.save(`PAVE_Relatorio_${periodo}.pdf`);
         this.showToast('PDF exportado com sucesso!', 'success');
     },
 
@@ -326,3 +516,250 @@ document.addEventListener('DOMContentLoaded', () => {
         if (el) el.setAttribute('data-money', 'true');
     });
 });
+
+// ============================================================
+// PAVE — Camada de Utilitários Centralizados
+// Usar window.Fmt, window.Calc e window.Storage em todos os
+// módulos para evitar reimplementações divergentes.
+// ============================================================
+
+// ── Detecção de tema ─────────────────────────────────────────────────────────
+window._isDark = function() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+};
+
+window.Fmt = {
+    /** Formata número como moeda BRL: R$ 1.234,56 */
+    money(v) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+    },
+    /** Formata percentual com N casas decimais: "12,3%" */
+    percent(v, decimals = 1) {
+        return (v || 0).toFixed(decimals).replace('.', ',') + '%';
+    },
+    /** Formata número compacto: 1200 → "1,2k" */
+    compact(v) {
+        return new Intl.NumberFormat('pt-BR', { notation: 'compact' }).format(v || 0);
+    },
+    /** Converte ISO (YYYY-MM-DD) para DD/MM/YYYY */
+    date(iso) {
+        if (!iso) return '—';
+        const parts = String(iso).split('T')[0].split('-');
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : iso;
+    },
+    /** Converte YYYY-MM para MM/YYYY */
+    month(ym) {
+        if (!ym) return '—';
+        const parts = String(ym).split('-');
+        return parts.length >= 2 ? `${parts[1]}/${parts[0]}` : ym;
+    }
+};
+
+window.Calc = {
+    /** Ponto de Equilíbrio: custos fixos / (margem contribuição / faturamento) */
+    pe(fixos, margemContrib, faturamento) {
+        if (!faturamento || faturamento <= 0) return 0;
+        const pct = margemContrib / faturamento;
+        return pct > 0 ? fixos / pct : 0;
+    },
+    /** Delta percentual entre dois períodos — retorna null se base inválida */
+    delta(atual, anterior) {
+        if (anterior === null || anterior === undefined || !isFinite(anterior) || anterior === 0) return null;
+        return ((atual - anterior) / Math.abs(anterior)) * 100;
+    },
+    /** Margem percentual: (lucro / faturamento) * 100 */
+    margin(lucro, faturamento) {
+        return faturamento > 0 ? (lucro / faturamento) * 100 : 0;
+    },
+    /** Ticket médio: faturamento / atendimentos */
+    ticket(faturamento, atendimentos) {
+        const qt = Math.round(atendimentos || 0);
+        return qt > 0 ? faturamento / qt : 0;
+    }
+};
+
+window.Storage = {
+    /** Lê e parseia JSON do localStorage — retorna fallback se corrompido */
+    get(key, fallback = null) {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw !== null ? JSON.parse(raw) : fallback;
+        } catch(e) {
+            console.warn(`[Storage] Chave "${key}" corrompida — retornando fallback.`, e);
+            return fallback;
+        }
+    },
+    /** Serializa e salva no localStorage */
+    set(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); }
+        catch(e) { console.error(`[Storage] Falha ao salvar "${key}":`, e); }
+    },
+    /** Lê campo numérico de objeto no localStorage */
+    num(key, field, defaultVal = 0) {
+        const obj = this.get(key, {});
+        return typeof obj[field] === 'number' ? obj[field] : defaultVal;
+    }
+};
+
+// ============================================================
+// ONBOARDING WIZARD — aparece uma vez, na primeira sessão
+// ============================================================
+window.OnboardingModule = (() => {
+    const DONE_KEY = 'pav_onboard_done';
+
+    function _html() {
+        return `
+        <div id="onboarding-overlay" class="onboarding-overlay" role="dialog" aria-modal="true" aria-label="Configuração inicial">
+            <div class="onboarding-card">
+                <!-- Steps indicator -->
+                <div style="display:flex; gap:6px; justify-content:center; margin-bottom:1.5rem;">
+                    <div id="ob-dot-1" style="width:32px; height:4px; border-radius:2px; background:var(--accent-blue); transition:all 0.2s;"></div>
+                    <div id="ob-dot-2" style="width:32px; height:4px; border-radius:2px; background:var(--border); transition:all 0.2s;"></div>
+                    <div id="ob-dot-3" style="width:32px; height:4px; border-radius:2px; background:var(--border); transition:all 0.2s;"></div>
+                </div>
+
+                <!-- Step 1: Dados da clínica -->
+                <div id="ob-step-1">
+                    <h2 style="margin:0 0 0.25rem; font-size:1.3rem; color:var(--text-primary);">Bem-vindo ao PAVE</h2>
+                    <p style="margin:0 0 1.5rem; color:var(--text-secondary); font-size:0.875rem;">Vamos configurar sua clínica em 3 passos rápidos.</p>
+                    <div class="form-grid" style="gap:1rem;">
+                        <div class="input-group">
+                            <label>Nome da Clínica *</label>
+                            <input type="text" id="ob-nome" placeholder="Ex: Clínica Vet Saúde" autocomplete="organization">
+                        </div>
+                        <div class="input-group">
+                            <label>Responsável / CRMV</label>
+                            <input type="text" id="ob-resp" placeholder="Ex: Dr. João — CRMV 12345">
+                        </div>
+                        <div class="input-group">
+                            <label>Regime Tributário</label>
+                            <select id="ob-regime">
+                                <option value="simples">Simples Nacional</option>
+                                <option value="lucro_presumido">Lucro Presumido</option>
+                                <option value="lucro_real">Lucro Real</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="ob-btn-1" style="margin-top:1.5rem; width:100%; padding:0.75rem; border-radius:var(--radius-sm); border:none; background:var(--accent-blue); color:#fff; font-weight:700; font-size:0.95rem; font-family:var(--font-family); cursor:pointer;">Próximo →</button>
+                </div>
+
+                <!-- Step 2: Divisão do lucro -->
+                <div id="ob-step-2" style="display:none;">
+                    <h2 style="margin:0 0 0.25rem; font-size:1.3rem; color:var(--text-primary);">Divisão do Lucro</h2>
+                    <p style="margin:0 0 1.5rem; color:var(--text-secondary); font-size:0.875rem;">Como você quer dividir o lucro líquido mensal? (Total deve ser 100%)</p>
+                    <div class="form-grid" style="gap:1rem;">
+                        <div class="input-group">
+                            <label>Pró-labore do sócio (%)</label>
+                            <input type="number" id="ob-prolabore" value="50" min="0" max="100">
+                        </div>
+                        <div class="input-group">
+                            <label>Reinvestimentos (%)</label>
+                            <input type="number" id="ob-invest" value="30" min="0" max="100">
+                        </div>
+                        <div class="input-group">
+                            <label>Reserva de emergência (%)</label>
+                            <input type="number" id="ob-reserva" value="20" min="0" max="100">
+                        </div>
+                    </div>
+                    <p id="ob-divisao-warning" style="display:none; color:var(--color-danger); font-size:0.8rem; margin-top:0.5rem;">⚠ A soma deve ser exatamente 100%.</p>
+                    <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                        <button id="ob-btn-back-2" style="flex:1; padding:0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-weight:700; font-family:var(--font-family); cursor:pointer;">← Voltar</button>
+                        <button id="ob-btn-2" style="flex:2; padding:0.75rem; border-radius:var(--radius-sm); border:none; background:var(--accent-blue); color:#fff; font-weight:700; font-family:var(--font-family); cursor:pointer;">Próximo →</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Concluído -->
+                <div id="ob-step-3" style="display:none; text-align:center;">
+                    <div style="font-size:3rem; margin-bottom:1rem;">🎉</div>
+                    <h2 style="margin:0 0 0.5rem; font-size:1.3rem; color:var(--text-primary);">Tudo pronto!</h2>
+                    <p style="color:var(--text-secondary); font-size:0.875rem; margin-bottom:1.5rem;">Sua clínica está configurada. Explore as abas para lançar receitas, despesas e acompanhar seu crescimento.</p>
+                    <div style="display:flex; flex-direction:column; gap:0.5rem; text-align:left; margin-bottom:1.5rem;">
+                        <div style="padding:0.625rem 0.875rem; background:var(--bg-elevated); border-radius:var(--radius-sm); font-size:0.82rem; color:var(--text-secondary);">📊 <strong style="color:var(--text-primary);">Dashboard</strong> — visão geral dos seus números</div>
+                        <div style="padding:0.625rem 0.875rem; background:var(--bg-elevated); border-radius:var(--radius-sm); font-size:0.82rem; color:var(--text-secondary);">💰 <strong style="color:var(--text-primary);">Caixa Diário</strong> — registre receitas e despesas do dia</div>
+                        <div style="padding:0.625rem 0.875rem; background:var(--bg-elevated); border-radius:var(--radius-sm); font-size:0.82rem; color:var(--text-secondary);">📋 <strong style="color:var(--text-primary);">Balanço</strong> — consolide o mês e veja seu lucro real</div>
+                        <div style="padding:0.625rem 0.875rem; background:var(--bg-elevated); border-radius:var(--radius-sm); font-size:0.82rem; color:var(--text-secondary);">📅 <strong style="color:var(--text-primary);">Contas P/R</strong> — controle vencimentos e recorrências</div>
+                    </div>
+                    <button id="ob-btn-finish" style="width:100%; padding:0.75rem; border-radius:var(--radius-sm); border:none; background:var(--accent-blue); color:#fff; font-weight:700; font-size:0.95rem; font-family:var(--font-family); cursor:pointer;">Começar a usar →</button>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function _goStep(n) {
+        [1, 2, 3].forEach(i => {
+            document.getElementById(`ob-step-${i}`).style.display = i === n ? '' : 'none';
+            const dot = document.getElementById(`ob-dot-${i}`);
+            dot.style.background = i <= n ? 'var(--accent-blue)' : 'var(--border)';
+        });
+    }
+
+    function _save() {
+        const nome     = document.getElementById('ob-nome')?.value.trim() || '';
+        const resp     = document.getElementById('ob-resp')?.value.trim() || '';
+        const regime   = document.getElementById('ob-regime')?.value || 'simples';
+        const prolabore = parseInt(document.getElementById('ob-prolabore')?.value) || 50;
+        const invest    = parseInt(document.getElementById('ob-invest')?.value) || 30;
+        const reserva   = parseInt(document.getElementById('ob-reserva')?.value) || 20;
+
+        if (nome) {
+            localStorage.setItem('pav_brand_nome', nome);
+            localStorage.setItem('pav_brand_resp', resp);
+            const clinica = JSON.parse(localStorage.getItem('pav_clinica') || '{}');
+            clinica.nome = nome; clinica.responsavel = resp; clinica.regime = regime;
+            localStorage.setItem('pav_clinica', JSON.stringify(clinica));
+            if (typeof OrgAPI !== 'undefined') {
+                OrgAPI.update({ nome, responsavel: resp, regime })
+                    .catch(e => console.warn('[Onboarding] OrgAPI.update:', e?.message));
+            }
+        }
+
+        localStorage.setItem('pav_divisao_lucro', JSON.stringify({ proLabore: prolabore, investimentos: invest, reserva }));
+        if (typeof OrgAPI !== 'undefined') { /* profit_config sync via Configurações */ }
+        localStorage.setItem(DONE_KEY, '1');
+    }
+
+    function init() {
+        if (localStorage.getItem(DONE_KEY)) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = _html();
+        document.body.appendChild(wrapper.firstChild);
+
+        document.getElementById('ob-btn-1').addEventListener('click', () => {
+            const nome = document.getElementById('ob-nome')?.value.trim();
+            if (!nome) { document.getElementById('ob-nome').style.borderColor = 'var(--color-danger)'; return; }
+            document.getElementById('ob-nome').style.borderColor = '';
+            _goStep(2);
+        });
+
+        document.getElementById('ob-btn-back-2').addEventListener('click', () => _goStep(1));
+
+        document.getElementById('ob-btn-2').addEventListener('click', () => {
+            const pl = parseInt(document.getElementById('ob-prolabore')?.value) || 0;
+            const iv = parseInt(document.getElementById('ob-invest')?.value) || 0;
+            const rv = parseInt(document.getElementById('ob-reserva')?.value) || 0;
+            const warn = document.getElementById('ob-divisao-warning');
+            if (pl + iv + rv !== 100) { warn.style.display = ''; return; }
+            warn.style.display = 'none';
+            _goStep(3);
+        });
+
+        document.getElementById('ob-btn-finish').addEventListener('click', () => {
+            _save();
+            document.getElementById('onboarding-overlay').remove();
+            if (window.renderConfig) window.renderConfig();
+        });
+
+        // Recalculate warning live
+        ['ob-prolabore','ob-invest','ob-reserva'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', () => {
+                const total = ['ob-prolabore','ob-invest','ob-reserva']
+                    .reduce((s, i) => s + (parseInt(document.getElementById(i)?.value) || 0), 0);
+                const warn = document.getElementById('ob-divisao-warning');
+                if (warn) warn.style.display = total === 100 ? 'none' : '';
+            });
+        });
+    }
+
+    return { init };
+})();
