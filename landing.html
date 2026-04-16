@@ -1007,11 +1007,20 @@
                     </li>
                     <li>
                         <div class="solution-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4D3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        </div>
+                        <div class="solution-text">
+                            <strong>Alertas de vencimento e contas P/R</strong>
+                            <span>Nunca perca uma conta: badge vermelho, notificação no celular e fluxo projetado 30 dias.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="solution-icon">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F4D3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                         </div>
                         <div class="solution-text">
                             <strong>Relatórios e simulações</strong>
-                            <span>Cenários What-If, simulador de RH e exportação PDF/Excel.</span>
+                            <span>Cenários What-If, simulador de RH, HealthScore e exportação PDF/Excel.</span>
                         </div>
                     </li>
                 </ul>
@@ -1030,6 +1039,7 @@
         <div class="tour-tabs">
             <button class="tour-tab active" onclick="showTour('dashboard', this)">Dashboard</button>
             <button class="tour-tab" onclick="showTour('caixa', this)">Caixa Diário</button>
+            <button class="tour-tab" onclick="showTour('contas', this)">Contas &amp; Alertas</button>
             <button class="tour-tab" onclick="showTour('precificacao', this)">Precificação</button>
             <button class="tour-tab" onclick="showTour('relatorios', this)">Relatórios</button>
         </div>
@@ -1098,6 +1108,41 @@
                                 <div class="mockup-bar accent" style="height:90%"></div>
                                 <div class="mockup-bar" style="height:20%"></div>
                                 <div class="mockup-bar accent" style="height:55%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contas & Alertas -->
+            <div class="tour-panel" id="tour-contas">
+                <div class="tour-panel-text">
+                    <h3>Contas a pagar/receber com alertas automáticos</h3>
+                    <p>Cadastre faturas recorrentes e deixe o PAVE avisá-lo antes do vencimento — por badge na tela e notificação nativa no sistema operacional.</p>
+                    <ul class="tour-feature-list">
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Alertas vermelhos para contas vencidas</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Recorrência mensal, trimestral e anual</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Fluxo projetado para os próximos 30 dias</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Notificações do sistema operacional (OS)</li>
+                    </ul>
+                </div>
+                <div class="tour-panel-visual">
+                    <div class="mockup-dashboard">
+                        <div class="mockup-row">
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">A vencer (7d)</div><div class="mockup-kpi-value">R$ 4.800</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Vencidas</div><div class="mockup-kpi-value red">2 contas</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Saldo 30 dias</div><div class="mockup-kpi-value green">+ R$ 9.2k</div></div>
+                        </div>
+                        <div class="mockup-bar-chart">
+                            <div class="mockup-chart-label">Fluxo projetado — próximos 30 dias</div>
+                            <div class="mockup-bars">
+                                <div class="mockup-bar accent" style="height:70%"></div>
+                                <div class="mockup-bar" style="height:35%"></div>
+                                <div class="mockup-bar accent" style="height:80%"></div>
+                                <div class="mockup-bar" style="height:50%"></div>
+                                <div class="mockup-bar accent" style="height:60%"></div>
+                                <div class="mockup-bar" style="height:25%; background:#E24B4A; opacity:0.4;"></div>
+                                <div class="mockup-bar accent" style="height:90%"></div>
                             </div>
                         </div>
                     </div>
@@ -1286,8 +1331,8 @@
                 <ul class="plan-mini-features">
                     <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Até 3 usuários</li>
                     <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Tudo do Starter</li>
-                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Relatórios PDF/Excel/CSV</li>
-                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Simulador What-If + backup</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Relatórios PDF/Excel/CSV + HealthScore</li>
+                    <li><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Alertas de vencimento + fluxo 30 dias</li>
                 </ul>
                 <a href="checkout.html?plano=pro" class="plan-mini-cta primary">Assinar Pro</a>
             </div>
@@ -1354,6 +1399,13 @@
                 </div>
                 <div class="faq-a">Sim. Clientes nos planos Pro e Clinic têm suporte para importação de dados via CSV. Nossa equipe também oferece migração assistida para quem está vindo de planilhas complexas.</div>
             </div>
+            <div class="faq-item">
+                <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+                    <span>O PAVE tem aplicativo para celular?</span>
+                    <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="faq-a">O PAVE é um Progressive Web App (PWA) — funciona direto no navegador do celular com experiência próxima de um app nativo. No Chrome/Safari, basta adicionar à tela inicial. Ele também funciona offline para consultar dados já carregados.</div>
+            </div>
         </div>
     </div>
 </section>
@@ -1400,7 +1452,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <span>© 2025 PAVE. Todos os direitos reservados.</span>
+            <span>© 2026 PAVE. Todos os direitos reservados.</span>
             <span>Feito para veterinários brasileiros 🐾</span>
         </div>
     </div>
