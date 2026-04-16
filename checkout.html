@@ -14,7 +14,7 @@
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/pav-design-system.css">
     <script src="js/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,18 +22,22 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --brand:    #064E3B;
-            --cta:      #059669;
-            --cta-dark: #047857;
+            --brand:    #234e70;
+            --cta:      #2f9c77;
+            --cta-dark: #268a68;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #F5F7F5;
-            color: #1A1A2E;
+            font-family: 'Montserrat', sans-serif;
+            background: #fafafa;
+            color: #181818;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        h1, h2, h3, h4, .co-form-title, .order-plan-name {
+            font-family: 'Antonio', sans-serif;
         }
 
         /* ── Topbar ── */
@@ -56,11 +60,11 @@
             width: 32px;
             height: 32px;
             border-radius: 7px;
-            background: linear-gradient(135deg, #059669 0%, #064E3B 100%);
+            background: linear-gradient(135deg, #2f9c77 0%, #234e70 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 6px rgba(5,150,105,0.3);
+            box-shadow: 0 2px 6px rgba(47,156,119,0.3);
         }
         .co-topbar-name {
             font-size: 0.95rem;
@@ -112,7 +116,7 @@
         }
         .co-step-circle.active {
             border-color: #059669;
-            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
+            background: linear-gradient(135deg, #2f9c77 0%, #234e70 100%);
             color: #fff;
             box-shadow: 0 0 0 3px rgba(5,150,105,0.15);
         }
@@ -199,13 +203,13 @@
             background: #fff;
             color: #1A1A2E;
             font-size: 0.875rem;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             transition: border-color 0.15s;
             outline: none;
         }
         .field input:focus {
             border-color: #059669;
-            box-shadow: 0 0 0 3px rgba(5,150,105,0.12);
+            box-shadow: 0 0 0 3px rgba(47,156,119,0.12);
         }
         .field input.error { border-color: #E24B4A; }
         .field-error {
@@ -241,7 +245,7 @@
         .pay-method.selected {
             border-color: #059669;
             background: #ECFDF5;
-            box-shadow: 0 0 0 2px rgba(5,150,105,0.12);
+            box-shadow: 0 0 0 2px rgba(47,156,119,0.12);
         }
         .pay-method-icon { font-size: 1.3rem; margin-bottom: 4px; }
         .pay-method-name { font-size: 0.75rem; font-weight: 600; color: #6B7280; }
@@ -252,11 +256,11 @@
             width: 100%;
             padding: 14px;
             border-radius: 8px;
-            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
+            background: linear-gradient(135deg, #2f9c77 0%, #234e70 100%);
             color: #fff;
             font-size: 0.9rem;
             font-weight: 700;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             border: none;
             cursor: pointer;
             display: flex;
@@ -265,11 +269,11 @@
             gap: 8px;
             transition: all 0.15s;
             margin-top: 8px;
-            box-shadow: 0 3px 12px rgba(5,150,105,0.35);
+            box-shadow: 0 3px 12px rgba(47,156,119,0.35);
         }
         #btn-submit:hover {
-            background: linear-gradient(135deg, #047857 0%, #064E3B 100%);
-            box-shadow: 0 5px 18px rgba(5,150,105,0.4);
+            background: linear-gradient(135deg, #268a68 0%, #1d4260 100%);
+            box-shadow: 0 5px 18px rgba(47,156,119,0.4);
             transform: translateY(-1px);
         }
         #btn-submit:active { transform: scale(0.98); }
@@ -318,16 +322,16 @@
             display: inline-block;
             padding: 12px 28px;
             border-radius: 8px;
-            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
+            background: linear-gradient(135deg, #2f9c77 0%, #234e70 100%);
             color: #fff;
             font-weight: 700;
             font-size: 0.875rem;
             text-decoration: none;
-            box-shadow: 0 2px 10px rgba(5,150,105,0.3);
+            box-shadow: 0 2px 10px rgba(47,156,119,0.3);
             transition: all 0.15s;
         }
         .success-back-btn:hover {
-            box-shadow: 0 4px 16px rgba(5,150,105,0.4);
+            box-shadow: 0 4px 16px rgba(47,156,119,0.4);
             transform: translateY(-1px);
         }
 

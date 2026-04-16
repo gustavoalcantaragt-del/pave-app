@@ -18,7 +18,7 @@
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/pav-design-system.css">
     <script src="js/config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,22 +26,27 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --brand:      #064E3B;
-            --brand-mid:  #065F46;
-            --cta:        #059669;
-            --cta-dark:   #047857;
-            --cta-glow:   rgba(5,150,105,0.22);
-            --surface:    #ECFDF5;
-            --bg:         #F5F7F5;
-            --text:       #111827;
+            --brand:      #234e70;
+            --brand-mid:  #1d4260;
+            --cta:        #2f9c77;
+            --cta-dark:   #268a68;
+            --cta-glow:   rgba(47,156,119,0.22);
+            --surface:    rgba(47,156,119,0.08);
+            --bg:         #fafafa;
+            --text:       #181818;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
             line-height: 1.5;
+        }
+
+        h1, h2, h3, h4,
+        .plans-hero h1, .plan-name, .plan-price-main {
+            font-family: 'Antonio', sans-serif;
         }
 
         /* ── Top bar ── */
@@ -69,11 +74,11 @@
             width: 34px;
             height: 34px;
             border-radius: 8px;
-            background: linear-gradient(135deg, #059669 0%, #064E3B 100%);
+            background: linear-gradient(135deg, #2f9c77 0%, #234e70 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 6px rgba(5,150,105,0.3);
+            box-shadow: 0 2px 6px rgba(47,156,119,0.3);
         }
         .plans-topbar-name {
             font-size: 1rem;
@@ -99,7 +104,7 @@
             font-weight: 600;
             text-decoration: none;
             transition: all 0.15s;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
         }
         .plans-back-link:hover {
             border-color: rgba(0,0,0,0.2);
@@ -249,11 +254,11 @@
             transform: translateY(-2px);
         }
         .plan-card.featured {
-            border: 2px solid #059669;
-            box-shadow: 0 6px 32px rgba(5,150,105,0.2);
+            border: 2px solid #2f9c77;
+            box-shadow: 0 6px 32px rgba(47,156,119,0.2);
         }
         .plan-card.featured:hover {
-            box-shadow: 0 10px 40px rgba(5,150,105,0.28);
+            box-shadow: 0 10px 40px rgba(47,156,119,0.28);
         }
         .plan-badge {
             position: absolute;
@@ -267,9 +272,9 @@
             letter-spacing: 0.8px;
             padding: 4px 16px;
             border-radius: 99px;
-            background: linear-gradient(135deg, #059669 0%, #065F46 100%);
+            background: linear-gradient(135deg, #2f9c77 0%, #234e70 100%);
             color: #fff;
-            box-shadow: 0 2px 8px rgba(5,150,105,0.35);
+            box-shadow: 0 2px 8px rgba(47,156,119,0.35);
         }
 
         .plan-name {
@@ -350,7 +355,7 @@
             border-radius: 8px;
             font-size: 0.875rem;
             font-weight: 600;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             cursor: pointer;
             text-align: center;
             transition: all 0.15s;
@@ -364,8 +369,8 @@
             box-shadow: 0 2px 10px rgba(5,150,105,0.3);
         }
         .plan-cta.primary:hover {
-            background: linear-gradient(135deg, #047857 0%, #064E3B 100%);
-            box-shadow: 0 4px 16px rgba(5,150,105,0.38);
+            background: linear-gradient(135deg, #268a68 0%, #1d4260 100%);
+            box-shadow: 0 4px 16px rgba(47,156,119,0.38);
             transform: translateY(-1px);
         }
         .plan-cta.secondary {
@@ -378,12 +383,12 @@
             color: #1A1A2E;
         }
         .plan-cta.gold {
-            background: linear-gradient(135deg, #065F46 0%, #022C22 100%);
+            background: linear-gradient(135deg, #234e70 0%, #0f2338 100%);
             color: #fff;
-            box-shadow: 0 2px 10px rgba(6,79,62,0.3);
+            box-shadow: 0 2px 10px rgba(35,78,112,0.3);
         }
         .plan-cta.gold:hover {
-            box-shadow: 0 4px 16px rgba(6,79,62,0.38);
+            box-shadow: 0 4px 16px rgba(35,78,112,0.38);
             transform: translateY(-1px);
         }
 
@@ -412,7 +417,7 @@
             font-size: 0.82rem;
             font-weight: 600;
             cursor: pointer;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Montserrat', sans-serif;
             transition: all 0.15s;
         }
         .comparison-toggle-btn:hover { border-color: rgba(0,0,0,0.2); color: #1A1A2E; }
@@ -593,7 +598,7 @@
 <!-- Current plan banner (shown when logged in and on trial/active) -->
 <div id="current-plan-banner">
     <div class="current-plan-inner">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <span id="current-plan-text" style="color:#6B7280;"></span>
         <a href="index.html">← Voltar ao app</a>
     </div>
@@ -626,27 +631,27 @@
         <div class="plan-divider"></div>
         <ul class="plan-features">
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 1 usuário
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Dashboard financeiro completo
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Caixa Diário + Contas a Pagar/Receber
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Alertas de vencimento (badge + notificação)
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Balanço mensal com DRE
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Até 30 serviços precificados
             </li>
             <li class="feat-off">
@@ -674,39 +679,39 @@
         <div class="plan-divider"></div>
         <ul class="plan-features">
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Até 3 usuários
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Tudo do Starter
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Serviços ilimitados
             </li>
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Fluxo de caixa projetado 30 dias
             </li>
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 HealthScore financeiro + SmartAlerts
             </li>
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 LTV e Ranking de Clientes
             </li>
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Relatórios PDF/Excel/CSV + DRE exportável
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Simulador RH + Cenários What-If
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Backup em tempo real + histórico 24 meses
             </li>
             <li class="feat-off">
@@ -729,31 +734,31 @@
         <div class="plan-divider"></div>
         <ul class="plan-features">
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Até 10 usuários
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Tudo do Pro
             </li>
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Multi-clínica (até 5 unidades)
             </li>
             <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Histórico ilimitado
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Suporte prioritário via WhatsApp
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 Onboarding dedicado
             </li>
             <li>
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 SLA de 99,9% de uptime
             </li>
         </ul>
