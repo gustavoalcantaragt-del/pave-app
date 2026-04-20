@@ -955,7 +955,7 @@
                     <div>
                         <div class="input-group">
                             <label>Salário Bruto na Carteira (R$)</label>
-                            <input type="number" step="0.01" min="0" id="clt-salario" placeholder="Ex: 2.500,00" oninput="window.simularCLT()">
+                            <input type="number" step="0.01" min="0" id="clt-salario" value="2500" oninput="window.simularCLT()">
                         </div>
                         <div class="input-group" style="margin-top:1rem;">
                             <label>Número de Funcionários</label>
@@ -965,27 +965,28 @@
                             <label>Regime Tributário da Empresa</label>
                             <select id="clt-tributacao" onchange="window.simularCLT()" class="sim-regime-select" style="width:100%;">
                                 <option value="simples">Simples Nacional (INSS incluso no DAS)</option>
+                                <option value="mei">MEI (INSS Patronal 3%)</option>
                                 <option value="lucro">Lucro Presumido / Real (INSS Patronal 20%)</option>
                             </select>
                         </div>
                         <div style="border-top:1px solid var(--border); margin-top:1.25rem; padding-top:1.25rem;">
-                            <p style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin:0 0 0.75rem; text-transform:uppercase; letter-spacing:0.5px;">Benefícios Opcionais</p>
+                            <p style="font-size:0.75rem; font-weight:700; color:var(--text-muted); margin:0 0 0.75rem; text-transform:uppercase; letter-spacing:0.5px;">Benefícios — valores pré-sugeridos, edite conforme necessário</p>
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
                                 <div class="input-group">
-                                    <label>Vale-Transporte (R$/dia)</label>
-                                    <input type="number" step="0.01" min="0" id="clt-vt" placeholder="0,00" oninput="window.simularCLT()">
+                                    <label>Vale-Transporte (R$/dia) <span style="color:var(--text-muted); font-weight:400;">média R$7,00</span></label>
+                                    <input type="number" step="0.01" min="0" id="clt-vt" value="7.00" oninput="window.simularCLT()">
                                 </div>
                                 <div class="input-group">
-                                    <label>Vale-Refeição (R$/dia)</label>
-                                    <input type="number" step="0.01" min="0" id="clt-vr" placeholder="0,00" oninput="window.simularCLT()">
+                                    <label>Vale-Refeição (R$/dia) <span style="color:var(--text-muted); font-weight:400;">média R$25,00</span></label>
+                                    <input type="number" step="0.01" min="0" id="clt-vr" value="25.00" oninput="window.simularCLT()">
                                 </div>
                                 <div class="input-group">
                                     <label>Dias Úteis no Mês</label>
                                     <input type="number" min="1" max="31" id="clt-dias" value="22" oninput="window.simularCLT()">
                                 </div>
                                 <div class="input-group">
-                                    <label>Plano de Saúde (R$/mês)</label>
-                                    <input type="number" step="0.01" min="0" id="clt-saude" placeholder="0,00" oninput="window.simularCLT()">
+                                    <label>Plano de Saúde (R$/mês) <span style="color:var(--text-muted); font-weight:400;">média R$350</span></label>
+                                    <input type="number" step="0.01" min="0" id="clt-saude" value="350.00" oninput="window.simularCLT()">
                                 </div>
                             </div>
                         </div>
@@ -1473,12 +1474,20 @@
                     }
                 }
                 if (active === 'whatif' && window.runSimulation) window.runSimulation();
+                if (active === 'clt' && window.simularCLT) window.simularCLT();
             });
         }
 
     })();
 
     // ── Simulador: troca de sub-abas ──────────────────────────
+    const _SIM_SUBTAB_INFO = {
+        whatif:      { title: 'Análise What-If',           sub: 'Projete cenários e veja o impacto no resultado em tempo real' },
+        tributario:  { title: 'Regime Tributário',          sub: 'Compare MEI, Simples Nacional, Lucro Presumido e Lucro Real' },
+        crescimento: { title: 'Projeção de Crescimento',    sub: 'Simule 4 cenários estratégicos com projeção para 12 meses' },
+        clt:         { title: 'Custo de Contratação CLT',   sub: 'Calcule o custo real mensal de contratar com carteira assinada' },
+    };
+
     window._simTabActive = 'whatif';
     window._switchSimTab = function(tab) {
         window._simTabActive = tab;
@@ -1488,6 +1497,17 @@
             if (panel) panel.style.display = t === tab ? '' : 'none';
             if (btn)  btn.classList.toggle('active', t === tab);
         });
+
+        // Atualiza título e subtítulo da topbar
+        const info = _SIM_SUBTAB_INFO[tab];
+        if (info) {
+            const pt = document.getElementById('page-title');
+            const ps = document.getElementById('page-subtitle');
+            const mt = document.getElementById('mobile-page-title');
+            if (pt) pt.innerText = info.title;
+            if (ps) ps.innerText = info.sub;
+            if (mt) mt.textContent = info.title;
+        }
 
         if (tab === 'crescimento') {
             const c = document.getElementById('sim-cresc-container');
@@ -1502,6 +1522,7 @@
             }
         }
         if (tab === 'whatif' && window.runSimulation) window.runSimulation();
+        if (tab === 'clt'    && window.simularCLT)    window.simularCLT();
     };
 
     // ── Simulador What-If: restaurar dados reais ──────────────

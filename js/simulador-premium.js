@@ -303,6 +303,9 @@ const SimuladorTributarioModule = (() => {
         const totais = data && window.calcularTotais ? window.calcularTotais(data) : {};
         const defFat = Math.round(data?.faturamento || totais?.faturamento || 0);
         const defCus = Math.round((totais?.totalFixos || 0) + (totais?.totalVariaveis || 0));
+        // Se não há dados, sugere valores de exemplo para o usuário explorar
+        const exFat = defFat || '';
+        const exCus = defCus || '';
 
         container.innerHTML = `
         <div class="card">
@@ -315,13 +318,13 @@ const SimuladorTributarioModule = (() => {
             <div class="sim-tax-inputs">
                 <div class="input-group">
                     <label>Faturamento Mensal (R$)</label>
-                    <input type="number" id="tax-fat" min="0" value="${defFat}"
+                    <input type="number" id="tax-fat" min="0" value="${defFat || ''}" placeholder="Ex: 30.000"
                            oninput="window.SimuladorTributarioModule.run()"
                            style="font-size:1.3rem; font-weight:800; color:var(--pave-blue);">
                 </div>
                 <div class="input-group">
                     <label>Custos Operacionais Mensais (R$)</label>
-                    <input type="number" id="tax-cus" min="0" value="${defCus}"
+                    <input type="number" id="tax-cus" min="0" value="${defCus || ''}" placeholder="Ex: 18.000"
                            oninput="window.SimuladorTributarioModule.run()"
                            style="font-size:1.3rem; font-weight:800; color:var(--color-danger);">
                 </div>
@@ -342,7 +345,17 @@ const SimuladorTributarioModule = (() => {
     function _run() {
         const fat = parseFloat(document.getElementById('tax-fat')?.value) || 0;
         const cus = parseFloat(document.getElementById('tax-cus')?.value) || 0;
-        if (!fat) return;
+        const cardsEl = document.getElementById('tax-regime-cards');
+
+        if (!fat) {
+            if (cardsEl) cardsEl.innerHTML = `
+                <div style="grid-column:1/-1; padding:2rem; text-align:center; color:var(--text-muted); font-size:0.9rem;">
+                    Informe o faturamento mensal para calcular e comparar os regimes.
+                </div>`;
+            const recomEl = document.getElementById('tax-recom');
+            if (recomEl) recomEl.innerHTML = '';
+            return;
+        }
 
         const R = _calcAll(fat, cus);
 
@@ -358,7 +371,6 @@ const SimuladorTributarioModule = (() => {
         const best = eligibles.length ? eligibles.reduce((a, b) => a.imp < b.imp ? a : b).key : null;
 
         // Cards
-        const cardsEl = document.getElementById('tax-regime-cards');
         if (cardsEl) {
             cardsEl.innerHTML = DEFS.map(d => {
                 const r = R[d.key];
@@ -493,9 +505,16 @@ window.simularCLT = function() {
     const decimo       = salario / 12;       // provisão 13º
     const ferias       = (salario / 12) * 1.3333; // provisão férias + 1/3
 
-    // Encargos previdenciários (somente LP/LR)
-    const inss         = trib === 'lucro' ? salario * 0.20 : 0;
-    const sistS        = trib === 'lucro' ? salario * 0.058 : 0;
+    // Encargos previdenciários por regime
+    let inss = 0, sistS = 0;
+    if (trib === 'lucro') {
+        inss  = salario * 0.20;   // INSS Patronal 20%
+        sistS = salario * 0.058;  // RAT + Sistema S ~5,8%
+    } else if (trib === 'mei') {
+        inss  = salario * 0.03;   // MEI: INSS Patronal 3%
+        sistS = 0;
+    }
+    // Simples: INSS incluso no DAS, sem custo patronal adicional
 
     // Benefícios
     const vtMes = vtDia * dias;
@@ -519,8 +538,10 @@ window.simularCLT = function() {
         ];
 
         if (trib === 'lucro') {
-            rows.push({ l: 'INSS Patronal (20%)',         v: inss,  highlight: false });
-            rows.push({ l: 'RAT + Sistema S (~5,8%)',     v: sistS, highlight: false });
+            rows.push({ l: 'INSS Patronal (20%)',             v: inss,  highlight: false });
+            rows.push({ l: 'RAT + Sistema S (~5,8%)',         v: sistS, highlight: false });
+        } else if (trib === 'mei') {
+            rows.push({ l: 'INSS Patronal MEI (3%)',          v: inss,  highlight: false });
         } else {
             rows.push({ l: 'INSS Patronal — incluso no DAS (Simples)', v: null, info: true });
         }
@@ -602,16 +623,21 @@ const SimuladorCrescimentoModule = (() => {
             title: 'Reajustar Preços',
             desc: 'Simula o impacto de aumentar preços com possível redução de demanda.',
             params: [
-                { id: 'ap_pct',   label: 'Reajuste de preço (%)', default: 10, min: 1, step: 1, suffix: '%' },
-                { id: 'ap_churn', label: 'Perda estimada de clientes (%)', default: 5, min: 0, step: 1, suffix: '%' }
+                { id: 'ap_pct',   label: 'Reajuste de preço (%)',         default: 10, min: 1, step: 1, suffix: '%' },
+                { id: 'ap_churn', label: 'Perda estimada de clientes (%)', default: 5,  min: 0, step: 1, suffix: '%' },
+                { id: 'ap_ramp',  label: 'Meses para estabilizar',         default: 2,  min: 1, step: 1 }
             ],
             compute: (base, p) => {
-                const fatNovo = base.faturamento * (1 + p.ap_pct / 100) * (1 - p.ap_churn / 100);
-                return Array.from({ length: 12 }, () => ({
-                    fat:  fatNovo,
-                    fix:  base.totalFixos,
-                    vari: base.totalVariaveis * (base.faturamento > 0 ? fatNovo / base.faturamento : 1)
-                }));
+                const fatFinal = base.faturamento * (1 + p.ap_pct / 100) * (1 - p.ap_churn / 100);
+                return Array.from({ length: 12 }, (_, i) => {
+                    const ramp = Math.min(1, (i + 1) / p.ap_ramp);
+                    const fat  = base.faturamento + (fatFinal - base.faturamento) * ramp;
+                    return {
+                        fat,
+                        fix:  base.totalFixos,
+                        vari: base.totalVariaveis * (base.faturamento > 0 ? fat / base.faturamento : 1)
+                    };
+                });
             }
         },
         {
@@ -643,17 +669,21 @@ const SimuladorCrescimentoModule = (() => {
             title: 'Reduzir Custos',
             desc: 'Simula o ganho de margem ao cortar despesas fixas e variáveis.',
             params: [
-                { id: 'rc_fix_pct', label: 'Redução em custos fixos (%)',    default: 10, min: 1, step: 1, suffix: '%' },
-                { id: 'rc_var_pct', label: 'Redução em custos variáveis (%)', default: 5,  min: 0, step: 1, suffix: '%' }
+                { id: 'rc_fix_pct', label: 'Redução em custos fixos (%)',     default: 10, min: 1, step: 1, suffix: '%' },
+                { id: 'rc_var_pct', label: 'Redução em custos variáveis (%)', default: 5,  min: 0, step: 1, suffix: '%' },
+                { id: 'rc_ramp',    label: 'Meses para implementar cortes',   default: 3,  min: 1, step: 1 }
             ],
             compute: (base, p) => {
-                const fixNovo  = base.totalFixos      * (1 - p.rc_fix_pct  / 100);
-                const variNovo = base.totalVariaveis  * (1 - p.rc_var_pct  / 100);
-                return Array.from({ length: 12 }, () => ({
-                    fat:  base.faturamento,
-                    fix:  fixNovo,
-                    vari: variNovo
-                }));
+                const fixFinal  = base.totalFixos     * (1 - p.rc_fix_pct  / 100);
+                const variFinal = base.totalVariaveis * (1 - p.rc_var_pct  / 100);
+                return Array.from({ length: 12 }, (_, i) => {
+                    const ramp = Math.min(1, (i + 1) / p.rc_ramp);
+                    return {
+                        fat:  base.faturamento,
+                        fix:  base.totalFixos     - (base.totalFixos     - fixFinal)  * ramp,
+                        vari: base.totalVariaveis - (base.totalVariaveis - variFinal) * ramp
+                    };
+                });
             }
         }
     ];
@@ -689,7 +719,7 @@ const SimuladorCrescimentoModule = (() => {
             <div class="sim-scenarios-grid" id="sim-cresc-scenarios"></div>
             <div class="sim-params-panel" id="sim-cresc-params"></div>
             <div class="sim-result-bar" id="sim-cresc-results"></div>
-            <div style="position:relative; height:260px; margin-top:0.5rem;">
+            <div style="position:relative; height:200px; margin-top:0.5rem;">
                 <canvas id="sim-cresc-chart"></canvas>
             </div>
             <p style="font-size:0.72rem; color:var(--text-muted); margin-top:8px; text-align:center;">
