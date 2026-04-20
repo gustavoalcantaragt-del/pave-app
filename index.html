@@ -1380,17 +1380,18 @@
             const syncBtn = btn || document.getElementById('btn-sync-now');
             if (icon) icon.style.animation = 'pav-spin 0.8s linear infinite';
             if (syncBtn) syncBtn.disabled = true;
+            if (window._SyncUI) _SyncUI.showSyncing();
             try {
-                localStorage.removeItem('pav_cloud_pulled_at');
-                await CloudPull.run();
+                await CloudPull.run(true);
+                await _SyncQueue.flush();
                 if (window.renderCaixa)     window.renderCaixa();
                 if (window.renderDashboard) window.renderDashboard();
                 if (window.renderBills)     window.renderBills();
                 if (window.NotificationsModule) NotificationsModule.refresh();
-                Utils.showToast('✓ Dados sincronizados com a nuvem!', 'success');
             } catch(e) {
                 console.error('[SYNC]', e);
                 Utils.showToast('Falha ao sincronizar: ' + (e?.message || 'verifique a conexão'), 'error');
+                if (window._SyncUI) _SyncUI.hide();
             } finally {
                 if (icon) icon.style.animation = '';
                 if (syncBtn) syncBtn.disabled = false;

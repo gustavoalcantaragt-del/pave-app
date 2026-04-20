@@ -12,26 +12,56 @@ const _supabase = supabase.createClient(
 // ── Sync Queue — operações que falharam e precisam ser reenviadas ────────────
 const _SyncQueue = {
     _key: 'pav_sync_queue',
+
     push(entry) {
         try {
             const q = JSON.parse(localStorage.getItem(this._key) || '[]');
             q.push({ ...entry, ts: Date.now() });
-            // Manter no máximo 50 entradas
             if (q.length > 50) q.splice(0, q.length - 50);
             localStorage.setItem(this._key, JSON.stringify(q));
         } catch(e) {}
     },
-    flush() {
+
+    size() {
+        try { return JSON.parse(localStorage.getItem(this._key) || '[]').length; } catch { return 0; }
+    },
+
+    async flush() {
+        if (!navigator.onLine) return;
         try {
             const q = JSON.parse(localStorage.getItem(this._key) || '[]');
             if (q.length === 0) return;
-            console.log(`[SyncQueue] ${q.length} operação(ões) pendente(s) de sincronização.`);
+            const orgId = await OrgAPI.getOrgId();
+            if (!orgId) return;
+            if (window._SyncUI) _SyncUI.showPending(q.length);
+            const failed = [];
+            for (const entry of q) {
+                try {
+                    if (entry.type === 'cash_movement') {
+                        const mov = CashAPI.getLocal().find(m => m.id === entry.id);
+                        if (mov) await CashAPI.upsertMovimento(mov);
+                    } else if (entry.type === 'financial_entry') {
+                        const dados = FinancialAPI.getUltimosDados();
+                        if (dados) await FinancialAPI.save(dados);
+                    }
+                } catch(e) { failed.push(entry); }
+            }
+            localStorage.setItem(this._key, JSON.stringify(failed));
+            const synced = q.length - failed.length;
+            if (synced > 0 && window._SyncUI) _SyncUI.showSynced(synced);
+            else if (window._SyncUI) _SyncUI.hide();
         } catch(e) {}
     }
 };
 
-// Tenta reenviar fila ao reconectar
+// Tenta reenviar fila ao reconectar e quando tab volta ao foco
 window.addEventListener('online', () => _SyncQueue.flush());
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && (typeof Auth !== 'undefined') && Auth.isAuthenticated()) {
+        if (_SyncQueue.size() > 0) _SyncQueue.flush();
+        if (typeof CloudPull !== 'undefined') CloudPull.runIfStale();
+    }
+});
 
 // ── UUID v4 — usa crypto.randomUUID se disponível ────────────
 function _genUUID() {
@@ -321,6 +351,7 @@ const CashAPI = {
                 client_id:        mov.clienteId      || null,
                 bill_id:          mov.billId          || null
             }, { onConflict: 'id' });
+            localStorage.setItem('pav_local_ts', String(Date.now()));
         } catch (e) {
             console.warn('[SYNC] CashAPI.upsertMovimento falhou — dado salvo localmente.', e?.message);
             _SyncQueue.push({ type: 'cash_movement', id: mov.id });
@@ -479,11 +510,36 @@ const SyncHelper = {
 
 // ── PULL FROM CLOUD → localStorage (para conta nova ou dispositivo novo) ─────
 const CloudPull = {
-    async run() {
+
+    // Verifica se dados remotos são mais recentes que os locais
+    async runIfStale() {
+        try {
+            const orgId = await OrgAPI.getOrgId();
+            if (!orgId) return false;
+            const localTs = parseInt(localStorage.getItem('pav_local_ts') || '0', 10);
+            const { data } = await _supabase
+                .from('monthly_summaries')
+                .select('last_updated')
+                .eq('organization_id', orgId)
+                .order('last_updated', { ascending: false })
+                .limit(1)
+                .single();
+            if (!data) return false;
+            const remoteTs = new Date(data.last_updated).getTime();
+            if (remoteTs > localTs + 5000) { // 5s de tolerância
+                if (window._SyncUI) _SyncUI.showSyncing();
+                await this.run(true);
+                return true;
+            }
+            return false;
+        } catch { return false; }
+    },
+
+    async run(force = false) {
         const pullKey = 'pav_cloud_pulled_at';
         const lastPull = parseInt(localStorage.getItem(pullKey) || '0', 10);
         const ONE_DAY  = 24 * 60 * 60 * 1000;
-        if (Date.now() - lastPull < ONE_DAY) return; // sincronizou há menos de 24h
+        if (!force && Date.now() - lastPull < ONE_DAY) return; // sincronizou recentemente
 
         const orgId = await OrgAPI.getOrgId();
         if (!orgId) return;
@@ -591,8 +647,11 @@ const CloudPull = {
                 }));
             }
 
-            localStorage.setItem(pullKey, String(Date.now()));
+            const now = String(Date.now());
+            localStorage.setItem(pullKey, now);
+            localStorage.setItem('pav_local_ts', now);
             console.log('[PAVE] Dados carregados da nuvem para o dispositivo.');
+            if (window._SyncUI) _SyncUI.showSynced(1);
         } catch (e) {
             console.warn('[PAVE] CloudPull falhou (silencioso):', e);
         }
@@ -698,3 +757,75 @@ const RealtimeModule = {
 };
 
 window.RealtimeModule = RealtimeModule;
+
+// ── SYNC UI — banner fino de status de sincronização ─────────────────────────
+const _SyncUI = {
+    _el:    null,
+    _timer: null,
+
+    _getEl() {
+        if (!this._el) {
+            this._el = document.createElement('div');
+            this._el.id = 'pave-sync-banner';
+            Object.assign(this._el.style, {
+                position:      'fixed',
+                top:           '56px',
+                left:          '0',
+                right:         '0',
+                zIndex:        '2000',
+                padding:       '5px 16px',
+                fontSize:      '0.76rem',
+                fontWeight:    '600',
+                textAlign:     'center',
+                letterSpacing: '0.3px',
+                transition:    'opacity 0.4s',
+                display:       'none',
+                opacity:       '0'
+            });
+            document.body.appendChild(this._el);
+        }
+        return this._el;
+    },
+
+    _show(msg, bg, color, border, autohide = 0) {
+        const el = this._getEl();
+        el.textContent = msg;
+        el.style.background   = bg;
+        el.style.color        = color;
+        el.style.borderBottom = `1px solid ${border}`;
+        el.style.display      = 'block';
+        requestAnimationFrame(() => { el.style.opacity = '1'; });
+        clearTimeout(this._timer);
+        if (autohide > 0) this._timer = setTimeout(() => this.hide(), autohide);
+    },
+
+    showPending(count) {
+        this._show(
+            `⚠ ${count} operação${count > 1 ? 'ões' : ''} pendente${count > 1 ? 's' : ''} — sincronizando...`,
+            'rgba(255,149,0,0.12)', '#ff9500', 'rgba(255,149,0,0.3)'
+        );
+    },
+
+    showSyncing() {
+        this._show(
+            '↻ Sincronizando dados da nuvem...',
+            'rgba(10,132,255,0.09)', 'var(--accent-blue, #0a84ff)', 'rgba(10,132,255,0.2)'
+        );
+    },
+
+    showSynced(count) {
+        const label = count > 1 ? `${count} registros sincronizados` : 'Dados atualizados';
+        this._show(
+            `✓ ${label}`,
+            'rgba(29,158,117,0.09)', '#1D9E75', 'rgba(29,158,117,0.2)',
+            3500
+        );
+    },
+
+    hide() {
+        const el = this._getEl();
+        el.style.opacity = '0';
+        this._timer = setTimeout(() => { el.style.display = 'none'; }, 400);
+    }
+};
+window._SyncUI = _SyncUI;
