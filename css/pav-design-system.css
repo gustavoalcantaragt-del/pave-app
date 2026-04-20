@@ -674,12 +674,60 @@ header p {
   color: var(--brand-primary);
   letter-spacing: 0.2px;
 }
+.period-chip-btn {
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: background 0.15s;
+}
+.period-chip-btn:hover {
+  background: var(--brand-border);
+}
 
 [data-theme="dark"] .period-chip {
   background: rgba(35,78,112,0.25);
   color: #7eb8e0;
   border-color: rgba(35,78,112,0.4);
 }
+
+/* ── PERIOD PICKER DROPDOWN ─────────────────────────────── */
+.period-picker-panel {
+  position: fixed;
+  top: 58px;
+  right: 60px;
+  width: 200px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  z-index: 401;
+}
+.period-picker-header {
+  padding: 8px 14px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.period-picker-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 14px;
+  font-size: 0.82rem;
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.period-picker-item:hover { background: var(--bg-elevated); }
+.period-picker-item.active { font-weight: 700; color: var(--brand-primary); }
 
 /* ----------------------------------------------------------
    FORM ELEMENTS

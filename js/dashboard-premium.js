@@ -33,6 +33,77 @@ const ZERO_DATA = {
 };
 
 let _dashboardDebounce = null;
+
+// ── SELETOR DE PERÍODO ──────────────────────────────────────────────────────
+function _togglePeriodPicker() {
+    const existing = document.getElementById('period-picker-panel');
+    if (existing) { existing.remove(); return; }
+
+    let historico = [];
+    try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch {}
+
+    if (historico.length === 0) return;
+
+    const atual = (() => { try { return JSON.parse(localStorage.getItem('pav_ultimos_dados'))?.mesReferencia || ''; } catch { return ''; } })();
+
+    const items = [...historico].reverse().map(h => {
+        const label = (() => {
+            const r = h.mesRef || h.mesReferencia || '';
+            if (!r) return r;
+            const p = r.split('-');
+            return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : p.length === 2 ? `${p[1]}/${p[0]}` : r;
+        })();
+        const isAtual = (h.mesRef === atual || h.mesReferencia === atual);
+        return `<button class="period-picker-item${isAtual ? ' active' : ''}" data-ref="${h.mesRef || h.mesReferencia || ''}">${label}</button>`;
+    }).join('');
+
+    const panel = document.createElement('div');
+    panel.id = 'period-picker-panel';
+    panel.className = 'period-picker-panel';
+    panel.innerHTML = `<div class="period-picker-header">Selecionar período</div>${items}`;
+    document.body.appendChild(panel);
+
+    panel.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-ref]');
+        if (!btn) return;
+        const ref = btn.dataset.ref; // formato YYYY-MM-DD ou YYYY-MM
+        panel.remove();
+
+        // Busca dados completos do Supabase para o período selecionado
+        try {
+            const orgId = await OrgAPI.getOrgId();
+            if (orgId) {
+                const refDate = ref.length === 7 ? ref + '-01' : ref;
+                const { data: entries } = await _supabase
+                    .from('financial_entries')
+                    .select('reference_date, data')
+                    .eq('organization_id', orgId)
+                    .gte('reference_date', refDate.substring(0, 7) + '-01')
+                    .lt('reference_date', (() => { const d = new Date(refDate.substring(0, 7) + '-01'); d.setMonth(d.getMonth() + 1); return d.toISOString().substring(0, 10); })())
+                    .order('reference_date', { ascending: false })
+                    .limit(1);
+
+                if (entries && entries.length > 0 && entries[0].data) {
+                    localStorage.setItem('pav_ultimos_dados', JSON.stringify(entries[0].data));
+                    if (window.renderDashboard) window.renderDashboard();
+                    return;
+                }
+            }
+        } catch {}
+
+        // Fallback: apenas re-renderiza com o que está no localStorage
+        if (window.renderDashboard) window.renderDashboard();
+    });
+
+    const close = (ev) => {
+        if (!panel.contains(ev.target) && ev.target?.id !== 'period-picker-trigger') {
+            panel.remove();
+            document.removeEventListener('click', close);
+        }
+    };
+    setTimeout(() => document.addEventListener('click', close), 80);
+}
+
 function _renderDashboardImpl(forceData) {
     const statsContainer  = document.getElementById('dashboard-stats');
     const chartsContainer = document.getElementById('dashboard-charts');
@@ -66,8 +137,16 @@ function _renderDashboardImpl(forceData) {
     const chipContainer = document.getElementById('period-chip-container');
     if (chipContainer) {
         chipContainer.innerHTML = dataLabel
-            ? `<span class="period-chip">${IC.calendar} ${dataLabel}</span>`
+            ? `<button class="period-chip period-chip-btn" id="period-picker-trigger" title="Selecionar período">${IC.calendar} ${dataLabel} ▾</button>`
             : '';
+        const trigger = document.getElementById('period-picker-trigger');
+        if (trigger && !trigger.dataset.wired) {
+            trigger.dataset.wired = '1';
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                _togglePeriodPicker();
+            });
+        }
     }
 
     // ── YTD ──────────────────────────────────────────────────────────────────

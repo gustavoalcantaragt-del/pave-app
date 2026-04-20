@@ -103,7 +103,7 @@ const NotificationsModule = (() => {
             return;
         }
 
-        fetchUpcoming().then(bills => {
+        fetchUpcoming().catch(() => []).then(bills => {
             document.getElementById('notif-panel')?.remove();
 
             const wrapper = document.createElement('div');
