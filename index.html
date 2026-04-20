@@ -1370,6 +1370,18 @@
             }
         }
 
+        // 10b) Calendário Financeiro — inicialização lazy
+        const tabCalendario = document.getElementById('tab-calendario');
+        if (tabCalendario) {
+            tabCalendario.addEventListener('click', () => {
+                const section = document.getElementById('aba-calendario');
+                if (section && !section.dataset.initialized) {
+                    section.dataset.initialized = 'true';
+                    if (window.CalendarioModule) CalendarioModule.renderCalendario(section);
+                }
+            });
+        }
+
         // 11) Simulador de Crescimento — inicialização lazy quando a aba for aberta
         const tabSim = document.getElementById('tab-simulacao');
         if (tabSim) {
