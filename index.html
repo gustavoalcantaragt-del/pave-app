@@ -494,19 +494,19 @@
                         </div>
                         <div class="input-group">
                             <label>Faturamento Real</label>
-                            <input type="number" id="faturamento" required style="font-size:1.2rem; font-weight:bold; color:var(--accent-blue);">
+                            <input type="number" step="0.01" min="0" id="faturamento" required style="font-size:1.2rem; font-weight:bold; color:var(--accent-blue);">
                         </div>
                         <div class="input-group">
                             <label>Nº de Atendimentos no Mês</label>
-                            <input type="number" id="qtdAtendimentos" placeholder="Ex: 120" min="0" style="padding:0.8rem;">
+                            <input type="number" step="1" id="qtdAtendimentos" placeholder="Ex: 120" min="0" style="padding:0.8rem;">
                         </div>
                         <div class="input-group">
                             <label>Meta de Faturamento</label>
-                            <input type="number" id="metaFaturamento" placeholder="Ex: 30000" style="padding:0.8rem;">
+                            <input type="number" step="0.01" min="0" id="metaFaturamento" placeholder="Ex: 30000" style="padding:0.8rem;">
                         </div>
                         <div class="input-group">
                             <label>Meta de Lucro Gerencial</label>
-                            <input type="number" id="metaLucro" placeholder="Ex: 8000" style="padding:0.8rem;">
+                            <input type="number" step="0.01" min="0" id="metaLucro" placeholder="Ex: 8000" style="padding:0.8rem;">
                         </div>
                     </div>
                     </div><!-- /collapsible-body -->
@@ -523,18 +523,18 @@
                     </div>
                     <div class="collapsible-body">
                     <div class="form-grid">
-                        <div class="input-group"><label>Reembolso/Inadimplência</label><input type="number" id="reembolsoInadimplencia"></div>
-                        <div class="input-group"><label>Impostos</label><input type="number" id="impostos"></div>
-                        <div class="input-group"><label>Taxas de Cartão</label><input type="number" id="taxasCartao"></div>
-                        <div class="input-group"><label>Insumos Diários (Agulha, Seringa)</label><input type="number" id="insumos"></div>
-                        <div class="input-group"><label>Boletos de Fornecedores</label><input type="number" id="boletosFornecedores"></div>
-                        <div class="input-group"><label>Serviços Terceirizados</label><input type="number" id="terceirizadosVar"></div>
-                        <div class="input-group"><label>Laboratório Terceirizado</label><input type="number" id="labTerceirizado"></div>
-                        <div class="input-group"><label>Comissões</label><input type="number" id="comissoes"></div>
-                        <div class="input-group"><label>Plantões</label><input type="number" id="plantoes"></div>
-                        <div class="input-group"><label>Escritório e Limpeza (Var)</label><input type="number" id="escritorioLimpezaVar"></div>
-                        <div class="input-group"><label>Estorno</label><input type="number" id="estorno"></div>
-                        <div class="input-group"><label>Outros Variáveis</label><input type="number" id="outrosVariaveis"></div>
+                        <div class="input-group"><label>Reembolso/Inadimplência</label><input type="number" step="0.01" min="0" id="reembolsoInadimplencia"></div>
+                        <div class="input-group"><label>Impostos</label><input type="number" step="0.01" min="0" id="impostos"></div>
+                        <div class="input-group"><label>Taxas de Cartão</label><input type="number" step="0.01" min="0" id="taxasCartao"></div>
+                        <div class="input-group"><label>Insumos Diários (Agulha, Seringa)</label><input type="number" step="0.01" min="0" id="insumos"></div>
+                        <div class="input-group"><label>Boletos de Fornecedores</label><input type="number" step="0.01" min="0" id="boletosFornecedores"></div>
+                        <div class="input-group"><label>Serviços Terceirizados</label><input type="number" step="0.01" min="0" id="terceirizadosVar"></div>
+                        <div class="input-group"><label>Laboratório Terceirizado</label><input type="number" step="0.01" min="0" id="labTerceirizado"></div>
+                        <div class="input-group"><label>Comissões</label><input type="number" step="0.01" min="0" id="comissoes"></div>
+                        <div class="input-group"><label>Plantões</label><input type="number" step="0.01" min="0" id="plantoes"></div>
+                        <div class="input-group"><label>Escritório e Limpeza (Var)</label><input type="number" step="0.01" min="0" id="escritorioLimpezaVar"></div>
+                        <div class="input-group"><label>Estorno</label><input type="number" step="0.01" min="0" id="estorno"></div>
+                        <div class="input-group"><label>Outros Variáveis</label><input type="number" step="0.01" min="0" id="outrosVariaveis"></div>
                     </div>
                     </div><!-- /collapsible-body -->
                 </div>
@@ -550,22 +550,22 @@
                     </div>
                     <div class="collapsible-body">
                     <div class="form-grid">
-                        <div class="input-group"><label>Folha de Pagamento</label><input type="number" id="folha"></div>
-                        <div class="input-group"><label>Água</label><input type="number" id="agua"></div>
-                        <div class="input-group"><label>Luz</label><input type="number" id="luz"></div>
-                        <div class="input-group"><label>Sistemas/Software</label><input type="number" id="sistemas"></div>
-                        <div class="input-group"><label>Aluguel</label><input type="number" id="aluguel"></div>
-                        <div class="input-group"><label>Telefone/Internet/TV</label><input type="number" id="telecom"></div>
-                        <div class="input-group"><label>Contabilidade</label><input type="number" id="contabilidade"></div>
-                        <div class="input-group"><label>Marketing</label><input type="number" id="marketing"></div>
-                        <div class="input-group"><label>E-Social</label><input type="number" id="esocial"></div>
-                        <div class="input-group"><label>Taxas Administrativas</label><input type="number" id="taxasAdmin"></div>
-                        <div class="input-group"><label>CRMV</label><input type="number" id="crmv"></div>
-                        <div class="input-group"><label>Lixo Contaminante</label><input type="number" id="lixoContaminante"></div>
-                        <div class="input-group"><label>IPTU</label><input type="number" id="iptu"></div>
-                        <div class="input-group"><label>Limpeza Fixa</label><input type="number" id="limpezaFixa"></div>
-                        <div class="input-group"><label>Serv. Terceirizados Fixos</label><input type="number" id="terceirizadosFixos"></div>
-                        <div class="input-group"><label>Outros Fixos</label><input type="number" id="outrosFixos"></div>
+                        <div class="input-group"><label>Folha de Pagamento</label><input type="number" step="0.01" min="0" id="folha"></div>
+                        <div class="input-group"><label>Água</label><input type="number" step="0.01" min="0" id="agua"></div>
+                        <div class="input-group"><label>Luz</label><input type="number" step="0.01" min="0" id="luz"></div>
+                        <div class="input-group"><label>Sistemas/Software</label><input type="number" step="0.01" min="0" id="sistemas"></div>
+                        <div class="input-group"><label>Aluguel</label><input type="number" step="0.01" min="0" id="aluguel"></div>
+                        <div class="input-group"><label>Telefone/Internet/TV</label><input type="number" step="0.01" min="0" id="telecom"></div>
+                        <div class="input-group"><label>Contabilidade</label><input type="number" step="0.01" min="0" id="contabilidade"></div>
+                        <div class="input-group"><label>Marketing</label><input type="number" step="0.01" min="0" id="marketing"></div>
+                        <div class="input-group"><label>E-Social</label><input type="number" step="0.01" min="0" id="esocial"></div>
+                        <div class="input-group"><label>Taxas Administrativas</label><input type="number" step="0.01" min="0" id="taxasAdmin"></div>
+                        <div class="input-group"><label>CRMV</label><input type="number" step="0.01" min="0" id="crmv"></div>
+                        <div class="input-group"><label>Lixo Contaminante</label><input type="number" step="0.01" min="0" id="lixoContaminante"></div>
+                        <div class="input-group"><label>IPTU</label><input type="number" step="0.01" min="0" id="iptu"></div>
+                        <div class="input-group"><label>Limpeza Fixa</label><input type="number" step="0.01" min="0" id="limpezaFixa"></div>
+                        <div class="input-group"><label>Serv. Terceirizados Fixos</label><input type="number" step="0.01" min="0" id="terceirizadosFixos"></div>
+                        <div class="input-group"><label>Outros Fixos</label><input type="number" step="0.01" min="0" id="outrosFixos"></div>
                     </div>
                     </div><!-- /collapsible-body -->
                 </div>
@@ -578,7 +578,7 @@
                     </div>
                     <div class="collapsible-body">
                     <div class="form-grid">
-                        <div class="input-group"><label>Parcela Mensal de Empréstimos</label><input type="number" id="emprestimos" placeholder="Ex: 2000"></div>
+                        <div class="input-group"><label>Parcela Mensal de Empréstimos</label><input type="number" step="0.01" min="0" id="emprestimos" placeholder="Ex: 2000"></div>
                         <div class="input-group"><label>Descrição (opcional)</label><input type="text" id="emprestimosDesc" placeholder="Ex: Financiamento equipamentos"></div>
                     </div>
                     </div><!-- /collapsible-body -->
