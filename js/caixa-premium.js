@@ -295,6 +295,11 @@ window.renderCaixa = function() {
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('caixaForm');
     if (form) {
+        // Injetar seção de split e ativar listeners
+        const splitWrapper = document.getElementById('cx-split-wrapper');
+        if (splitWrapper) splitWrapper.innerHTML = window.renderPaymentSplitSection([]);
+        window.initSplitListeners(form);
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const btn = form.querySelector('[type="submit"]');
@@ -324,6 +329,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (valor <= 0) { _markInvalid('cxValor', 'Informe um valor válido'); return; }
             if (!venc)    { _markInvalid('cxVencimento', 'Informe a data de vencimento'); return; }
 
+            // Validar split de pagamento (se preenchido)
+            const payments = window.collectPayments(form);
+            if (payments) {
+                const splitResult = window.validatePaymentSplit(valor, payments);
+                if (!splitResult.valid) {
+                    Utils.showToast(splitResult.message, 'error');
+                    return;
+                }
+            }
+
             const origHTML = btn.innerHTML;
             btn.disabled = true;
             btn.style.opacity = '0.7';
@@ -342,7 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     valor, vencimento: dataFormatada, tipo, categoria: cat,
                     formaPag, observacao, status: 'pendente',
                     clienteId: clienteId || null,
-                    serviceId: serviceId || null
+                    serviceId: serviceId || null,
+                    payments: payments || null
                 });
             }
 
@@ -366,6 +382,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (hiddenTipo) hiddenTipo.value = 'despesa';
             window.cxTipoChange();
             document.getElementById('cxVezesDiv').style.display = 'none';
+            // Resetar seção de split
+            const sw = document.getElementById('cx-split-wrapper');
+            if (sw) sw.innerHTML = window.renderPaymentSplitSection([]);
             btn.disabled = false;
             btn.style.opacity = '';
             btn.innerHTML = origHTML;

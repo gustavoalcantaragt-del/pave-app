@@ -255,13 +255,19 @@ function _renderDashboardImpl(forceData) {
     // ── CHARTS + INDICADORES ──────────────────────────────────────────────────
     const healthScore = parseFloat(pctFix) || 0;
     let healthColor = '#1D9E75', healthLabel = 'Saudável';
-    let healthDesc  = 'Estrutura de custos fixos controlada. Operação sustentável.';
+    let healthDesc  = fromCaixa
+        ? 'Custos totais controlados em relação ao faturamento. Operação sustentável.'
+        : 'Estrutura de custos fixos controlada. Operação sustentável.';
     if (healthScore > 35 && healthScore <= 50) {
         healthColor = '#ffd60a'; healthLabel = 'Atenção';
-        healthDesc  = 'Custos fixos elevados. Monitore o faturamento para evitar déficits.';
+        healthDesc  = fromCaixa
+            ? 'Custos totais elevados. Monitore o faturamento para evitar déficits.'
+            : 'Custos fixos elevados. Monitore o faturamento para evitar déficits.';
     } else if (healthScore > 50) {
         healthColor = '#E24B4A'; healthLabel = 'Risco Crítico';
-        healthDesc  = 'Mais de 50% do faturamento comprometido com estrutura fixa.';
+        healthDesc  = fromCaixa
+            ? 'Mais de 50% do faturamento comprometido com custos totais.'
+            : 'Mais de 50% do faturamento comprometido com estrutura fixa.';
     }
 
     chartsContainer.innerHTML = `
@@ -269,7 +275,7 @@ function _renderDashboardImpl(forceData) {
 
             <!-- Termômetro -->
             <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
-                <h3 style="margin-bottom:1.5rem; color:var(--text-secondary); display:flex; align-items:center; gap:6px; justify-content:center;" data-tooltip="Percentual do faturamento comprometido com custos fixos. Abaixo de 35%: saudável · 35–50%: atenção · Acima de 50%: crítico.">Índice de Custo Fixo <span style="opacity:0.6; color:var(--text-muted);">${IC.info}</span></h3>
+                <h3 style="margin-bottom:1.5rem; color:var(--text-secondary); display:flex; align-items:center; gap:6px; justify-content:center;" data-tooltip="${fromCaixa ? 'Percentual do faturamento comprometido com custos totais (dados do Caixa). Abaixo de 35%: saudável · 35–50%: atenção · Acima de 50%: crítico.' : 'Percentual do faturamento comprometido com custos fixos. Abaixo de 35%: saudável · 35–50%: atenção · Acima de 50%: crítico.'}">${fromCaixa ? 'Índice de Custos Totais' : 'Índice de Custo Fixo'} <span style="opacity:0.6; color:var(--text-muted);">${IC.info}</span></h3>
                 <div style="position:relative; width:150px; height:150px; border-radius:50%; background:conic-gradient(${healthColor} ${healthScore}%, ${_isDark()?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.07)'} 0%); display:flex; align-items:center; justify-content:center;">
                     <div style="width:118px; height:118px; border-radius:50%; background:var(--bg-card); display:flex; flex-direction:column; align-items:center; justify-content:center;">
                         <span style="font-size:2rem; font-weight:900; color:${healthColor};">${hasData ? healthScore + '%' : '—'}</span>
@@ -380,24 +386,35 @@ function _renderDashboardImpl(forceData) {
 
     // ── GRÁFICO DE COMPOSIÇÃO ─────────────────────────────────────────────────
     if (window.chartCostsDeepObj) window.chartCostsDeepObj.destroy();
-    const expenses = [
-        { name: 'Folha',        val: parseFloat(data?.folha) || 0 },
-        { name: 'Aluguel',      val: parseFloat(data?.aluguel) || 0 },
-        { name: 'Insumos',      val: parseFloat(data?.insumos) || 0 },
-        { name: 'Marketing',    val: parseFloat(data?.marketing) || 0 },
-        { name: 'Sistemas',     val: parseFloat(data?.sistemas) || 0 },
-        { name: 'Boletos',      val: parseFloat(data?.boletosFornecedores) || 0 },
-        { name: 'Impostos',     val: parseFloat(data?.impostos) || 0 },
-        { name: 'Taxas Cartão', val: parseFloat(data?.taxasCartao) || 0 }
-    ];
-    const explicitTotal = expenses.reduce((a, b) => a + b.val, 0);
-    const othersVal     = Math.max(0, (totais.totalFixos + totais.totalVariaveis) - explicitTotal);
-    if (othersVal > 0) expenses.push({ name: 'Outros', val: othersVal });
-    expenses.sort((a, b) => b.val - a.val);
-    const top5       = expenses.slice(0, 5).filter(e => e.val > 0);
-    const remaining  = expenses.slice(5).reduce((a, b) => a + b.val, 0);
-    if (remaining > 0) top5.push({ name: 'Demais', val: remaining });
-    top5.push({ name: 'Lucro', val: Math.max(0, totais.lucroGerencial) });
+    let top5;
+    if (fromCaixa) {
+        // Dados do Caixa não têm breakdown por categoria — exibe 2 fatias significativas
+        top5 = [];
+        const custosCaixa = Math.max(0, totais.totalFixos);
+        const lucroCaixa  = Math.max(0, totais.lucroGerencial);
+        if (custosCaixa > 0) top5.push({ name: 'Custos Totais (Caixa)', val: custosCaixa });
+        if (lucroCaixa  > 0) top5.push({ name: 'Lucro', val: lucroCaixa });
+        if (top5.length === 0) top5.push({ name: 'Sem resultado', val: 1 });
+    } else {
+        const expenses = [
+            { name: 'Folha',        val: parseFloat(data?.folha) || 0 },
+            { name: 'Aluguel',      val: parseFloat(data?.aluguel) || 0 },
+            { name: 'Insumos',      val: parseFloat(data?.insumos) || 0 },
+            { name: 'Marketing',    val: parseFloat(data?.marketing) || 0 },
+            { name: 'Sistemas',     val: parseFloat(data?.sistemas) || 0 },
+            { name: 'Boletos',      val: parseFloat(data?.boletosFornecedores) || 0 },
+            { name: 'Impostos',     val: parseFloat(data?.impostos) || 0 },
+            { name: 'Taxas Cartão', val: parseFloat(data?.taxasCartao) || 0 }
+        ];
+        const explicitTotal = expenses.reduce((a, b) => a + b.val, 0);
+        const othersVal     = Math.max(0, (totais.totalFixos + totais.totalVariaveis) - explicitTotal);
+        if (othersVal > 0) expenses.push({ name: 'Outros', val: othersVal });
+        expenses.sort((a, b) => b.val - a.val);
+        top5 = expenses.slice(0, 5).filter(e => e.val > 0);
+        const remaining = expenses.slice(5).reduce((a, b) => a + b.val, 0);
+        if (remaining > 0) top5.push({ name: 'Demais', val: remaining });
+        top5.push({ name: 'Lucro', val: Math.max(0, totais.lucroGerencial) });
+    }
 
     const chartEl = document.getElementById('chart-costs-deep');
     if (chartEl) {

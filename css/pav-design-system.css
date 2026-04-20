@@ -2737,3 +2737,21 @@ body.pave-offline .sidebar {
 .sim-scenario-icon svg { display: block; }
 .sim-scenario-icon { color: var(--pave-blue); margin-bottom: 0.75rem; }
 .sim-scenario-card.active .sim-scenario-icon { color: var(--pave-blue-dk); }
+
+/* ── Feature 2.1: Split de Pagamento ── */
+.payment-line { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
+.payment-line select,
+.payment-line input { font-family: var(--font-family); }
+
+.split-validation { font-size: 0.78rem; font-weight: 600; min-height: 1.2rem; margin-top: 0.25rem; }
+.split-ok    { color: #1D9E75; }
+.split-error { color: var(--color-danger); }
+
+/* ── Feature 2.3: Fluxo Projetado ── */
+.cashflow-alert {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.75rem 1rem; border-radius: var(--radius-md);
+    background: rgba(255,214,10,0.10); border: 1px solid rgba(255,214,10,0.35);
+    color: #ffd60a; font-size: 0.84rem; font-weight: 600; margin-bottom: 1.5rem;
+}
+.cashflow-alert svg { flex-shrink: 0; }
