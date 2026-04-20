@@ -318,7 +318,8 @@ const CashAPI = {
                 status:           mov.status         || 'pendente',
                 is_recurring:     mov.isRecurring    || false,
                 recurrence_group: mov.recurrenceGroup || null,
-                client_id:        mov.clienteId      || null
+                client_id:        mov.clienteId      || null,
+                bill_id:          mov.billId          || null
             }, { onConflict: 'id' });
         } catch (e) {
             console.warn('[SYNC] CashAPI.upsertMovimento falhou — dado salvo localmente.', e?.message);
@@ -533,7 +534,8 @@ const CloudPull = {
                     observacao:    m.notes || '',
                     status:        m.status || 'pendente',
                     isRecurring:   m.is_recurring || false,
-                    clienteId:     m.client_id || null
+                    clienteId:     m.client_id || null,
+                    billId:        m.bill_id   || null
                 }));
                 localStorage.setItem(STORAGE_KEYS.CAIXA, JSON.stringify(local));
             }

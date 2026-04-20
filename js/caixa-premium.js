@@ -586,26 +586,28 @@ const BillsModule = (() => {
     async function markAsPaid(id) {
         const today = new Date().toISOString().split('T')[0];
 
-        // Fetch bill before updating to check recurrence
+        // Busca a bill para usar os dados no movimento de Caixa
         const { data: bill } = await _supabase.from('bills').select('*').eq('id', id).single();
+
+        // Atualiza bill — trigger SQL cuida de: status='paid' + clonagem recorrente
         await updateBill(id, { paid_date: today });
 
-        // Clone recurring bill to next period
-        if (bill && bill.recurrence && bill.recurrence !== 'none') {
-            const nextDate = _nextDueDate(bill.due_date, bill.recurrence);
-            if (nextDate) {
-                const orgId = await OrgAPI.getOrgId();
-                const user  = Auth.getUser();
-                await _supabase.from('bills').insert({
-                    organization_id: orgId,
-                    user_id:         user.id,
-                    type:            bill.type,
-                    description:     bill.description,
-                    amount:          bill.amount,
-                    due_date:        nextDate,
-                    recurrence:      bill.recurrence,
-                    category:        bill.category || null,
-                    notes:           bill.notes    || null
+        // Cria movimento no Caixa automaticamente (vinculado à bill)
+        if (bill) {
+            // Verifica se já existe movimento vinculado a esta bill para não duplicar
+            const existentes = CashAPI.getLocal().filter(m => m.billId === id);
+            if (existentes.length === 0) {
+                await CashAPI.upsertMovimento({
+                    id:          _genUUID(),
+                    descricao:   bill.description,
+                    valor:       parseFloat(bill.amount),
+                    vencimento:  today,
+                    tipo:        bill.type === 'payable' ? 'despesa' : 'receita',
+                    categoria:   bill.category || '',
+                    formaPag:    'outros',
+                    observacao:  `Lançado automaticamente via Contas a Pagar/Receber`,
+                    status:      'pago',
+                    billId:      bill.id
                 });
             }
         }
