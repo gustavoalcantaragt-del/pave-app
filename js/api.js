@@ -582,6 +582,40 @@ const CloudPull = {
     }
 };
 
+// ── MONTHLY SUMMARIES (calculado automaticamente a partir do Caixa) ──────────
+const MonthlySummaryAPI = {
+
+    async getForMonth(mesRef) {
+        try {
+            const orgId = await OrgAPI.getOrgId();
+            if (!orgId) return null;
+            const refMonth = (mesRef || new Date().toISOString().substring(0, 7)) + '-01';
+            const { data, error } = await _supabase
+                .from('monthly_summaries')
+                .select('*')
+                .eq('organization_id', orgId)
+                .eq('reference_month', refMonth)
+                .single();
+            return error ? null : data;
+        } catch { return null; }
+    },
+
+    async getHistory(limitRows = 12) {
+        try {
+            const orgId = await OrgAPI.getOrgId();
+            if (!orgId) return [];
+            const { data } = await _supabase
+                .from('monthly_summaries')
+                .select('reference_month, revenue, total_costs, net_profit, movements_count')
+                .eq('organization_id', orgId)
+                .order('reference_month', { ascending: true })
+                .limit(limitRows);
+            return data || [];
+        } catch { return []; }
+    }
+};
+window.MonthlySummaryAPI = MonthlySummaryAPI;
+
 // ── REALTIME ──────────────────────────────────────────────────────────────────
 // Escuta mudanças em cash_movements e bills para o org do usuário logado.
 // Atualiza localStorage e dispara re-render nas abas abertas sem reload.

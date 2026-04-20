@@ -114,8 +114,17 @@ function _renderDashboardImpl(forceData) {
     catch(e) { console.error('[Dashboard] localStorage corrompido:', e); data = null; }
 
     const hasData   = !!data;
+    const fromCaixa = data?._fromCaixa === true;
     const totais    = hasData
-        ? (window.calcularTotais ? window.calcularTotais(data) : ZERO_DATA)
+        ? (fromCaixa
+            ? {
+                faturamento:        data.faturamento,
+                totalFixos:         data._totalCosts,
+                totalVariaveis:     0,
+                margemContribuicao: data.faturamento - data._totalCosts,
+                lucroGerencial:     data.faturamento - data._totalCosts
+              }
+            : (window.calcularTotais ? window.calcularTotais(data) : ZERO_DATA))
         : ZERO_DATA;
 
     const fat       = hasData && totais.faturamento > 0 ? totais.faturamento : 0;
@@ -197,23 +206,38 @@ function _renderDashboardImpl(forceData) {
     // ── INFO BANNER (sem dados) ───────────────────────────────────────────────
     const fmt = v => `R$ ${(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
-    const infoBanner = !hasData ? `
-        <div style="grid-column:1/-1; padding:1rem 1.5rem; background:rgba(10,132,255,0.06); border:1px solid rgba(10,132,255,0.2); border-radius:var(--radius-card); display:flex; align-items:center; gap:12px; margin-bottom:0.5rem;">
+    const infoBanner = !hasData
+        ? `<div style="grid-column:1/-1; padding:1rem 1.5rem; background:rgba(10,132,255,0.06); border:1px solid rgba(10,132,255,0.2); border-radius:var(--radius-card); display:flex; align-items:center; gap:12px; margin-bottom:0.5rem;">
             <span style="color:var(--accent-blue); flex-shrink:0;">${IC.info}</span>
             <span style="font-size:0.875rem; color:var(--text-secondary);">Preencha seu primeiro balanço financeiro para ativar os indicadores.</span>
             <button onclick="document.getElementById('tab-balanco').click()" class="btn-primary" style="margin-left:auto; padding:0.45rem 1rem; font-size:0.8rem; flex-shrink:0;">Ir para Finanças</button>
-        </div>` : '';
+           </div>`
+        : fromCaixa
+        ? `<div style="grid-column:1/-1; padding:0.75rem 1.25rem; background:rgba(29,158,117,0.07); border:1px solid rgba(29,158,117,0.25); border-radius:var(--radius-card); display:flex; align-items:center; gap:10px; margin-bottom:0.5rem;">
+            <span style="color:#1D9E75; flex-shrink:0;">${IC.check}</span>
+            <span style="font-size:0.82rem; color:var(--text-secondary);">Dados calculados automaticamente do <strong>Caixa</strong> — ${data._movCount} lançamentos pagos em ${dataLabel}. Preencha o <button onclick="document.getElementById('tab-balanco').click()" style="background:none;border:none;padding:0;font-size:inherit;color:var(--accent-blue);cursor:pointer;font-weight:700;text-decoration:underline;">Balanço</button> para ver o detalhamento de custos fixos vs variáveis.</span>
+           </div>`
+        : '';
 
     // ── KPI CARDS ─────────────────────────────────────────────────────────────
     const ticketIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>`;
-    const cards = [
-        { label: 'Receita Operacional', value: totais.faturamento,    color: 'var(--accent-blue)', icon: IC.revenue,  delta: dFat,   inverter: false },
-        { label: 'Margem Líquida',      value: totais.lucroGerencial, color: totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A', icon: IC.profit, delta: dLucro, inverter: false },
-        { label: 'Custos Fixos',        value: totais.totalFixos,     color: '#E24B4A',            icon: IC.fixed,    delta: dFix,   inverter: true  },
-        { label: 'Custos Variáveis',    value: totais.totalVariaveis, color: 'var(--color-warning)', icon: IC.variable, delta: dVar,   inverter: true  },
-        { label: 'Ticket Médio',        value: ticketMed,             color: 'var(--color-info)',  icon: ticketIcon,  delta: null,   inverter: false,
-          sub: qtdAtend > 0 ? `${qtdAtend} atendimentos` : 'Sem atendimentos' }
-    ];
+    const cards = fromCaixa
+        ? [
+            { label: 'Receita Operacional', value: totais.faturamento,    color: 'var(--accent-blue)', icon: IC.revenue,  delta: dFat,   inverter: false },
+            { label: 'Margem Líquida',      value: totais.lucroGerencial, color: totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A', icon: IC.profit, delta: dLucro, inverter: false },
+            { label: 'Custos Totais',       value: data._totalCosts,      color: '#E24B4A',            icon: IC.fixed,    delta: null,   inverter: true,
+              sub: 'Fixos + variáveis · detalhe no Balanço' },
+            { label: 'Ticket Médio',        value: ticketMed,             color: 'var(--color-info)',  icon: ticketIcon,  delta: null,   inverter: false,
+              sub: qtdAtend > 0 ? `${qtdAtend} atendimentos` : 'Sem atendimentos' }
+          ]
+        : [
+            { label: 'Receita Operacional', value: totais.faturamento,    color: 'var(--accent-blue)', icon: IC.revenue,  delta: dFat,   inverter: false },
+            { label: 'Margem Líquida',      value: totais.lucroGerencial, color: totais.lucroGerencial >= 0 ? '#1D9E75' : '#E24B4A', icon: IC.profit, delta: dLucro, inverter: false },
+            { label: 'Custos Fixos',        value: totais.totalFixos,     color: '#E24B4A',            icon: IC.fixed,    delta: dFix,   inverter: true  },
+            { label: 'Custos Variáveis',    value: totais.totalVariaveis, color: 'var(--color-warning)', icon: IC.variable, delta: dVar,   inverter: true  },
+            { label: 'Ticket Médio',        value: ticketMed,             color: 'var(--color-info)',  icon: ticketIcon,  delta: null,   inverter: false,
+              sub: qtdAtend > 0 ? `${qtdAtend} atendimentos` : 'Sem atendimentos' }
+          ];
 
     statsContainer.innerHTML = infoBanner + cards.map(c => `
         <div class="card stat-card">
@@ -457,7 +481,7 @@ function _renderDashboardImpl(forceData) {
             alertas.push({ msg: `Faturamento abaixo da meta em R$ ${(metaFat - totais.faturamento).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`, color: '#ffd60a' });
         if (metaLucro > 0 && totais.lucroGerencial < metaLucro)
             alertas.push({ msg: `Lucro abaixo da meta em R$ ${(metaLucro - totais.lucroGerencial).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`, color: '#ffd60a' });
-        if (totais.totalVariaveis > fat * 0.6)
+        if (!fromCaixa && totais.totalVariaveis > fat * 0.6)
             alertas.push({ msg: 'Custos variáveis acima de 60% do faturamento.', color: '#ff9500' });
     }
 
@@ -480,8 +504,28 @@ function _renderDashboardImpl(forceData) {
     }
 }
 
-// Wrapper público com debounce — evita memory leaks por renders concorrentes
-window.renderDashboard = function(forceData) {
+// Wrapper público com debounce — tenta carregar de monthly_summaries se não há Balanço do mês atual
+window.renderDashboard = async function(forceData) {
+    if (!forceData && window.MonthlySummaryAPI) {
+        const currentMes = new Date().toISOString().substring(0, 7);
+        const local = (typeof FinancialAPI !== 'undefined') ? FinancialAPI.getUltimosDados() : null;
+        const localMes = local?.mesReferencia;
+        if (localMes !== currentMes) {
+            try {
+                const summary = await MonthlySummaryAPI.getForMonth(currentMes);
+                if (summary && summary.movements_count > 0) {
+                    forceData = {
+                        _fromCaixa:  true,
+                        _totalCosts: parseFloat(summary.total_costs)  || 0,
+                        _movCount:   summary.movements_count,
+                        _lastUpdated: summary.last_updated,
+                        mesReferencia: currentMes,
+                        faturamento:   parseFloat(summary.revenue) || 0
+                    };
+                }
+            } catch {}
+        }
+    }
     clearTimeout(_dashboardDebounce);
     _dashboardDebounce = setTimeout(() => _renderDashboardImpl(forceData || null), 80);
 };
