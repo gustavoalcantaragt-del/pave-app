@@ -165,7 +165,16 @@ window.salvarServico = function() {
         goalQty:     goalQty,
         goalRevenue: goalRev
     });
+    const novoServico = servicos[servicos.length - 1];
     localStorage.setItem('pav_servicos', JSON.stringify(servicos));
+
+    // Sincronizar com Supabase
+    if (typeof ServicesAPI !== 'undefined') {
+        ServicesAPI.save(novoServico).catch(e =>
+            console.warn('[SYNC] salvarServico falhou para', novoServico.id, e?.message)
+        );
+    }
+
     Utils.showToast(`"${labelNome}" salvo no catálogo!`, 'success');
     renderServicosSalvos();
 };

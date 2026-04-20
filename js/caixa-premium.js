@@ -345,6 +345,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             localStorage.setItem('pav_caixa_movimentos', JSON.stringify(movimentos));
+
+            // Sincronizar cada novo movimento com Supabase (fire-and-forget)
+            if (typeof CashAPI !== 'undefined') {
+                const novos = movimentos.slice(-vezes);
+                novos.forEach(m => CashAPI.upsertMovimento(m).catch(e =>
+                    console.warn('[SYNC] caixaForm upsert falhou para', m.id, e?.message)
+                ));
+            }
+
             Utils.showToast(
                 vezes > 1 ? `${vezes} lançamentos recorrentes registrados!` : 'Lançamento registrado com sucesso!',
                 'success'
@@ -427,8 +436,13 @@ window.toggleStatusCaixa = function(id) {
         const novoStatus = movimentos[idx].status === 'pago' ? 'pendente' : 'pago';
         movimentos[idx].status = novoStatus;
         localStorage.setItem('pav_caixa_movimentos', JSON.stringify(movimentos));
+        // Sincronizar status com Supabase
+        if (typeof CashAPI !== 'undefined') {
+            CashAPI.upsertMovimento(movimentos[idx]).catch(e =>
+                console.warn('[SYNC] toggleStatusCaixa falhou para', id, e?.message)
+            );
+        }
         window.renderCaixa();
-        // Auto-sync: notifica o Dashboard para recarregar após mudança de status
         if (novoStatus === 'pago' && window.renderDashboard) {
             window.renderDashboard();
         }
