@@ -885,14 +885,23 @@
                 <div style="margin-top:2rem;"><canvas id="sim-chart" style="max-height:250px;"></canvas></div>
             </div>
 
-            <div class="card" style="margin-top:2rem;">
-                <h3 class="text-gold" style="margin-bottom:1.5rem;">Simulador RH (Custo de Contratação CLT)</h3>
+            </div><!-- /sim-panel-whatif -->
+
+            <!-- Painel Crescimento -->
+            <div id="sim-panel-crescimento" style="display:none;">
+                <div id="sim-cresc-container"></div>
+            </div>
+
+            <!-- Painel RH -->
+            <div id="sim-panel-rh" style="display:none;">
+            <div class="card">
+                <h3 class="text-gold" style="margin-bottom:1.5rem;">Simulador Financeiro — Custo de Contratação CLT</h3>
                 <p style="color:var(--text-secondary); margin-bottom:1.5rem; font-size:0.9rem;">Descubra o custo real mensal da clínica ao assinar a carteira (CLT) com provisões.</p>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:2rem;">
                     <div>
                         <div class="input-group">
                             <label>Salário Bruto na Carteira (R$)</label>
-                            <input type="number" id="rh-salario" placeholder="Ex: 2500" oninput="window.simularRH()">
+                            <input type="number" step="0.01" min="0" id="rh-salario" placeholder="Ex: 2500" oninput="window.simularRH()">
                         </div>
                         <div class="input-group" style="margin-top:1rem;">
                             <label>Tributação da Empresa</label>
@@ -911,15 +920,6 @@
                     </div>
                 </div>
             </div>
-            </div><!-- /sim-panel-whatif -->
-
-            <!-- Painel Crescimento -->
-            <div id="sim-panel-crescimento" style="display:none;">
-                <div id="sim-cresc-container"></div>
-            </div>
-
-            <!-- Painel RH (moved content) -->
-            <div id="sim-panel-rh" style="display:none;">
             </div>
 
         </section>

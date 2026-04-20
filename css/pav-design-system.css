@@ -389,7 +389,7 @@ body.sidebar-collapsed .main-content {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.875rem;
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition);
@@ -397,6 +397,12 @@ body.sidebar-collapsed .main-content {
   text-align: left;
   font-family: var(--font-family);
   white-space: nowrap;
+  overflow: hidden;
+}
+.nav-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .nav-btn:hover {
