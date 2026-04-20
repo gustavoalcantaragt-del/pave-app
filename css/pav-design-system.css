@@ -2447,3 +2447,293 @@ body.pave-offline .sidebar {
     from { opacity: 0; transform: translateX(-50%) translateY(20px); }
     to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+/* ══════════════════════════════════════════════════════════
+   SIMULADOR FINANCEIRO — REDESIGN v2
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Módulo Header ── */
+.sim-module-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid var(--border);
+}
+.sim-module-header-icon {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--pave-blue-lt);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--pave-blue);
+    flex-shrink: 0;
+}
+.sim-module-title {
+    font-family: var(--font-family-heading);
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 2px;
+}
+.sim-module-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* ── Tab Nav (override prev definitivamente) ── */
+.sim-tab-nav {
+    display: flex !important;
+    gap: 0 !important;
+    margin-bottom: 1.75rem !important;
+    border-bottom: 2px solid var(--border) !important;
+    padding-bottom: 0 !important;
+    overflow-x: auto;
+}
+.sim-tab-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 0.7rem 1.2rem !important;
+    border-radius: 0 !important;
+    font-weight: 600 !important;
+    font-size: 0.83rem !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    margin-bottom: -2px !important;
+    color: var(--text-secondary) !important;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: var(--transition);
+    font-family: inherit;
+    white-space: nowrap;
+}
+.sim-tab-btn svg { opacity: 0.55; transition: opacity 0.15s; }
+.sim-tab-btn:hover { color: var(--pave-blue) !important; background: var(--pave-blue-lt) !important; }
+.sim-tab-btn.active {
+    color: var(--pave-blue) !important;
+    border-bottom-color: var(--pave-blue) !important;
+    font-weight: 700 !important;
+}
+.sim-tab-btn.active svg { opacity: 1; }
+
+/* ── Panel header ── */
+.sim-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.sim-panel-header h3 {
+    font-size: 1rem; font-weight: 700;
+    margin: 0 0 4px;
+    color: var(--text-primary);
+}
+.sim-panel-header p {
+    font-size: 0.83rem; color: var(--text-secondary); margin: 0;
+}
+.sim-panel-actions {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+
+/* ── Regime select ── */
+.sim-regime-select {
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.83rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.sim-regime-select:focus { outline: none; border-color: var(--pave-blue); }
+
+/* ── Inputs grid ── */
+.sim-inputs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+/* ── KPI strip ── */
+.sim-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+.sim-kpi-card {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--border);
+}
+.sim-kpi-card.blue  { border-top-color: var(--pave-blue); }
+.sim-kpi-card.green { border-top-color: var(--pave-green); }
+.sim-kpi-card.red   { border-top-color: var(--color-danger); }
+.sim-kpi-card.amber { border-top-color: var(--color-warning); }
+.sim-kpi-card.gray  { border-top-color: var(--text-muted); }
+.sim-kpi-label {
+    font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); margin-bottom: 6px; display: block;
+}
+.sim-kpi-value {
+    font-size: 1.15rem; font-weight: 800;
+    color: var(--text-primary); line-height: 1.1;
+}
+.sim-kpi-value.danger  { color: var(--color-danger); }
+.sim-kpi-value.success { color: var(--pave-green); }
+.sim-kpi-sub { font-size: 0.7rem; color: var(--text-muted); margin-top: 3px; }
+
+/* ── Chart wrap ── */
+.sim-chart-wrap { position: relative; height: 240px; margin-top: 0.5rem; }
+
+/* ── Risk alert ── */
+.sim-risk-alert {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 1rem 1.25rem;
+    background: rgba(226,75,74,0.07);
+    border: 1px solid rgba(226,75,74,0.3);
+    border-radius: var(--radius-lg);
+    margin-bottom: 1rem;
+    color: var(--color-danger);
+    grid-column: 1 / -1;
+}
+.sim-risk-alert svg { flex-shrink: 0; margin-top: 2px; }
+.sim-risk-alert h4  { margin: 0 0 4px; font-size: 0.9rem; }
+.sim-risk-alert p   { margin: 0; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* ── Regime Tributário ── */
+.sim-tax-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem; margin-bottom: 1.5rem;
+}
+.sim-regime-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem; margin-bottom: 1.25rem;
+}
+.sim-regime-card {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--border);
+    padding: 1.25rem;
+    position: relative;
+    transition: var(--transition);
+}
+.sim-regime-card.not-eligible { opacity: 0.5; }
+.sim-regime-card.best {
+    border-color: var(--pave-green);
+    background: var(--pave-green-lt);
+    box-shadow: 0 0 0 3px rgba(47,156,119,0.12);
+}
+.sim-regime-name-main {
+    font-size: 1rem; font-weight: 800;
+    color: var(--text-primary); margin-bottom: 2px;
+}
+.sim-regime-imposto {
+    font-size: 1.4rem; font-weight: 800;
+    color: var(--color-danger); margin: 10px 0 4px; line-height: 1;
+}
+.sim-regime-aliq {
+    font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;
+}
+.sim-regime-lucro {
+    font-size: 0.88rem; font-weight: 700; color: var(--pave-green);
+    padding-top: 8px; border-top: 1px solid var(--border);
+}
+.sim-regime-best-badge, .sim-regime-ineligible-badge {
+    position: absolute; top: -1px; right: 12px;
+    font-size: 0.62rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 0 0 6px 6px; text-transform: uppercase; letter-spacing: 0.5px; color: #fff;
+}
+.sim-regime-best-badge    { background: var(--pave-green); }
+.sim-regime-ineligible-badge { background: var(--text-muted); }
+.sim-regime-bd-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.73rem; color: var(--text-secondary);
+    border-top: 1px solid var(--border); padding: 3px 0;
+}
+.sim-recom-bar {
+    background: var(--pave-green-lt);
+    border: 1px solid rgba(47,156,119,0.3);
+    border-radius: var(--radius-lg);
+    padding: 0.9rem 1.25rem;
+    display: flex; align-items: center; gap: 12px;
+}
+.sim-recom-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--pave-green); color: #fff;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.sim-recom-text { font-size: 0.85rem; color: var(--text-primary); line-height: 1.5; }
+.sim-recom-text strong { color: var(--pave-green); }
+.sim-tax-chart-wrap { position: relative; height: 220px; margin-top: 1.25rem; }
+
+/* ── CLT Panel ── */
+.sim-clt-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 700px) { .sim-clt-grid { grid-template-columns: 1fr; } }
+.sim-clt-result-card {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(226,75,74,0.2);
+    padding: 1.5rem;
+    text-align: center;
+}
+.sim-clt-total-label {
+    font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--text-secondary); margin-bottom: 8px;
+}
+.sim-clt-total-value {
+    font-size: 2.4rem; font-weight: 800;
+    color: var(--color-danger); line-height: 1; margin-bottom: 4px;
+}
+.sim-clt-mult {
+    font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;
+}
+.sim-clt-team-total {
+    background: var(--pave-blue-lt);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    text-align: left;
+}
+.sim-clt-team-total strong {
+    font-size: 1.15rem; color: var(--pave-blue); display: block; font-weight: 800;
+}
+.sim-clt-breakdown {
+    width: 100%; font-size: 0.78rem; text-align: left; border-collapse: collapse;
+}
+.sim-clt-breakdown tbody tr { border-top: 1px solid var(--border); }
+.sim-clt-breakdown tbody tr:first-child { border-top: none; }
+.sim-clt-breakdown td { padding: 5px 2px; color: var(--text-secondary); }
+.sim-clt-breakdown td:last-child { text-align: right; font-weight: 600; color: var(--text-primary); }
+.sim-clt-breakdown tfoot td {
+    font-weight: 800; color: var(--color-danger);
+    border-top: 2px solid var(--border); padding-top: 8px; font-size: 0.86rem;
+}
+.sim-clt-note {
+    margin-top: 1rem; font-size: 0.72rem; color: var(--text-muted);
+    padding-top: 10px; border-top: 1px solid var(--border); line-height: 1.5;
+}
+
+/* ── Scenario cards (icon override p/ SVG) ── */
+.sim-scenario-icon svg { display: block; }
+.sim-scenario-icon { color: var(--pave-blue); margin-bottom: 0.75rem; }
+.sim-scenario-card.active .sim-scenario-icon { color: var(--pave-blue-dk); }

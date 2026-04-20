@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'tab-bills':     { section: 'aba-bills',      title: 'Contas a Pagar / Receber', subtitle: 'Vencimentos, recorrências e fluxo futuro' },
         'tab-catalogo':  { section: 'aba-catalogo',   title: 'Precificação de Serviços', subtitle: 'Calcule margens e custos por serviço' },
         'tab-relatorios':{ section: 'aba-relatorios', title: 'Relatórios',               subtitle: 'Exportação e análise de dados' },
-        'tab-simulacao': { section: 'aba-simulacao',  title: 'Simulador de Cenários',    subtitle: 'Projeções financeiras What-If' },
+        'tab-simulacao': { section: 'aba-simulacao',  title: 'Simulador Financeiro',     subtitle: 'What-If, regime tributário, crescimento e custo CLT' },
         'tab-calendario':{ section: 'aba-calendario', title: 'Calendário Financeiro',    subtitle: 'Visualização de receitas e despesas por dia' },
         'tab-config':    { section: 'aba-config',     title: 'Configurações',            subtitle: 'Perfil da clínica, divisão do lucro e dados de demonstração' }
     };
@@ -55,12 +55,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (tabId === 'tab-catalogo' && window.renderCatalogo) window.renderCatalogo();
             if (tabId === 'tab-simulacao') {
-                if (window._simTabActive === 'whatif' && window.runSimulation) window.runSimulation();
-                if (window._simTabActive === 'crescimento') {
+                const active = window._simTabActive || 'whatif';
+                if (active === 'whatif' && window.runSimulation) window.runSimulation();
+                if (active === 'crescimento') {
                     const c = document.getElementById('sim-cresc-container');
                     if (c && !c.dataset.initialized && window.SimuladorCrescimentoModule) {
-                        c.dataset.initialized = 'true';
-                        SimuladorCrescimentoModule.render(c);
+                        c.dataset.initialized = 'true'; SimuladorCrescimentoModule.render(c);
+                    }
+                }
+                if (active === 'tributario') {
+                    const c = document.getElementById('sim-trib-container');
+                    if (c && !c.dataset.initialized && window.SimuladorTributarioModule) {
+                        c.dataset.initialized = 'true'; SimuladorTributarioModule.render(c);
                     }
                 }
             }
