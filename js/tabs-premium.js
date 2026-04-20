@@ -58,7 +58,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tabId === 'tab-bills' && window.renderBills) window.renderBills();
             if (tabId === 'tab-relatorios' && window.renderRelatorios) window.renderRelatorios();
             if (tabId === 'tab-config' && window.renderConfig) window.renderConfig();
-            if (tabId === 'tab-calendario' && window.renderCalendario) window.renderCalendario(targetSection);
+            if (tabId === 'tab-calendario' && window.renderCalendario && !targetSection?.dataset.calInit) {
+                targetSection.dataset.calInit = '1';
+                window.renderCalendario(targetSection);
+            }
         });
     });
 });

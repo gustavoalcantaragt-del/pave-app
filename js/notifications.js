@@ -108,7 +108,7 @@ const NotificationsModule = (() => {
 
             const wrapper = document.createElement('div');
             wrapper.innerHTML = _renderPanel(bills);
-            document.body.appendChild(wrapper.firstChild);
+            document.body.appendChild(wrapper.querySelector('#notif-panel') || wrapper.firstElementChild);
             _panelOpen = true;
 
             const _removeOutside = () => {
@@ -179,7 +179,7 @@ const NotificationsModule = (() => {
             if (panel) {
                 const wrapper = document.createElement('div');
                 wrapper.innerHTML = _renderPanel(bills);
-                const newPanel = wrapper.firstChild;
+                const newPanel = wrapper.querySelector('#notif-panel') || wrapper.firstElementChild;
                 panel.replaceWith(newPanel);
                 newPanel.querySelector('#btn-close-notif')?.addEventListener('click', () => {
                     newPanel.remove();
