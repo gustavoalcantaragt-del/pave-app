@@ -114,20 +114,11 @@
             </button>
             <button id="tab-simulacao" class="nav-btn">
                 <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></i>
-                <span>Simulador RH</span>
-            </button>
-            <button id="tab-clientes" class="nav-btn">
-                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></i>
-                <span>Clientes</span>
+                <span>Simulador Financeiro</span>
             </button>
             <button id="tab-calendario" class="nav-btn">
                 <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></i>
                 <span>Calendário</span>
-            </button>
-
-            <button id="tab-estoque" class="nav-btn">
-                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></i>
-                <span>Estoque</span>
             </button>
 
             <div class="nav-divider"></div>
@@ -486,11 +477,20 @@
                         </div>
                         <div class="input-group">
                             <label>Meta de Faturamento</label>
-                            <input type="number" step="0.01" min="0" id="metaFaturamento" placeholder="Ex: 30000" style="padding:0.8rem;">
+                            <input type="number" step="0.01" min="0" id="metaFaturamento" placeholder="Ex: 30000" style="padding:0.8rem;" oninput="window._calcMetaDiaria()">
                         </div>
                         <div class="input-group">
                             <label>Meta de Lucro Gerencial</label>
                             <input type="number" step="0.01" min="0" id="metaLucro" placeholder="Ex: 8000" style="padding:0.8rem;">
+                        </div>
+                        <div class="input-group">
+                            <label>Dias úteis no mês</label>
+                            <input type="number" step="1" min="1" max="31" id="diasUteis" placeholder="Ex: 22" value="22" style="padding:0.8rem;" oninput="window._calcMetaDiaria()">
+                            <small style="color:var(--text-muted); font-size:0.7rem; margin-top:3px; display:block;">Seg–Sex = 22 · Seg–Sáb = 26</small>
+                        </div>
+                        <div class="input-group">
+                            <label>Meta de Faturamento Diária</label>
+                            <div id="metaDiaria-display" style="padding:0.8rem; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm); font-size:1rem; font-weight:700; color:var(--accent-blue);">—</div>
                         </div>
                     </div>
                     </div><!-- /collapsible-body -->
@@ -844,7 +844,7 @@
             <div style="display:flex; gap:10px; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:1rem; overflow-x:auto;">
                 <button onclick="window._switchSimTab('whatif')" id="btn-sim-whatif" style="padding:0.8rem 1.5rem; border-radius:8px; font-weight:700; background:var(--brand-surface); border:1px solid var(--brand-border); color:var(--brand-primary); cursor:pointer; flex-shrink:0;">Simulador What-If</button>
                 <button onclick="window._switchSimTab('crescimento')" id="btn-sim-crescimento" style="padding:0.8rem 1.5rem; border-radius:8px; font-weight:700; background:transparent; border:1px solid var(--border); color:var(--text-secondary); cursor:pointer; flex-shrink:0;">Simulador de Crescimento</button>
-                <button onclick="window._switchSimTab('rh')" id="btn-sim-rh" style="padding:0.8rem 1.5rem; border-radius:8px; font-weight:700; background:transparent; border:1px solid var(--border); color:var(--text-secondary); cursor:pointer; flex-shrink:0;">Simulador RH</button>
+                <button onclick="window._switchSimTab('rh')" id="btn-sim-rh" style="padding:0.8rem 1.5rem; border-radius:8px; font-weight:700; background:transparent; border:1px solid var(--border); color:var(--text-secondary); cursor:pointer; flex-shrink:0;">Simulador Financeiro (RH)</button>
             </div>
 
             <!-- Painel What-If -->
@@ -1048,14 +1048,8 @@
             </div>
         </section>
 
-        <!-- Clientes (Feature 3.2) -->
-        <section id="aba-clientes" style="display:none;"></section>
-
         <!-- Calendário Financeiro (Feature 3.4) -->
         <section id="aba-calendario" style="display:none;"></section>
-
-        <!-- Estoque (Feature 4.5) -->
-        <section id="aba-estoque" style="display:none;"></section>
 
     </main>
 
@@ -1167,10 +1161,8 @@
     <script src="js/simulador-premium.js"></script>
     <script src="js/configuracoes-premium.js"></script>
     <script src="js/notifications.js"></script>
-    <script src="js/clientes.js"></script>
     <script src="js/calendario.js"></script>
     <script src="js/nfe-import.js"></script>
-    <script src="js/estoque.js"></script>
     <script src="js/tabs-premium.js"></script>
 
     <script>
@@ -1288,6 +1280,23 @@
             RealtimeModule.start();
         }
 
+        // Meta de faturamento diária — calcula em tempo real
+        window._calcMetaDiaria = function() {
+            const meta = parseFloat(document.getElementById('metaFaturamento')?.value) || 0;
+            const dias = parseInt(document.getElementById('diasUteis')?.value) || 22;
+            const el   = document.getElementById('metaDiaria-display');
+            if (!el) return;
+            if (meta > 0 && dias > 0) {
+                const diaria = meta / dias;
+                el.textContent = diaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            } else {
+                el.textContent = '—';
+            }
+        };
+        // Calcular ao carregar dados salvos
+        document.getElementById('balancoForm')?.addEventListener('change', window._calcMetaDiaria);
+        setTimeout(window._calcMetaDiaria, 500);
+
         // 6d) Sync forçado manual
         window._forceSyncNow = async function(btn) {
             const icon = document.getElementById('sync-icon');
@@ -1353,22 +1362,6 @@
                 }, 50);
             }
         });
-
-        // 10) Estoque — inicialização lazy
-        const tabEstoque = document.getElementById('tab-estoque');
-        if (tabEstoque) {
-            tabEstoque.addEventListener('click', () => {
-                const section = document.getElementById('aba-estoque');
-                if (section && !section.dataset.initialized) {
-                    section.dataset.initialized = 'true';
-                    if (window.EstoqueModule) EstoqueModule.render(section);
-                }
-            });
-            // Badge de alertas no sidebar
-            if (window.EstoqueModule) {
-                setTimeout(() => EstoqueModule.updateSidebarBadge(), 3000);
-            }
-        }
 
         // 10b) Calendário Financeiro — inicialização lazy
         const tabCalendario = document.getElementById('tab-calendario');

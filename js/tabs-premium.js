@@ -8,9 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'tab-catalogo':  { section: 'aba-catalogo',   title: 'Precificação de Serviços', subtitle: 'Calcule margens e custos por serviço' },
         'tab-relatorios':{ section: 'aba-relatorios', title: 'Relatórios',               subtitle: 'Exportação e análise de dados' },
         'tab-simulacao': { section: 'aba-simulacao',  title: 'Simulador de Cenários',    subtitle: 'Projeções financeiras What-If' },
-        'tab-clientes':  { section: 'aba-clientes',   title: 'Clientes',                 subtitle: 'Cadastro e histórico de clientes e pacientes' },
         'tab-calendario':{ section: 'aba-calendario', title: 'Calendário Financeiro',    subtitle: 'Visualização de receitas e despesas por dia' },
-        'tab-estoque':   { section: 'aba-estoque',    title: 'Estoque',                  subtitle: 'Controle de medicamentos, vacinas e materiais' },
         'tab-config':    { section: 'aba-config',     title: 'Configurações',            subtitle: 'Perfil da clínica, divisão do lucro e dados de demonstração' }
     };
 
@@ -40,6 +38,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Dynamic logic
             if (tabId === 'tab-dashboard' && window.renderDashboard) window.renderDashboard();
 
+            if (tabId === 'tab-balanco' && window.fillBalancoForm) {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
+                    if (saved) window.fillBalancoForm(saved);
+                } catch {}
+            }
+
             if (tabId === 'tab-caixa' && window.renderCaixa) {
                 window.renderCaixa();
                 // Refresh seletor de clientes ao abrir aba (caso novos clientes tenham sido cadastrados)
@@ -53,14 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tabId === 'tab-bills' && window.renderBills) window.renderBills();
             if (tabId === 'tab-relatorios' && window.renderRelatorios) window.renderRelatorios();
             if (tabId === 'tab-config' && window.renderConfig) window.renderConfig();
-            if (tabId === 'tab-clientes' && window.renderClientes) window.renderClientes(targetSection);
             if (tabId === 'tab-calendario' && window.renderCalendario) window.renderCalendario(targetSection);
-            if (tabId === 'tab-estoque' && window.EstoqueModule) {
-                if (!targetSection.dataset.initialized) {
-                    targetSection.dataset.initialized = 'true';
-                    EstoqueModule.render(targetSection);
-                }
-            }
         });
     });
 });

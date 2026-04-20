@@ -497,8 +497,62 @@ window.deleteHistorico = function(idx) {
 };
 
 // ── SUBMIT DO BALANÇO ──────────────────────────────────────────────────────
+// ── PREENCHER FORM DE FINANÇAS COM DADOS SALVOS ──────────────────────────────
+window.fillBalancoForm = function(data) {
+    if (!data) return;
+    const setV = (id, val) => {
+        const el = document.getElementById(id);
+        if (el && val !== undefined && val !== null) el.value = val;
+    };
+    setV('mesReferencia',         data.mesReferencia || '');
+    setV('faturamento',           data.faturamento || '');
+    setV('qtdAtendimentos',       data.qtdAtendimentos || '');
+    setV('metaFaturamento',       data.metaFaturamento || '');
+    setV('metaLucro',             data.metaLucro || '');
+    setV('diasUteis',             data.diasUteis || 22);
+    setV('reembolsoInadimplencia',data.reembolsoInadimplencia || '');
+    setV('impostos',              data.impostos || '');
+    setV('taxasCartao',           data.taxasCartao || '');
+    setV('insumos',               data.insumos || '');
+    setV('boletosFornecedores',   data.boletosFornecedores || '');
+    setV('terceirizadosVar',      data.terceirizadosVar || '');
+    setV('labTerceirizado',       data.labTerceirizado || '');
+    setV('comissoes',             data.comissoes || '');
+    setV('plantoes',              data.plantoes || '');
+    setV('escritorioLimpezaVar',  data.escritorioLimpezaVar || '');
+    setV('estorno',               data.estorno || '');
+    setV('outrosVariaveis',       data.outrosVariaveis || '');
+    setV('folha',                 data.folha || '');
+    setV('agua',                  data.agua || '');
+    setV('luz',                   data.luz || '');
+    setV('sistemas',              data.sistemas || '');
+    setV('aluguel',               data.aluguel || '');
+    setV('telecom',               data.telecom || '');
+    setV('contabilidade',         data.contabilidade || '');
+    setV('marketing',             data.marketing || '');
+    setV('esocial',               data.esocial || '');
+    setV('taxasAdmin',            data.taxasAdmin || '');
+    setV('crmv',                  data.crmv || '');
+    setV('lixoContaminante',      data.lixoContaminante || '');
+    setV('iptu',                  data.iptu || '');
+    setV('limpezaFixa',           data.limpezaFixa || '');
+    setV('terceirizadosFixos',    data.terceirizadosFixos || '');
+    setV('outrosFixos',           data.outrosFixos || '');
+    setV('emprestimos',           data.emprestimos || '');
+    setV('emprestimosDesc',       data.emprestimosDesc || '');
+    // Recalcular previews
+    if (window.updateLiveBalanco) window.updateLiveBalanco();
+    if (window._calcMetaDiaria)   window._calcMetaDiaria();
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     if (window.renderDashboard) window.renderDashboard();
+
+    // Preencher form com último balanço salvo
+    try {
+        const saved = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
+        if (saved) window.fillBalancoForm(saved);
+    } catch {}
 
     const balancoForm = document.getElementById('balancoForm');
     if (!balancoForm) return;
@@ -529,6 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mesReferencia: mesStr,
             faturamento: getVal('faturamento'), qtdAtendimentos: getVal('qtdAtendimentos'),
             metaFaturamento: getVal('metaFaturamento'), metaLucro: getVal('metaLucro'),
+            diasUteis: parseInt(document.getElementById('diasUteis')?.value) || 22,
             reembolsoInadimplencia: getVal('reembolsoInadimplencia'), impostos: getVal('impostos'), taxasCartao: getVal('taxasCartao'),
             insumos: getVal('insumos'), boletosFornecedores: getVal('boletosFornecedores'), terceirizadosVar: getVal('terceirizadosVar'),
             labTerceirizado: getVal('labTerceirizado'), comissoes: getVal('comissoes'), plantoes: getVal('plantoes'),
