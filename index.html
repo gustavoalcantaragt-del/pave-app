@@ -1398,7 +1398,7 @@
                 await CloudPull.run(true);
                 await _SyncQueue.flush();
                 if (window.renderCaixa)     window.renderCaixa();
-                if (window.renderDashboard) window.renderDashboard();
+                if (window.renderDashboard) await window.renderDashboard();
                 if (window.renderBills)     window.renderBills();
                 if (window.NotificationsModule) NotificationsModule.refresh();
             } catch(e) {

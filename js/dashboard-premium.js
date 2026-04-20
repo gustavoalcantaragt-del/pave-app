@@ -504,31 +504,7 @@ function _renderDashboardImpl(forceData) {
     }
 }
 
-// Wrapper público com debounce — tenta carregar de monthly_summaries se não há Balanço do mês atual
-window.renderDashboard = async function(forceData) {
-    if (!forceData && window.MonthlySummaryAPI) {
-        const currentMes = new Date().toISOString().substring(0, 7);
-        const local = (typeof FinancialAPI !== 'undefined') ? FinancialAPI.getUltimosDados() : null;
-        const localMes = local?.mesReferencia;
-        if (localMes !== currentMes) {
-            try {
-                const summary = await MonthlySummaryAPI.getForMonth(currentMes);
-                if (summary && summary.movements_count > 0) {
-                    forceData = {
-                        _fromCaixa:  true,
-                        _totalCosts: parseFloat(summary.total_costs)  || 0,
-                        _movCount:   summary.movements_count,
-                        _lastUpdated: summary.last_updated,
-                        mesReferencia: currentMes,
-                        faturamento:   parseFloat(summary.revenue) || 0
-                    };
-                }
-            } catch {}
-        }
-    }
-    clearTimeout(_dashboardDebounce);
-    _dashboardDebounce = setTimeout(() => _renderDashboardImpl(forceData || null), 80);
-};
+// (definição canônica mais abaixo — "HOOK: renderDashboard")
 
 // ── HISTÓRICO ──────────────────────────────────────────────────────────────
 window.deleteHistorico = function(idx) {
@@ -2152,10 +2128,28 @@ function _relComparativo() {
     </div>`;
 }
 
-// ── HOOK: renderDashboard → renderHealthScore + renderSmartAlerts ─────────────
-// Redefine com debounce para que HealthScore e SmartAlerts rodem DEPOIS do render
-
-window.renderDashboard = function(forceData) {
+// ── renderDashboard — definição canônica (async, com pull de monthly_summaries)
+window.renderDashboard = async function(forceData) {
+    // Se não há forceData e o Balanço do mês atual está vazio, tenta monthly_summaries
+    if (!forceData && window.MonthlySummaryAPI) {
+        const currentMes = new Date().toISOString().substring(0, 7);
+        const local = (typeof FinancialAPI !== 'undefined') ? FinancialAPI.getUltimosDados() : null;
+        if (local?.mesReferencia !== currentMes) {
+            try {
+                const summary = await MonthlySummaryAPI.getForMonth(currentMes);
+                if (summary && summary.movements_count > 0) {
+                    forceData = {
+                        _fromCaixa:    true,
+                        _totalCosts:   parseFloat(summary.total_costs) || 0,
+                        _movCount:     summary.movements_count,
+                        _lastUpdated:  summary.last_updated,
+                        mesReferencia: currentMes,
+                        faturamento:   parseFloat(summary.revenue) || 0
+                    };
+                }
+            } catch {}
+        }
+    }
     clearTimeout(_dashboardDebounce);
     _dashboardDebounce = setTimeout(() => {
         _renderDashboardImpl(forceData || null);

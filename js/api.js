@@ -723,15 +723,24 @@ const RealtimeModule = {
                         .order('due_date', { ascending: false }).limit(500);
                     if (movs) {
                         const local = movs.map(m => ({
-                            id: m.id, descricao: m.description, valor: parseFloat(m.amount),
-                            vencimento: m.due_date, tipo: m.type, categoria: m.category || '',
-                            formaPag: m.payment_method || 'outros', observacao: m.notes || '',
-                            status: m.status || 'pendente', isRecurring: m.is_recurring || false,
-                            clienteId: m.client_id || null
+                            id:          m.id,
+                            descricao:   m.description,
+                            valor:       parseFloat(m.amount),
+                            vencimento:  m.due_date,
+                            tipo:        m.type,
+                            categoria:   m.category       || '',
+                            formaPag:    m.payment_method || 'outros',
+                            observacao:  m.notes          || '',
+                            status:      m.status         || 'pendente',
+                            isRecurring: m.is_recurring   || false,
+                            clienteId:   m.client_id      || null,
+                            billId:      m.bill_id        || null,
+                            serviceId:   m.service_id     || null
                         }));
                         localStorage.setItem(STORAGE_KEYS.CAIXA, JSON.stringify(local));
                     }
                 } catch(e) { console.warn('[Realtime] pull cash_movements falhou:', e); }
+                if (window.PaveEvents) PaveEvents.emit('pave:caixa-updated', { mes: null });
                 if (window.renderCaixa)     window.renderCaixa();
                 if (window.renderDashboard) window.renderDashboard();
             })
@@ -771,10 +780,10 @@ const _SyncUI = {
             this._el.id = 'pave-sync-banner';
             Object.assign(this._el.style, {
                 position:      'fixed',
-                top:           '56px',
+                top:           'var(--topbar-height, 56px)',
                 left:          '0',
                 right:         '0',
-                zIndex:        '2000',
+                zIndex:        '999',
                 padding:       '5px 16px',
                 fontSize:      '0.76rem',
                 fontWeight:    '600',

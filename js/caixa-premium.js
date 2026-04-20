@@ -538,14 +538,11 @@ window.cxOnServiceChange = function(sel) {
     const descEl  = document.getElementById('cxDescricao');
     const valorEl = document.getElementById('cxValor');
     const catEl   = document.getElementById('cxCategoria');
-    const tipoEl  = document.getElementById('cxTipo');
-    const recEl   = document.getElementById('cxTipoReceita');
+    // Só preenche campos que ainda estão vazios — respeita escolhas do usuário
     if (descEl  && !descEl.value)  descEl.value  = s.nome;
     if (valorEl && !valorEl.value) valorEl.value = parseFloat(s.preco || 0).toFixed(2);
-    if (catEl)   catEl.value = 'faturamento';
-    if (tipoEl)  tipoEl.value = 'receita';
-    if (recEl)   recEl.checked = true;
-    if (window.cxTipoChange) window.cxTipoChange();
+    if (catEl   && !catEl.value)   catEl.value   = 'faturamento';
+    // Não altera o tipo de movimento — usuário pode registrar despesa vinculada a serviço
 };
 
 // ============================================================
