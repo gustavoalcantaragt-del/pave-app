@@ -405,6 +405,19 @@
                         </select>
                     </div>
 
+                    <!-- LINHA 4b: Serviço vinculado (opcional — receitas) -->
+                    <div style="margin-bottom:1.25rem;">
+                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:0.5rem;">
+                            Serviço <span style="font-weight:500; opacity:0.55; text-transform:none; letter-spacing:0;">(opcional — vincula ao catálogo de precificação)</span>
+                        </label>
+                        <select id="cxServiceId"
+                                onchange="window.cxOnServiceChange(this)"
+                                style="width:100%; padding:0.75rem 1rem; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.875rem; font-family:var(--font-family); outline:none; transition:border-color 0.15s;"
+                                onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
+                            <option value="">Sem serviço vinculado</option>
+                        </select>
+                    </div>
+
                     <!-- LINHA 5: Observação (full-width, opcional) -->
                     <div style="margin-bottom:1.75rem;">
                         <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:0.5rem;">

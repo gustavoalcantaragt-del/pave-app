@@ -349,7 +349,8 @@ const CashAPI = {
                 is_recurring:     mov.isRecurring    || false,
                 recurrence_group: mov.recurrenceGroup || null,
                 client_id:        mov.clienteId      || null,
-                bill_id:          mov.billId          || null
+                bill_id:          mov.billId          || null,
+                service_id:       mov.serviceId       || null
             }, { onConflict: 'id' });
             localStorage.setItem('pav_local_ts', String(Date.now()));
         } catch (e) {
@@ -590,8 +591,9 @@ const CloudPull = {
                     observacao:    m.notes || '',
                     status:        m.status || 'pendente',
                     isRecurring:   m.is_recurring || false,
-                    clienteId:     m.client_id || null,
-                    billId:        m.bill_id   || null
+                    clienteId:     m.client_id  || null,
+                    billId:        m.bill_id    || null,
+                    serviceId:     m.service_id || null
                 }));
                 localStorage.setItem(STORAGE_KEYS.CAIXA, JSON.stringify(local));
             }

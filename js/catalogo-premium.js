@@ -192,6 +192,21 @@ window.deleteServico = function(id) {
 let _catBusca  = '';
 let _catOrdem  = 'margem-desc'; // 'margem-desc' | 'margem-asc' | 'nome'
 
+// ── MÉTRICAS REAIS POR SERVIÇO (do Caixa) ───────────────────────────────────
+function _serviceMetrics(serviceId) {
+    const mes = new Date().toISOString().substring(0, 7); // 'YYYY-MM'
+    const movs = JSON.parse(localStorage.getItem('pav_caixa_movimentos') || '[]');
+    const pagos = movs.filter(m =>
+        m.serviceId === serviceId &&
+        m.status === 'pago' &&
+        (m.vencimento || '').startsWith(mes)
+    );
+    return {
+        count:   pagos.length,
+        revenue: pagos.reduce((s, m) => s + (parseFloat(m.valor) || 0), 0)
+    };
+}
+
 // ── CATÁLOGO SALVO ──────────────────────────────────────────────────────────
 function renderServicosSalvos() {
     const container = document.getElementById('servicos-salvos');
@@ -257,9 +272,14 @@ function renderServicosSalvos() {
     }
 
     container.innerHTML = controls + lista.map(s => {
-        const lucro  = parseFloat(s.lucro) || 0;
-        const health = healthBadge(s.margem);
+        const lucro   = parseFloat(s.lucro) || 0;
+        const health  = healthBadge(s.margem);
         const borderColor = lucro >= 0 ? health.color : '#E24B4A';
+        const metrics = _serviceMetrics(s.id);
+        const hasMetrics = metrics.count > 0;
+        const priceDiff = hasMetrics && metrics.count > 0
+            ? (metrics.revenue / metrics.count) - parseFloat(s.preco || 0)
+            : 0;
         return `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:0.875rem 1rem; background:var(--bg-elevated); border-radius:10px; margin-bottom:0.5rem; border-left:3px solid ${borderColor}; transition:background 0.15s;"
              onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg-elevated)'">
@@ -274,6 +294,14 @@ function renderServicosSalvos() {
                     &nbsp;·&nbsp; Margem: <strong style="color:${health.color};">${parseFloat(s.margem||0).toFixed(1)}%</strong>
                     &nbsp;·&nbsp; Custo: ${fmt(s.custoTotal)}
                 </div>
+                ${hasMetrics ? `
+                <div style="font-size:0.72rem; margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span style="background:rgba(10,132,255,0.08); color:var(--accent-blue); padding:2px 7px; border-radius:12px; border:1px solid rgba(10,132,255,0.2); font-weight:700;">
+                        ${metrics.count} atend. este mês
+                    </span>
+                    <span style="color:var(--text-secondary);">Receita: <strong style="color:#1D9E75;">${fmt(metrics.revenue)}</strong></span>
+                    ${Math.abs(priceDiff) > 0.5 ? `<span style="color:${priceDiff >= 0 ? '#1D9E75' : '#E24B4A'}; font-weight:700;">${priceDiff >= 0 ? '+' : ''}${fmt(priceDiff)} vs tabela</span>` : ''}
+                </div>` : ''}
                 ${s.comboItens && s.comboItens.length > 0 ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:3px;">${s.comboItens.join(' + ')}</div>` : ''}
                 ${_renderGoalProgress(s)}
             </div>
@@ -526,3 +554,11 @@ window.registerServiceSale = function(serviceId) {
     renderServicosSalvos();
     if (window.Utils) Utils.showToast('Atendimento registrado!', 'success');
 };
+
+// ── EVENT BUS LISTENER ────────────────────────────────────────────────────────
+if (window.PaveEvents) {
+    PaveEvents.on('pave:caixa-updated', function() {
+        const cat = document.getElementById('aba-catalogo');
+        if (cat && cat.style.display !== 'none') renderServicosSalvos();
+    });
+}

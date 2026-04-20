@@ -306,7 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const cat        = document.getElementById('cxCategoria').value;
             const formaPag   = document.getElementById('cxFormaPagamento')?.value || 'outros';
             const observacao = document.getElementById('cxObservacao')?.value.trim() || '';
-            const clienteId  = document.getElementById('cxClienteId')?.value || null;
+            const clienteId  = document.getElementById('cxClienteId')?.value  || null;
+            const serviceId  = document.getElementById('cxServiceId')?.value   || null;
             const isRec      = document.getElementById('cxRecorrente')?.checked;
             const vezes      = isRec ? parseInt(document.getElementById('cxVezes').value) || 2 : 1;
 
@@ -340,7 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     descricao: vezes > 1 ? `${desc} (${i+1}/${vezes})` : desc,
                     valor, vencimento: dataFormatada, tipo, categoria: cat,
                     formaPag, observacao, status: 'pendente',
-                    clienteId: clienteId || null
+                    clienteId: clienteId || null,
+                    serviceId: serviceId || null
                 });
             }
 
@@ -510,6 +512,40 @@ window.syncWithCaixa = function() {
             }
         }
     }
+};
+
+// ── SERVIÇO VINCULADO NO FORM DO CAIXA ───────────────────────────────────────
+window.cxPopulateServices = function() {
+    const sel = document.getElementById('cxServiceId');
+    if (!sel) return;
+    const current = sel.value;
+    const servicos = JSON.parse(localStorage.getItem('pav_servicos') || '[]');
+    sel.innerHTML = '<option value="">Sem serviço vinculado</option>';
+    servicos.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.nome} — R$ ${parseFloat(s.preco || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+        if (s.id === current) opt.selected = true;
+        sel.appendChild(opt);
+    });
+};
+
+window.cxOnServiceChange = function(sel) {
+    if (!sel.value) return;
+    const servicos = JSON.parse(localStorage.getItem('pav_servicos') || '[]');
+    const s = servicos.find(sv => sv.id === sel.value);
+    if (!s) return;
+    const descEl  = document.getElementById('cxDescricao');
+    const valorEl = document.getElementById('cxValor');
+    const catEl   = document.getElementById('cxCategoria');
+    const tipoEl  = document.getElementById('cxTipo');
+    const recEl   = document.getElementById('cxTipoReceita');
+    if (descEl  && !descEl.value)  descEl.value  = s.nome;
+    if (valorEl && !valorEl.value) valorEl.value = parseFloat(s.preco || 0).toFixed(2);
+    if (catEl)   catEl.value = 'faturamento';
+    if (tipoEl)  tipoEl.value = 'receita';
+    if (recEl)   recEl.checked = true;
+    if (window.cxTipoChange) window.cxTipoChange();
 };
 
 // ============================================================

@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (clienteSelect && window.ClientesModule) {
                     ClientesModule.renderClientSelector(clienteSelect, clienteSelect.value || null);
                 }
+                // Refresh seletor de serviços (caso novo serviço tenha sido cadastrado no Catálogo)
+                if (window.cxPopulateServices) window.cxPopulateServices();
             }
             if (tabId === 'tab-catalogo' && window.renderCatalogo) window.renderCatalogo();
             if (tabId === 'tab-simulacao') {
