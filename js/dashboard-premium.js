@@ -462,14 +462,23 @@ document.addEventListener('DOMContentLoaded', () => {
             emprestimos: getVal('emprestimos'), emprestimosDesc: document.getElementById('emprestimosDesc')?.value || ''
         };
 
-        localStorage.setItem('pav_ultimos_dados', JSON.stringify(dados));
-
-        const totais  = window.calcularTotais ? window.calcularTotais(dados) : {};
-        let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
-        let label = mesStr;
-        if (label?.includes('-')) { const p = label.split('-'); label = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : label; }
-        historico.push({ mesRef: mesStr, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() });
-        localStorage.setItem('pav_historico', JSON.stringify(historico));
+        // Salva localmente + sincroniza com Supabase via FinancialAPI
+        if (typeof FinancialAPI !== 'undefined') {
+            FinancialAPI.save(dados).catch(e =>
+                console.warn('[SYNC] balancoForm FinancialAPI.save falhou:', e?.message)
+            );
+        } else {
+            // Fallback offline: salvar direto no localStorage
+            localStorage.setItem('pav_ultimos_dados', JSON.stringify(dados));
+            const totais = window.calcularTotais ? window.calcularTotais(dados) : {};
+            let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
+            let label = mesStr;
+            if (label?.includes('-')) { const p = label.split('-'); label = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : label; }
+            const idx = historico.findIndex(h => h.mesRef === mesStr);
+            const entry = { mesRef: mesStr, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() };
+            if (idx >= 0) historico[idx] = entry; else historico.push(entry);
+            localStorage.setItem('pav_historico', JSON.stringify(historico));
+        }
 
         if (submitBtn) Utils.setLoading(submitBtn, false);
         Utils.showToast('Balanço consolidado com sucesso!', 'success');

@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 while (m > 12) { m -= 12; y++; }
                 const dataFormatada = `${y}-${String(m).padStart(2,'0')}-${String(vDay).padStart(2,'0')}`;
                 movimentos.push({
-                    id:        Date.now().toString() + '-' + i,
+                    id:        (typeof _genUUID !== 'undefined' ? _genUUID() : crypto.randomUUID()),
                     descricao: vezes > 1 ? `${desc} (${i+1}/${vezes})` : desc,
                     valor, vencimento: dataFormatada, tipo, categoria: cat,
                     formaPag, observacao, status: 'pendente',

@@ -154,7 +154,7 @@ window.salvarServico = function() {
     const goalRev   = parseFloat(document.getElementById('goal-revenue')?.value) || null;
     const servicos  = JSON.parse(localStorage.getItem('pav_servicos') || '[]');
     servicos.push({
-        id:          Date.now(),
+        id:          (typeof _genUUID !== 'undefined' ? _genUUID() : crypto.randomUUID()),
         nome:        labelNome,
         preco:       c.preco,
         custoTotal:  c.custoTotal.toFixed(2),

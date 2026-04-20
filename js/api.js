@@ -33,6 +33,19 @@ const _SyncQueue = {
 // Tenta reenviar fila ao reconectar
 window.addEventListener('online', () => _SyncQueue.flush());
 
+// ── UUID v4 — usa crypto.randomUUID se disponível ────────────
+function _genUUID() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+    // Fallback RFC-4122 v4 para browsers antigos
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+}
+window._genUUID = _genUUID;
+
 // ── Storage Keys (localStorage — cache local) ────────────────
 const STORAGE_KEYS = {
     USER:          'pav_user',
