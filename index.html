@@ -456,22 +456,6 @@
                     <div id="cxListaMovimentos" style="display:flex; flex-direction:column; max-height:560px; overflow-y:auto;"></div>
                 </div>
 
-                <!-- Custo Operacional por Dia -->
-                <div class="card" style="border:1px solid var(--brand-border);">
-                    <h3 class="text-gold" style="margin-bottom:0.75rem; font-size:0.95rem;">Custo Operacional por Dia</h3>
-                    <p style="color:var(--text-secondary); font-size:0.82rem; margin-bottom:1.25rem;">Baseado nos Custos Fixos do Balanço Financeiro consolidado.</p>
-                    <div style="display:flex; flex-direction:column; gap:0.875rem;">
-                        <div class="input-group" style="margin:0;">
-                            <label>Dias trabalhados no mês</label>
-                            <input type="number" id="cxRateioDias" value="22" oninput="window.calcRateioDiario()">
-                        </div>
-                        <button class="btn-primary" onclick="window.calcRateioDiario()" style="width:100%; padding:0.75rem;">Calcular</button>
-                        <div style="text-align:center; padding:1rem; background:rgba(226,75,74,0.06); border:1px solid rgba(226,75,74,0.12); border-radius:var(--radius-md);">
-                            <div style="font-size:0.68rem; color:var(--text-muted); letter-spacing:0.5px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">Custo por dia</div>
-                            <div id="cxRateioResultado" style="font-size:1.6rem; font-weight:800; color:var(--color-danger);">R$ 0,00</div>
-                        </div>
-                    </div>
-                </div>
 
             </div>
         </section>
@@ -607,6 +591,23 @@
                         <div style="padding:1.1rem 1.5rem;" title="Faturamento mínimo para cobrir todos os custos">
                             <div style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; display:flex; align-items:center; gap:4px;">Ponto de Equilíbrio <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
                             <div id="live-breakeven" style="font-size:1.1rem; font-weight:800; color:var(--color-warning);">R$ 0,00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custo Operacional por Dia -->
+                <div class="card" style="border:1px solid var(--brand-border); margin-bottom:2rem;">
+                    <h3 class="text-gold" style="margin-bottom:0.75rem; font-size:0.95rem;">Custo Operacional por Dia</h3>
+                    <p style="color:var(--text-secondary); font-size:0.82rem; margin-bottom:1.25rem;">Baseado nos Custos Fixos do Balanço Financeiro consolidado.</p>
+                    <div style="display:flex; flex-direction:column; gap:0.875rem;">
+                        <div class="input-group" style="margin:0;">
+                            <label>Dias trabalhados no mês</label>
+                            <input type="number" step="1" min="1" id="cxRateioDias" value="22" oninput="window.calcRateioDiario()">
+                        </div>
+                        <button class="btn-primary" onclick="window.calcRateioDiario()" style="width:100%; padding:0.75rem;">Calcular</button>
+                        <div style="text-align:center; padding:1rem; background:rgba(226,75,74,0.06); border:1px solid rgba(226,75,74,0.12); border-radius:var(--radius-md);">
+                            <div style="font-size:0.68rem; color:var(--text-muted); letter-spacing:0.5px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">Custo por dia</div>
+                            <div id="cxRateioResultado" style="font-size:1.6rem; font-weight:800; color:var(--color-danger);">R$ 0,00</div>
                         </div>
                     </div>
                 </div>
