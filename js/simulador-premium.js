@@ -21,7 +21,7 @@ window.runSimulation = function() {
     const varEl = document.getElementById('sim-var');
     if (!fatEl || !fixEl || !varEl) return;
 
-    const simResultsEl = document.getElementById('sim-results');
+    const simResultsEl = document.getElementById('sim-result');
 
     // Initialize from last data if fields are empty or 0
     const data = JSON.parse(localStorage.getItem('pav_ultimos_dados'));

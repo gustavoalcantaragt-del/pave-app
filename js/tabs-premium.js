@@ -54,7 +54,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             if (tabId === 'tab-catalogo' && window.renderCatalogo) window.renderCatalogo();
-            if (tabId === 'tab-simulacao' && window.runSimulation) window.runSimulation();
+            if (tabId === 'tab-simulacao') {
+                if (window._simTabActive === 'whatif' && window.runSimulation) window.runSimulation();
+                if (window._simTabActive === 'crescimento') {
+                    const c = document.getElementById('sim-cresc-container');
+                    if (c && !c.dataset.initialized && window.SimuladorCrescimentoModule) {
+                        c.dataset.initialized = 'true';
+                        SimuladorCrescimentoModule.render(c);
+                    }
+                }
+            }
             if (tabId === 'tab-bills' && window.renderBills) window.renderBills();
             if (tabId === 'tab-relatorios' && window.renderRelatorios) window.renderRelatorios();
             if (tabId === 'tab-config' && window.renderConfig) window.renderConfig();
