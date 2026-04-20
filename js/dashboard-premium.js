@@ -2582,3 +2582,19 @@ window.switchRelTab = function(tab) {
         if (tab === 'clientes') _relClientes();
     }
 };
+
+// ── EVENT BUS LISTENERS ───────────────────────────────────────────────────────
+if (window.PaveEvents) {
+    // Atualiza Dashboard automaticamente quando Caixa muda
+    PaveEvents.on('pave:caixa-updated', function() {
+        const dash = document.getElementById('aba-dashboard');
+        if (dash && dash.style.display !== 'none') {
+            window.renderDashboard();
+        }
+        // Invalida Relatórios se estiver aberto (força re-leitura no próximo render)
+        const rel = document.getElementById('aba-relatorios');
+        if (rel && rel.style.display !== 'none' && window.renderRelatorios) {
+            window.renderRelatorios();
+        }
+    });
+}

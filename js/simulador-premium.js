@@ -942,3 +942,17 @@ const SimuladorCrescimentoModule = (() => {
 })();
 
 window.SimuladorCrescimentoModule = SimuladorCrescimentoModule;
+
+// ── EVENT BUS LISTENERS ───────────────────────────────────────────────────────
+if (window.PaveEvents) {
+    PaveEvents.on('pave:caixa-updated', function() {
+        const simSection = document.getElementById('aba-simulacao');
+        if (!simSection || simSection.style.display === 'none') return;
+        const activeTab = window._simTabActive || 'whatif';
+        if (activeTab === 'whatif' && window.runSimulation) window.runSimulation();
+        if (activeTab === 'tributario' && window.SimuladorTributarioModule) {
+            const c = document.getElementById('sim-trib-container');
+            if (c) SimuladorTributarioModule.render(c);
+        }
+    });
+}

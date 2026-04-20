@@ -325,11 +325,19 @@ const CashAPI = {
             _SyncQueue.push({ type: 'cash_movement', id: mov.id });
         }
 
+        if (window.PaveEvents) {
+            PaveEvents.emit('pave:caixa-updated', {
+                mes:  mov.vencimento?.substring(0, 7) || null,
+                tipo: mov.tipo || null
+            });
+        }
+
         return { ok: true };
     },
 
     async deleteMovimento(id) {
         let local = JSON.parse(localStorage.getItem(STORAGE_KEYS.CAIXA) || '[]');
+        const deletado = local.find(m => m.id === id);
         local = local.filter(m => m.id !== id);
         localStorage.setItem(STORAGE_KEYS.CAIXA, JSON.stringify(local));
 
@@ -338,6 +346,13 @@ const CashAPI = {
             if (orgId) await _supabase.from('cash_movements').delete().eq('id', id).eq('organization_id', orgId);
         } catch (e) {
             console.warn('[SYNC] CashAPI.deleteMovimento falhou — removido localmente.', e?.message);
+        }
+
+        if (window.PaveEvents) {
+            PaveEvents.emit('pave:caixa-updated', {
+                mes:  deletado?.vencimento?.substring(0, 7) || null,
+                tipo: deletado?.tipo || null
+            });
         }
 
         return { ok: true };
