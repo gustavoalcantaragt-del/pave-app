@@ -442,6 +442,78 @@ const ServicesAPI = {
     }
 };
 
+// ── CATEGORIES (Categorias personalizadas com hierarquia) ────
+const CategoriesAPI = {
+
+    async list() {
+        const orgId = await OrgAPI.getOrgId();
+        if (!orgId) return [];
+        const { data, error } = await _supabase
+            .from('categories')
+            .select('*')
+            .eq('organization_id', orgId)
+            .order('sort_order', { ascending: true })
+            .order('name',       { ascending: true });
+        if (error) { console.warn('[CAT] list', error.message); return []; }
+        return data || [];
+    },
+
+    async create({ name, parent_id = null, type = 'both' }) {
+        const orgId = await OrgAPI.getOrgId();
+        const userId = Auth.getUser()?.id;
+        if (!orgId || !userId) throw new Error('Sessão inválida');
+        const trimmed = (name || '').trim();
+        if (!trimmed) throw new Error('Nome obrigatório');
+        const { data, error } = await _supabase
+            .from('categories')
+            .insert({ organization_id: orgId, user_id: userId, name: trimmed, parent_id, type })
+            .select()
+            .single();
+        if (error) {
+            if (error.code === '23505') throw new Error('Já existe uma categoria com esse nome neste nível');
+            throw error;
+        }
+        return data;
+    },
+
+    async update(id, payload) {
+        if (payload.name) payload.name = payload.name.trim();
+        const { data, error } = await _supabase
+            .from('categories')
+            .update(payload)
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    },
+
+    async remove(id) {
+        // Bloqueio: categoria em uso por bills?
+        const { count: billsCount } = await _supabase
+            .from('bills')
+            .select('id', { count: 'exact', head: true })
+            .eq('category_id', id);
+        if (billsCount && billsCount > 0) {
+            throw new Error(`Categoria está vinculada a ${billsCount} conta(s). Reatribua antes de excluir.`);
+        }
+        const { error } = await _supabase.from('categories').delete().eq('id', id);
+        if (error) throw error;
+    },
+
+    // Constrói árvore hierárquica
+    async listTree() {
+        const flat = await this.list();
+        const map  = new Map(flat.map(c => [c.id, { ...c, children: [] }]));
+        const roots = [];
+        map.forEach(c => {
+            if (c.parent_id && map.has(c.parent_id)) map.get(c.parent_id).children.push(c);
+            else roots.push(c);
+        });
+        return roots;
+    }
+};
+
 // ── SUBSCRIPTION ─────────────────────────────────────────────
 const SubscriptionAPI = {
 
@@ -739,7 +811,6 @@ const RealtimeModule = {
                     }
                 } catch(e) { console.warn('[Realtime] pull cash_movements falhou:', e); }
                 if (window.PaveEvents) PaveEvents.emit('pave:caixa-updated', { mes: null });
-                if (window.renderCaixa)     window.renderCaixa();
                 if (window.renderDashboard) window.renderDashboard();
             })
             .on('postgres_changes', {

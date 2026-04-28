@@ -212,8 +212,10 @@ const BillsModule = (() => {
                 </div>
                 <div class="bills-form-row bills-form-row-2">
                     <div>
-                        <label>Categoria</label>
-                        <input type="text" name="category" value="${bill?.category || ''}" placeholder="Ex: Aluguel, Fornecedor…" />
+                        <label>Categoria <a href="#" id="bills-cat-manage" style="font-size:0.72rem; font-weight:500; margin-left:0.5rem; color:var(--accent-blue);">gerenciar →</a></label>
+                        <select name="category_id" id="bills-category-select" data-current="${bill?.category_id || ''}">
+                            <option value="">— sem categoria —</option>
+                        </select>
                     </div>
                     <div>
                         <label>Recorrência</label>
@@ -373,6 +375,26 @@ const BillsModule = (() => {
         });
     }
 
+    async function _populateCategorySelect(modal, currentId) {
+        const select = modal.querySelector('#bills-category-select');
+        if (!select) return;
+        try {
+            const cats = (typeof CategoriesAPI !== 'undefined') ? await CategoriesAPI.list() : [];
+            window._catCache = cats; // cache p/ resolução de nome no submit
+            const byParent = (parentId) => cats.filter(c => (c.parent_id || null) === parentId);
+            const renderTree = (parentId, depth) => {
+                return byParent(parentId).map(c => {
+                    const indent = '— '.repeat(depth);
+                    const sel = c.id === currentId ? 'selected' : '';
+                    return `<option value="${c.id}" ${sel}>${indent}${c.name}</option>` + renderTree(c.id, depth + 1);
+                }).join('');
+            };
+            select.innerHTML = `<option value="">— sem categoria —</option>` + renderTree(null, 0);
+        } catch (e) {
+            console.warn('[BILLS] populateCategorySelect:', e);
+        }
+    }
+
     function _openModal(container, bill, defaultType, onSuccess) {
         const modal = container.querySelector('#bills-modal');
         if (!modal) return;
@@ -385,6 +407,19 @@ const BillsModule = (() => {
             if (typeSelect && defaultType) typeSelect.value = defaultType;
         }
 
+        // Carregar categorias dinâmicas
+        _populateCategorySelect(modal, bill?.category_id);
+
+        // Link "gerenciar" → abre Configurações
+        modal.querySelector('#bills-cat-manage')?.addEventListener('click', e => {
+            e.preventDefault();
+            modal.classList.add('bills-modal-hidden');
+            document.getElementById('tab-config')?.click();
+            setTimeout(() => {
+                document.getElementById('cfg-categorias-section')?.scrollIntoView({ behavior: 'smooth' });
+            }, 200);
+        });
+
         modal.querySelector('#bills-btn-cancel').addEventListener('click', () => {
             modal.classList.add('bills-modal-hidden');
         });
@@ -395,13 +430,22 @@ const BillsModule = (() => {
             const recurrence = fd.get('recurrence');
             const recurrenceMode = fd.get('recurrence_mode');
             const recurrenceEndDate = fd.get('recurrence_end_date');
+            const categoryId = fd.get('category_id') || null;
+
+            // Resolver nome da categoria (texto) para preencher o campo legado category
+            let categoryName = null;
+            if (categoryId && window._catCache) {
+                const found = window._catCache.find(c => c.id === categoryId);
+                categoryName = found?.name || null;
+            }
 
             const payload = {
                 type:                 fd.get('type'),
                 description:          fd.get('description').trim(),
                 amount:               parseFloat(fd.get('amount')),
                 due_date:             fd.get('due_date'),
-                category:             fd.get('category')   || null,
+                category_id:          categoryId,
+                category:             categoryName,
                 recurrence:           recurrence,
                 recurrence_end_date:  (recurrence !== 'none' && recurrenceMode === 'until_date' && recurrenceEndDate)
                                         ? recurrenceEndDate
@@ -441,99 +485,3 @@ window._billsToggleEndDate = function(recurrenceValue) {
     }
 };
 
-// ============================================================
-// FEATURE 1.3 — SPLIT DE PAGAMENTO
-// Adiciona múltiplas formas de pagamento por lançamento do Caixa
-// ============================================================
-
-window.renderPaymentSplitSection = function(existing = []) {
-    return `
-    <div id="payment-split-section" style="margin-top:0.75rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-            <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">Formas de Pagamento (opcional)</label>
-            <button type="button" id="btn-add-payment" class="btn-link" style="font-size:0.8rem;">+ Adicionar forma</button>
-        </div>
-        <div id="payment-lines">
-            ${existing.map((p, i) => window.renderPaymentLine(p, i)).join('')}
-        </div>
-        <div id="split-validation" class="split-validation"></div>
-    </div>`;
-};
-
-window.renderPaymentLine = function(payment = {}, index = 0) {
-    const methods = [
-        { value: 'dinheiro',       label: 'Dinheiro' },
-        { value: 'cartao_credito', label: 'Cartão Crédito' },
-        { value: 'cartao_debito',  label: 'Cartão Débito' },
-        { value: 'pix',            label: 'PIX' },
-        { value: 'cheque',         label: 'Cheque' },
-        { value: 'transferencia',  label: 'Transferência' },
-    ];
-    return `
-    <div class="payment-line" data-index="${index}" style="display:flex; gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
-        <select name="payment_method_${index}" style="flex:1; padding:0.4rem 0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.82rem; font-family:var(--font-family);">
-            ${methods.map(m => `<option value="${m.value}" ${payment.method === m.value ? 'selected' : ''}>${m.label}</option>`).join('')}
-        </select>
-        <input type="number" name="payment_amount_${index}"
-               value="${payment.amount || ''}" min="0.01" step="0.01"
-               placeholder="Valor R$" class="payment-amount-input"
-               style="width:110px; padding:0.4rem 0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.82rem; font-family:var(--font-family);" />
-        <button type="button" class="btn-remove-payment" data-index="${index}"
-                style="background:none; border:none; cursor:pointer; color:var(--text-muted); font-size:1rem; padding:0 4px;">✕</button>
-    </div>`;
-};
-
-window.collectPayments = function(form) {
-    const lines = form.querySelectorAll('.payment-line');
-    if (!lines.length) return null;
-    const payments = Array.from(lines).map((line, i) => ({
-        method: form.querySelector(`[name="payment_method_${i}"]`)?.value,
-        amount: parseFloat(form.querySelector(`[name="payment_amount_${i}"]`)?.value || 0),
-    })).filter(p => p.amount > 0);
-    return payments.length ? payments : null;
-};
-
-window.validatePaymentSplit = function(totalAmount, payments) {
-    if (!payments || !payments.length) return { valid: true };
-    const sum  = payments.reduce((acc, p) => acc + p.amount, 0);
-    const diff = Math.abs(sum - totalAmount);
-    if (diff > 0.01) {
-        const fmt = v => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-        return { valid: false, message: `Soma das formas (${fmt(sum)}) difere do total (${fmt(totalAmount)}).` };
-    }
-    return { valid: true };
-};
-
-// Inicializar listeners de split em um formulário
-window.initSplitListeners = function(formEl) {
-    formEl.addEventListener('click', e => {
-        if (e.target.id === 'btn-add-payment') {
-            const lines  = formEl.querySelectorAll('.payment-line');
-            const wrap   = formEl.querySelector('#payment-lines');
-            if (wrap) wrap.insertAdjacentHTML('beforeend', window.renderPaymentLine({}, lines.length));
-        }
-        if (e.target.matches('.btn-remove-payment')) {
-            e.target.closest('.payment-line')?.remove();
-            // Renumerar índices
-            formEl.querySelectorAll('.payment-line').forEach((line, i) => {
-                line.dataset.index = i;
-                line.querySelector('select')?.setAttribute('name', `payment_method_${i}`);
-                line.querySelector('input')?.setAttribute('name', `payment_amount_${i}`);
-                const rmBtn = line.querySelector('.btn-remove-payment');
-                if (rmBtn) rmBtn.dataset.index = i;
-            });
-        }
-    });
-
-    // Validar ao digitar
-    formEl.addEventListener('input', () => {
-        const totalEl = formEl.querySelector('[name="cxValor"]') || formEl.querySelector('#cxValor');
-        const total   = parseFloat(totalEl?.value || 0);
-        const payments = window.collectPayments(formEl);
-        const validEl  = formEl.querySelector('#split-validation');
-        if (!validEl || !payments || !payments.length) return;
-        const result = window.validatePaymentSplit(total, payments);
-        validEl.textContent = result.valid ? '✓ Divisão OK' : result.message;
-        validEl.className   = result.valid ? 'split-validation split-ok' : 'split-validation split-error';
-    });
-};

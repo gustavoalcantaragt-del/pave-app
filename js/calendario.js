@@ -227,23 +227,15 @@ const CalendarioModule = (() => {
             ${group('A receber (projetado)', day.billsReceita, '#1D9E75', true)}
             ${group('A pagar (projetado)', day.billsDespesa, '#E24B4A', true)}
             <div style="margin-top:0.75rem; text-align:right;">
-                <button id="btn-goto-caixa-day" data-date="${date}" style="background:none; border:none; color:var(--accent-blue); font-size:0.8rem; cursor:pointer; font-family:var(--font-family);">Ver lançamentos do dia →</button>
+                <button id="btn-goto-bills-day" style="background:none; border:none; color:var(--accent-blue); font-size:0.8rem; cursor:pointer; font-family:var(--font-family);">Abrir Contas P/R →</button>
             </div>`;
 
             document.getElementById('btn-close-cal-detail').addEventListener('click', () => {
                 detailEl.style.display = 'none';
             });
 
-            document.getElementById('btn-goto-caixa-day')?.addEventListener('click', () => {
-                document.getElementById('tab-caixa')?.click();
-                // Pré-filtrar data no Caixa se disponível
-                setTimeout(() => {
-                    const filtro = document.getElementById('cxFiltroDia');
-                    if (filtro) {
-                        filtro.value = date;
-                        filtro.dispatchEvent(new Event('change'));
-                    }
-                }, 200);
+            document.getElementById('btn-goto-bills-day')?.addEventListener('click', () => {
+                document.getElementById('tab-bills')?.click();
                 detailEl.style.display = 'none';
             });
         }

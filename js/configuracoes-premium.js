@@ -24,7 +24,150 @@ window.renderConfig = function() {
 
     // Card de assinatura
     _renderSubscriptionCard();
+
+    // Card de categorias
+    _renderCategoriasCard();
 };
+
+// ── CATEGORIAS PERSONALIZADAS ────────────────────────────────────────────────
+async function _renderCategoriasCard() {
+    const listEl = document.getElementById('cfg-cat-list');
+    const btnNew = document.getElementById('cfg-cat-btn-new');
+    const formWrap = document.getElementById('cfg-cat-form-wrap');
+    if (!listEl || !btnNew || !formWrap) return;
+
+    if (typeof CategoriesAPI === 'undefined') {
+        listEl.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">CategoriesAPI indisponível.</p>`;
+        return;
+    }
+
+    // Listener uma única vez
+    if (!btnNew.dataset.wired) {
+        btnNew.dataset.wired = '1';
+        btnNew.addEventListener('click', () => _showCategoriaForm(null));
+    }
+
+    await _refreshCategoriasList();
+}
+
+async function _refreshCategoriasList() {
+    const listEl = document.getElementById('cfg-cat-list');
+    if (!listEl) return;
+    listEl.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">Carregando…</p>`;
+
+    try {
+        const tree = await CategoriesAPI.listTree();
+        if (!tree.length) {
+            listEl.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem; padding:0.75rem 0;">Nenhuma categoria criada. Use "+ Nova categoria" para começar.</p>`;
+            return;
+        }
+
+        const renderItem = (cat, depth) => {
+            const indent = depth * 1.5;
+            const typeLabel = { income: 'Receita', expense: 'Despesa', both: 'Ambos' }[cat.type] || 'Ambos';
+            const typeColor = { income: '#1D9E75', expense: '#E24B4A', both: 'var(--text-muted)' }[cat.type] || 'var(--text-muted)';
+            return `
+            <div style="display:flex; align-items:center; gap:0.75rem; padding:0.6rem 0.85rem; background:var(--bg-elevated); border:1px solid var(--border); border-radius:6px; margin-left:${indent}rem;" data-cat-id="${cat.id}">
+                <span style="font-weight:600; color:var(--text-primary); flex:1;">${cat.name}</span>
+                <span style="font-size:0.7rem; padding:0.15rem 0.5rem; border-radius:10px; background:${typeColor}22; color:${typeColor}; font-weight:700;">${typeLabel}</span>
+                <button class="cfg-cat-btn-add-sub" data-parent="${cat.id}" title="Adicionar subcategoria" style="background:none; border:none; cursor:pointer; color:var(--accent-blue); font-size:0.85rem; font-family:var(--font-family);">+ sub</button>
+                <button class="cfg-cat-btn-edit"  data-id="${cat.id}" title="Editar" style="background:none; border:none; cursor:pointer; color:var(--text-secondary); font-size:0.9rem;">✎</button>
+                <button class="cfg-cat-btn-del"   data-id="${cat.id}" title="Excluir" style="background:none; border:none; cursor:pointer; color:var(--color-danger); font-size:0.9rem;">✕</button>
+            </div>
+            ${(cat.children || []).map(ch => renderItem(ch, depth + 1)).join('')}`;
+        };
+
+        listEl.innerHTML = tree.map(c => renderItem(c, 0)).join('');
+
+        // Wire actions (event delegation única)
+        if (!listEl.dataset.wired) {
+            listEl.dataset.wired = '1';
+            listEl.addEventListener('click', async e => {
+                const t = e.target;
+                if (t.matches('.cfg-cat-btn-add-sub')) {
+                    _showCategoriaForm(null, t.dataset.parent);
+                } else if (t.matches('.cfg-cat-btn-edit')) {
+                    const flat = await CategoriesAPI.list();
+                    const cat = flat.find(c => c.id === t.dataset.id);
+                    if (cat) _showCategoriaForm(cat);
+                } else if (t.matches('.cfg-cat-btn-del')) {
+                    const id = t.dataset.id;
+                    if (!confirm('Excluir esta categoria?')) return;
+                    try {
+                        await CategoriesAPI.remove(id);
+                        Utils.showToast('Categoria excluída.', 'success');
+                        _refreshCategoriasList();
+                    } catch (err) {
+                        Utils.showToast(err.message || 'Erro ao excluir', 'error');
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        listEl.innerHTML = `<p style="color:var(--color-danger); font-size:0.85rem;">Erro ao carregar: ${e.message}</p>`;
+    }
+}
+
+function _showCategoriaForm(cat, parentId = null) {
+    const wrap = document.getElementById('cfg-cat-form-wrap');
+    if (!wrap) return;
+    const isEdit = !!cat;
+    wrap.style.display = 'block';
+    wrap.innerHTML = `
+        <h4 style="margin:0 0 0.75rem; font-size:0.95rem;">${isEdit ? 'Editar categoria' : (parentId ? 'Nova subcategoria' : 'Nova categoria')}</h4>
+        <form id="cfg-cat-form" style="display:flex; flex-direction:column; gap:0.75rem;">
+            <input type="hidden" name="id"        value="${cat?.id || ''}" />
+            <input type="hidden" name="parent_id" value="${parentId || cat?.parent_id || ''}" />
+            <div>
+                <label style="font-size:0.78rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">Nome *</label>
+                <input type="text" name="name" value="${cat?.name || ''}" required
+                    style="width:100%; padding:0.55rem 0.75rem; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-family:var(--font-family); font-size:0.88rem;" />
+            </div>
+            <div>
+                <label style="font-size:0.78rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:0.25rem;">Aplicar em</label>
+                <select name="type" style="width:100%; padding:0.55rem 0.75rem; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-family:var(--font-family); font-size:0.88rem;">
+                    <option value="both"    ${(cat?.type || 'both') === 'both'    ? 'selected' : ''}>Receitas e Despesas</option>
+                    <option value="income"  ${cat?.type === 'income'  ? 'selected' : ''}>Apenas Receitas</option>
+                    <option value="expense" ${cat?.type === 'expense' ? 'selected' : ''}>Apenas Despesas</option>
+                </select>
+            </div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button type="button" id="cfg-cat-form-cancel" class="btn-secondary" style="padding:0.45rem 1rem; font-size:0.85rem;">Cancelar</button>
+                <button type="submit" class="btn-primary" style="padding:0.45rem 1rem; font-size:0.85rem;">${isEdit ? 'Salvar' : 'Criar'}</button>
+            </div>
+        </form>
+    `;
+
+    document.getElementById('cfg-cat-form-cancel').addEventListener('click', () => {
+        wrap.style.display = 'none';
+        wrap.innerHTML = '';
+    });
+
+    document.getElementById('cfg-cat-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const id        = fd.get('id') || null;
+        const parent_id = fd.get('parent_id') || null;
+        const payload = {
+            name: fd.get('name'),
+            type: fd.get('type'),
+            parent_id: parent_id || null
+        };
+        const submitBtn = e.target.querySelector('[type="submit"]');
+        Utils.setLoading(submitBtn, true);
+        try {
+            if (id) await CategoriesAPI.update(id, { name: payload.name, type: payload.type });
+            else    await CategoriesAPI.create(payload);
+            wrap.style.display = 'none';
+            wrap.innerHTML = '';
+            Utils.showToast(id ? 'Categoria atualizada!' : 'Categoria criada!', 'success');
+            _refreshCategoriasList();
+        } catch (err) {
+            Utils.setLoading(submitBtn, false);
+            Utils.showToast(err.message || 'Erro ao salvar', 'error');
+        }
+    });
+}
 
 // ── SUBSCRIPTION CARD (Configurações) ────────────────────────────────────────
 async function _renderSubscriptionCard() {

@@ -737,6 +737,19 @@
 
         <!-- Configurações -->
         <section id="aba-config" style="display:none;">
+            <!-- Card de Categorias Personalizadas -->
+            <div id="cfg-categorias-section" class="card" style="margin-bottom:1.5rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+                    <div>
+                        <h3 style="margin-bottom:0.25rem;">Categorias</h3>
+                        <p style="color:var(--text-secondary); font-size:0.85rem;">Crie categorias e subcategorias para organizar suas Contas a Pagar/Receber.</p>
+                    </div>
+                    <button id="cfg-cat-btn-new" class="btn-primary" style="padding:0.45rem 1rem; font-size:0.85rem; white-space:nowrap;">+ Nova categoria</button>
+                </div>
+                <div id="cfg-cat-form-wrap" style="display:none; padding:1rem; background:var(--bg-elevated); border-radius:8px; margin-bottom:1rem; border:1px solid var(--border);"></div>
+                <div id="cfg-cat-list" style="display:flex; flex-direction:column; gap:0.4rem;"></div>
+            </div>
+
             <!-- Card de Status da Assinatura -->
             <div id="config-subscription-card" class="card" style="margin-bottom:1.5rem;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">

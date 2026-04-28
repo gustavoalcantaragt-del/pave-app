@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'labTerceirizado','comissoes','plantoes','escritorioLimpezaVar','estorno',
         'outrosVariaveis','folha','agua','luz','internet','aluguel','contador',
         'manutencao','seguro','combustivel','telefone','publicidade','outrosFixos',
-        'cxValor','calc-preco','calc-ins-prin','calc-com-vet','calc-com-ext',
+        'calc-preco','calc-ins-prin','calc-com-vet','calc-com-ext',
         'calc-ins-med','calc-ins-geral','calc-ali-det','calc-ext-des',
         'calc-ext-kit','calc-ext-out'
     ];
