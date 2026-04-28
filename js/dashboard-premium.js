@@ -44,17 +44,23 @@ function _togglePeriodPicker() {
 
     if (historico.length === 0) return;
 
-    const atual = (() => { try { return JSON.parse(localStorage.getItem('pav_ultimos_dados'))?.mesReferencia || ''; } catch { return ''; } })();
+    const atual = (() => { try { return (JSON.parse(localStorage.getItem('pav_ultimos_dados'))?.mesReferencia || '').substring(0, 7); } catch { return ''; } })();
 
-    const items = [...historico].reverse().map(h => {
-        const label = (() => {
-            const r = h.mesRef || h.mesReferencia || '';
-            if (!r) return r;
-            const p = r.split('-');
-            return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : p.length === 2 ? `${p[1]}/${p[0]}` : r;
-        })();
-        const isAtual = (h.mesRef === atual || h.mesReferencia === atual);
-        return `<button class="period-picker-item${isAtual ? ' active' : ''}" data-ref="${h.mesRef || h.mesReferencia || ''}">${label}</button>`;
+    // Deduplicar por YYYY-MM — caso existam entradas com formato misto (YYYY-MM-DD vs YYYY-MM)
+    const seen = new Set();
+    const deduped = [...historico].reverse().filter(h => {
+        const key = (h.mesRef || h.mesReferencia || '').substring(0, 7);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+
+    const items = deduped.map(h => {
+        const key = (h.mesRef || h.mesReferencia || '').substring(0, 7);
+        const [y, m] = key.split('-');
+        const label = m && y ? `${m}/${y}` : key;
+        const isAtual = key === atual;
+        return `<button class="period-picker-item${isAtual ? ' active' : ''}" data-ref="${key}">${label}</button>`;
     }).join('');
 
     const panel = document.createElement('div');
@@ -541,7 +547,8 @@ window.fillBalancoForm = function(data) {
         const el = document.getElementById(id);
         if (el && val !== undefined && val !== null) el.value = val;
     };
-    setV('mesReferencia',         data.mesReferencia || '');
+    // Normaliza para YYYY-MM (compatível com input type="month")
+    setV('mesReferencia',         (data.mesReferencia || '').substring(0, 7));
     setV('faturamento',           data.faturamento || '');
     setV('qtdAtendimentos',       data.qtdAtendimentos || '');
     setV('metaFaturamento',       data.metaFaturamento || '');
