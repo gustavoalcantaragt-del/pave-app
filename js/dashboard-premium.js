@@ -594,13 +594,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const balancoForm = document.getElementById('balancoForm');
     if (!balancoForm) return;
 
-    balancoForm.addEventListener('submit', (e) => {
+    balancoForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const submitBtn = balancoForm.querySelector('[type="submit"]');
-        if (submitBtn) Utils.setLoading(submitBtn, true);
+
+        // Guard duplo-clique
+        if (submitBtn?.dataset.saving === 'true') return;
+        if (submitBtn) { submitBtn.dataset.saving = 'true'; Utils.setLoading(submitBtn, true); }
 
         const getVal = id => parseFloat(document.getElementById(id)?.value) || 0;
         const mesStr = document.getElementById('mesReferencia')?.value || 'N/A';
+
+        const _unlock = () => {
+            if (submitBtn) { submitBtn.dataset.saving = ''; Utils.setLoading(submitBtn, false); }
+        };
 
         // Validação inline: faturamento e data são obrigatórios
         const _markBad = (id, msg) => {
@@ -610,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.style.animation   = 'pav-shake 0.3s ease';
                 el.addEventListener('input', () => { el.style.borderColor = ''; el.style.animation = ''; }, { once: true });
             }
-            if (submitBtn) Utils.setLoading(submitBtn, false);
+            _unlock();
             Utils.showToast(msg, 'error');
         };
         if (getVal('faturamento') <= 0) { _markBad('faturamento', 'Informe o faturamento do mês'); return; }
@@ -633,29 +640,35 @@ document.addEventListener('DOMContentLoaded', () => {
             emprestimos: getVal('emprestimos'), emprestimosDesc: document.getElementById('emprestimosDesc')?.value || ''
         };
 
-        // Salva localmente + sincroniza com Supabase via FinancialAPI
-        if (typeof FinancialAPI !== 'undefined') {
-            FinancialAPI.save(dados).catch(e =>
-                console.warn('[SYNC] balancoForm FinancialAPI.save falhou:', e?.message)
-            );
-        } else {
-            // Fallback offline: salvar direto no localStorage
-            localStorage.setItem('pav_ultimos_dados', JSON.stringify(dados));
-            const totais = window.calcularTotais ? window.calcularTotais(dados) : {};
-            let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
-            let label = mesStr;
-            if (label?.includes('-')) { const p = label.split('-'); label = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : label; }
-            const idx = historico.findIndex(h => h.mesRef === mesStr);
-            const entry = { mesRef: mesStr, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() };
-            if (idx >= 0) historico[idx] = entry; else historico.push(entry);
-            localStorage.setItem('pav_historico', JSON.stringify(historico));
-        }
+        try {
+            if (typeof FinancialAPI !== 'undefined') {
+                await FinancialAPI.save(dados);
+            } else {
+                // Fallback offline: salvar direto no localStorage
+                localStorage.setItem('pav_ultimos_dados', JSON.stringify(dados));
+                const totais = window.calcularTotais ? window.calcularTotais(dados) : {};
+                let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
+                let label = mesStr;
+                if (label?.includes('-')) { const p = label.split('-'); label = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : label; }
+                const idx = historico.findIndex(h => h.mesRef === mesStr);
+                const entry = { mesRef: mesStr, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() };
+                if (idx >= 0) historico[idx] = entry; else historico.push(entry);
+                localStorage.setItem('pav_historico', JSON.stringify(historico));
+            }
 
-        if (submitBtn) Utils.setLoading(submitBtn, false);
-        Utils.showToast('Balanço consolidado com sucesso!', 'success');
-        window.renderDashboard(dados);
-        document.getElementById('tab-dashboard').click();
-        window.scrollTo(0, 0);
+            _unlock();
+            Utils.showToast('Balanço consolidado com sucesso!', 'success');
+            window.renderDashboard(dados);
+            document.getElementById('tab-dashboard').click();
+            window.scrollTo(0, 0);
+        } catch (err) {
+            _unlock();
+            console.error('[BALANCO] Falha ao salvar balanço:', err);
+            Utils.showToast(
+                'Erro ao salvar: ' + (err?.message || 'falha de conexão. Verifique sua internet e tente novamente.'),
+                'error'
+            );
+        }
     });
 
     // ── Sugestão de Impostos baseada no Regime Tributário ──────────────────────
@@ -883,10 +896,18 @@ function _relFluxoCaixa() {
         <!-- Filters -->
         <div class="card" style="margin-bottom:1.5rem; padding:1rem 1.5rem;">
             <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-                <select id="rel-cx-mes" onchange="_relFluxoCaixaRender()" style="padding:0.4rem 0.875rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-size:0.85rem; font-family:var(--font-family);">
+                <select id="rel-cx-mes" onchange="window._relCxMesChange(this.value)" style="padding:0.4rem 0.875rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-size:0.85rem; font-family:var(--font-family);">
                     <option value="">Todos os períodos</option>
                     ${[...new Set(caixa.map(c => c.vencimento.substring(0,7)))].sort().reverse().map(m => `<option value="${m}" ${m===mesAtual?'selected':''}>${m}</option>`).join('')}
+                    <option value="__custom__">Período personalizado…</option>
                 </select>
+                <div id="rel-cx-custom-range" style="display:none; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <input type="date" id="rel-cx-from" onchange="_relFluxoCaixaRender()"
+                           style="padding:0.35rem 0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.83rem; font-family:var(--font-family);" />
+                    <span style="color:var(--text-muted); font-size:0.8rem;">até</span>
+                    <input type="date" id="rel-cx-to" onchange="_relFluxoCaixaRender()"
+                           style="padding:0.35rem 0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.83rem; font-family:var(--font-family);" />
+                </div>
                 <select id="rel-cx-tipo" onchange="_relFluxoCaixaRender()" style="padding:0.4rem 0.875rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-size:0.85rem; font-family:var(--font-family);">
                     <option value="">Receitas e Despesas</option>
                     <option value="receita">Apenas Receitas</option>
@@ -913,14 +934,28 @@ function _relFluxoCaixa() {
     window._relFluxoCaixaRender();
 }
 
+window._relCxMesChange = function(val) {
+    const rangeDiv = document.getElementById('rel-cx-custom-range');
+    if (rangeDiv) rangeDiv.style.display = val === '__custom__' ? 'flex' : 'none';
+    if (val !== '__custom__') window._relFluxoCaixaRender();
+};
+
 window._relFluxoCaixaRender = function() {
-    const mes    = document.getElementById('rel-cx-mes')?.value || '';
+    const mesEl  = document.getElementById('rel-cx-mes');
+    const mes    = mesEl?.value || '';
     const tipo   = document.getElementById('rel-cx-tipo')?.value || '';
     const status = document.getElementById('rel-cx-status')?.value || '';
+    const fromDate = document.getElementById('rel-cx-from')?.value || '';
+    const toDate   = document.getElementById('rel-cx-to')?.value   || '';
     const fmt    = v => `R$ ${(Math.abs(v) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
     let caixa = JSON.parse(localStorage.getItem('pav_caixa_movimentos') || '[]');
-    if (mes)    caixa = caixa.filter(c => c.vencimento.startsWith(mes));
+    if (mes === '__custom__') {
+        if (fromDate) caixa = caixa.filter(c => c.vencimento >= fromDate);
+        if (toDate)   caixa = caixa.filter(c => c.vencimento <= toDate);
+    } else if (mes) {
+        caixa = caixa.filter(c => c.vencimento.startsWith(mes));
+    }
     if (tipo)   caixa = caixa.filter(c => c.tipo === tipo);
     if (status) caixa = caixa.filter(c => (c.status || 'pendente') === status);
     caixa.sort((a, b) => b.vencimento.localeCompare(a.vencimento));

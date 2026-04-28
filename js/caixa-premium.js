@@ -780,13 +780,33 @@ const BillsModule = (() => {
                     </div>
                     <div>
                         <label>Recorrência</label>
-                        <select name="recurrence">
+                        <select name="recurrence" id="bills-recurrence-select" onchange="window._billsToggleEndDate(this.value)">
                             <option value="none"       ${(bill?.recurrence || 'none') === 'none'       ? 'selected' : ''}>Não recorrente</option>
                             <option value="monthly"    ${bill?.recurrence === 'monthly'    ? 'selected' : ''}>Mensal</option>
                             <option value="quarterly"  ${bill?.recurrence === 'quarterly'  ? 'selected' : ''}>Trimestral</option>
                             <option value="semiannual" ${bill?.recurrence === 'semiannual' ? 'selected' : ''}>Semestral</option>
                             <option value="annual"     ${bill?.recurrence === 'annual'     ? 'selected' : ''}>Anual</option>
                         </select>
+                    </div>
+                </div>
+                <div id="bills-end-date-row" class="bills-form-row" style="display:${bill?.recurrence && bill.recurrence !== 'none' ? 'block' : 'none'};">
+                    <label>Vigência da recorrência</label>
+                    <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap; margin-top:0.35rem;">
+                        <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; font-weight:500; margin:0;">
+                            <input type="radio" name="recurrence_mode" value="indefinite"
+                                ${(!bill?.recurrence_end_date) ? 'checked' : ''}
+                                onchange="document.getElementById('bills-end-date-input').style.display='none'">
+                            Indefinida (até cancelar)
+                        </label>
+                        <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; font-weight:500; margin:0;">
+                            <input type="radio" name="recurrence_mode" value="until_date"
+                                ${bill?.recurrence_end_date ? 'checked' : ''}
+                                onchange="document.getElementById('bills-end-date-input').style.display='block'">
+                            Até data:
+                        </label>
+                        <input type="date" id="bills-end-date-input" name="recurrence_end_date"
+                               value="${bill?.recurrence_end_date || ''}"
+                               style="display:${bill?.recurrence_end_date ? 'block' : 'none'}; padding:0.35rem 0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-family:var(--font-family); font-size:0.85rem;" />
                     </div>
                 </div>
                 <div class="bills-form-row">
@@ -935,14 +955,21 @@ const BillsModule = (() => {
         modal.querySelector('#bills-form').addEventListener('submit', async e => {
             e.preventDefault();
             const fd = new FormData(e.target);
+            const recurrence = fd.get('recurrence');
+            const recurrenceMode = fd.get('recurrence_mode');
+            const recurrenceEndDate = fd.get('recurrence_end_date');
+
             const payload = {
-                type:        fd.get('type'),
-                description: fd.get('description').trim(),
-                amount:      parseFloat(fd.get('amount')),
-                due_date:    fd.get('due_date'),
-                category:    fd.get('category')   || null,
-                recurrence:  fd.get('recurrence'),
-                notes:       fd.get('notes')       || null,
+                type:                 fd.get('type'),
+                description:          fd.get('description').trim(),
+                amount:               parseFloat(fd.get('amount')),
+                due_date:             fd.get('due_date'),
+                category:             fd.get('category')   || null,
+                recurrence:           recurrence,
+                recurrence_end_date:  (recurrence !== 'none' && recurrenceMode === 'until_date' && recurrenceEndDate)
+                                        ? recurrenceEndDate
+                                        : null,
+                notes:                fd.get('notes') || null,
             };
             const submitBtn = modal.querySelector('[type="submit"]');
             Utils.setLoading(submitBtn, true);
@@ -966,6 +993,16 @@ const BillsModule = (() => {
 })();
 
 window.renderBills = BillsModule.renderBillsTab;
+
+window._billsToggleEndDate = function(recurrenceValue) {
+    const row = document.getElementById('bills-end-date-row');
+    if (!row) return;
+    row.style.display = recurrenceValue && recurrenceValue !== 'none' ? 'block' : 'none';
+    if (recurrenceValue === 'none') {
+        const input = document.getElementById('bills-end-date-input');
+        if (input) { input.style.display = 'none'; input.value = ''; }
+    }
+};
 
 // ============================================================
 // FEATURE 1.3 — SPLIT DE PAGAMENTO
