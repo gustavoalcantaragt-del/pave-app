@@ -2755,3 +2755,330 @@ body.pave-offline .sidebar {
     color: #ffd60a; font-size: 0.84rem; font-weight: 600; margin-bottom: 1.5rem;
 }
 .cashflow-alert svg { flex-shrink: 0; }
+
+/* ============================================================
+   POLISH v5 — Refinamentos visuais (camada de override)
+   Última camada do arquivo. Modifica apenas propriedades
+   específicas; se precisar reverter, remova só este bloco.
+   ============================================================ */
+
+/* ── 1. CARDS: profundidade sutil + lift no hover ────────── */
+.card {
+  border-radius: 14px;
+  box-shadow:
+    0 1px 2px rgba(24,24,24,0.04),
+    0 2px 6px rgba(24,24,24,0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 4px rgba(24,24,24,0.06),
+    0 8px 24px rgba(24,24,24,0.08);
+}
+[data-theme="dark"] .card {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.25),
+    0 2px 6px rgba(0,0,0,0.20);
+}
+[data-theme="dark"] .card:hover {
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.3),
+    0 8px 24px rgba(0,0,0,0.35);
+}
+
+/* ── 2. STAT CARDS: tipografia mais hierárquica + accent bar ── */
+.stat-card {
+  position: relative;
+  padding: 1.25rem 1.25rem 1.125rem;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand-cta), var(--brand-primary));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.stat-card:hover::before { opacity: 0.8; }
+.stat-card-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+  margin-top: 0.25rem;
+}
+.stat-card-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+}
+.stat-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  opacity: 1;
+}
+
+/* ── 3. INPUTS: focus ring com cor da brand + smooth transition ── */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="month"],
+input[type="search"],
+input[type="tel"],
+select,
+textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="month"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--brand-cta) !important;
+  box-shadow: 0 0 0 3px rgba(47,156,119,0.15);
+}
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  box-shadow: 0 0 0 3px rgba(47,156,119,0.22);
+}
+
+/* ── 4. BUTTONS: micro-interações refinadas ─────────────── */
+.btn-primary {
+  letter-spacing: 0.2px;
+  background: var(--brand-cta);
+  box-shadow: 0 1px 2px rgba(47,156,119,0.20), 0 1px 3px rgba(47,156,119,0.10);
+  transition: all 0.15s ease;
+}
+.btn-primary:hover {
+  background: var(--pave-green-dk);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(47,156,119,0.30), 0 2px 4px rgba(47,156,119,0.15);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  transition: all 0.15s ease;
+}
+.btn-secondary:hover {
+  border-color: var(--brand-cta);
+  color: var(--brand-cta);
+}
+
+/* ── 5. SIDEBAR: indicador de aba ativa com accent bar ── */
+.nav-btn {
+  position: relative;
+  border-radius: 8px;
+}
+.nav-btn::before {
+  content: '';
+  position: absolute;
+  left: -0.75rem;
+  top: 25%;
+  bottom: 25%;
+  width: 3px;
+  background: var(--brand-cta);
+  border-radius: 0 3px 3px 0;
+  opacity: 0;
+  transform: scaleY(0);
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+.nav-btn.active::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+.nav-btn.active {
+  background: linear-gradient(90deg, rgba(47,156,119,0.10), rgba(47,156,119,0.02));
+  color: var(--brand-cta);
+  font-weight: 600;
+}
+.nav-btn.active i,
+.nav-btn.active svg {
+  color: var(--brand-cta);
+}
+.nav-btn:hover:not(.active) {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+/* ── 6. TOPBAR: blur + sombra sutil ──────────────────────── */
+.topbar {
+  box-shadow: 0 1px 0 rgba(24,24,24,0.06);
+  backdrop-filter: saturate(180%) blur(8px);
+  -webkit-backdrop-filter: saturate(180%) blur(8px);
+}
+[data-theme="dark"] .topbar {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* ── 7. TOAST: slide elegante com easing customizado ── */
+@keyframes toast-slide-in {
+  from { opacity: 0; transform: translateX(120%) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.toast {
+  animation: toast-slide-in 0.32s cubic-bezier(0.34, 1.36, 0.5, 1);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(24,24,24,0.18), 0 1px 0 rgba(255,255,255,0.05) inset;
+}
+
+/* ── 8. TABLES: hover de linha + zebra sutil ────────────── */
+.bills-table tbody tr,
+table.report-table tbody tr {
+  transition: background 0.12s ease;
+}
+.bills-table tbody tr:hover,
+table.report-table tbody tr:hover {
+  background: rgba(47,156,119,0.05);
+}
+.bills-table tbody tr:nth-child(even),
+table.report-table tbody tr:nth-child(even) {
+  background: rgba(24,24,24,0.015);
+}
+[data-theme="dark"] .bills-table tbody tr:nth-child(even),
+[data-theme="dark"] table.report-table tbody tr:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+
+/* ── 9. STATUS BADGES: visual mais limpo ──────────────── */
+.status-badge {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+}
+
+/* ── 10. EMPTY STATES (placeholder de listas vazias) ─── */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+}
+.empty-state-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  opacity: 0.7;
+}
+.empty-state h4 {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+}
+.empty-state p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 auto;
+  max-width: 320px;
+}
+
+/* ── 11. SCROLLBAR custom ───────────────────────────── */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(24,24,24,0.12);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(24,24,24,0.22);
+  background-clip: padding-box;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); background-clip: padding-box; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.20); background-clip: padding-box; }
+
+/* ── 12. MODAL: backdrop blur premium ──────────────── */
+.modal-backdrop,
+.bills-modal:not(.bills-modal-hidden),
+.pav-modal-overlay {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 17, 23, 0.55) !important;
+}
+.modal-content,
+.bills-modal-content,
+.pav-modal {
+  border-radius: 14px;
+  box-shadow:
+    0 24px 60px rgba(0,0,0,0.32),
+    0 0 0 1px rgba(255,255,255,0.04) inset;
+}
+
+/* ── 13. SKELETON LOADERS (utilitário) ────────────── */
+@keyframes pav-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.pav-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-elevated) 0%,
+    var(--bg-input)    50%,
+    var(--bg-elevated) 100%
+  );
+  background-size: 200% 100%;
+  animation: pav-shimmer 1.4s infinite;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+/* ── 14. FOCUS VISIBLE (acessibilidade) ────────────── */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--brand-cta);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── 15. SMOOTH TAB TRANSITIONS ────────────────────── */
+main section {
+  animation: pav-fade-in 0.22s ease;
+}
+@keyframes pav-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── 16. NUMERAIS: tabular nums (alinhamento financeiro) ── */
+.stat-card-value,
+.bills-table td:last-child,
+table.report-table td:last-child {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ── 17. SELECTION: cor alinhada à brand ──────────── */
+::selection {
+  background: rgba(47,156,119,0.25);
+  color: var(--text-primary);
+}
+
+/* ── 18. CHIPS DE PERÍODO ────────────────────────── */
+.period-chip {
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.period-chip:hover {
+  background: var(--bg-elevated);
+  border-color: var(--brand-cta);
+}
