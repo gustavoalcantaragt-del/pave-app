@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const tabs = {
         'tab-dashboard': { section: 'aba-dashboard', title: 'Dashboard', subtitle: 'Visão geral do seu negócio' },
-        'tab-caixa': { section: 'aba-caixa', title: 'Caixa Diário', subtitle: 'Lançamentos de contas a pagar e receber' },
         'tab-balanco': { section: 'aba-balanco', title: 'Balanço Financeiro', subtitle: 'Lançamento de receitas e custos' },
 
         'tab-bills':     { section: 'aba-bills',      title: 'Contas a Pagar / Receber', subtitle: 'Vencimentos, recorrências e fluxo futuro' },
@@ -45,16 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch {}
             }
 
-            if (tabId === 'tab-caixa' && window.renderCaixa) {
-                window.renderCaixa();
-                // Refresh seletor de clientes ao abrir aba (caso novos clientes tenham sido cadastrados)
-                const clienteSelect = document.getElementById('cxClienteId');
-                if (clienteSelect && window.ClientesModule) {
-                    ClientesModule.renderClientSelector(clienteSelect, clienteSelect.value || null);
-                }
-                // Refresh seletor de serviços (caso novo serviço tenha sido cadastrado no Catálogo)
-                if (window.cxPopulateServices) window.cxPopulateServices();
-            }
             if (tabId === 'tab-catalogo' && window.renderCatalogo) window.renderCatalogo();
             if (tabId === 'tab-simulacao') {
                 const active = window._simTabActive || 'whatif';

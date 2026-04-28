@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -92,10 +92,6 @@
                 <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></i>
                 <span>Dashboard</span>
             </button>
-            <button id="tab-caixa" class="nav-btn">
-                <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></i>
-                <span>Caixa Diário</span>
-            </button>
             <button id="tab-balanco" class="nav-btn">
                 <i><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="m3 7 9-4 9 4"/><path d="M5 7l-2 9a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2l-2-9"/><path d="M19 7l2 9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2l2-9"/></svg></i>
                 <span>Finanças (Mês)</span>
@@ -144,10 +140,6 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
             <span>Início</span>
         </button>
-        <button class="bottom-nav-btn" data-tab="tab-caixa">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <span>Caixa</span>
-        </button>
         <button class="bottom-nav-btn" data-tab="tab-balanco">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="m3 7 9-4 9 4"/><path d="M5 7l-2 9a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2l-2-9"/><path d="M19 7l2 9a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2l2-9"/></svg>
             <span>Finanças</span>
@@ -193,279 +185,6 @@
 
         <!-- Contas a Pagar / Receber (Feature 1.1) -->
         <section id="aba-bills" style="display:none;"></section>
-
-        <!-- Caixa Diário -->
-        <section id="aba-caixa" style="display:none;">
-
-            <!-- BLOCO 1: Resumo Mensal + Filtros -->
-            <div class="card" style="margin-bottom:1.5rem; padding:0; overflow:hidden;">
-
-                <!-- Linha 1: Resumo do mês completo -->
-                <div style="padding:1rem 1.5rem; border-bottom:1px solid var(--border); background:var(--bg-surface); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
-                    <span style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">Resumo do Mês</span>
-                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:0.875rem; flex:1; max-width:580px;">
-                        <div style="padding:0.75rem 1rem; border-radius:var(--radius-md); background:rgba(29,158,117,0.06); border:1px solid rgba(29,158,117,0.18); text-align:center;">
-                            <div style="font-size:0.65rem; font-weight:700; color:var(--color-success); margin-bottom:3px; letter-spacing:0.5px;">RECEITAS MÊS</div>
-                            <div id="cxResumoReceitas" style="font-size:1.2rem; font-weight:800; color:var(--color-success);">R$ 0,00</div>
-                        </div>
-                        <div style="padding:0.75rem 1rem; border-radius:var(--radius-md); background:rgba(226,75,74,0.06); border:1px solid rgba(226,75,74,0.18); text-align:center;">
-                            <div style="font-size:0.65rem; font-weight:700; color:var(--color-danger); margin-bottom:3px; letter-spacing:0.5px;">DESPESAS MÊS</div>
-                            <div id="cxResumoDespesas" style="font-size:1.2rem; font-weight:800; color:var(--color-danger);">R$ 0,00</div>
-                        </div>
-                        <div style="padding:0.75rem 1rem; border-radius:var(--radius-md); background:var(--bg-elevated); border:1px solid var(--border); text-align:center;">
-                            <div style="font-size:0.65rem; font-weight:700; color:var(--text-secondary); margin-bottom:3px; letter-spacing:0.5px;">SALDO MÊS</div>
-                            <div id="cxResumoSaldo" style="font-size:1.2rem; font-weight:800; color:var(--text-primary);">R$ 0,00</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Linha 2: Filtros de período e categoria -->
-                <div style="padding:0.875rem 1.5rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-                    <!-- Mode toggle -->
-                    <div style="display:flex; gap:3px; background:var(--bg-elevated); border-radius:8px; padding:3px; flex-shrink:0;">
-                        <button id="cxBtnDia" onclick="window.setCxPeriodo('dia')"
-                            style="padding:0.35rem 0.875rem; border-radius:6px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:var(--accent-blue); color:#fff;">Dia</button>
-                        <button id="cxBtnSemana" onclick="window.setCxPeriodo('semana')"
-                            style="padding:0.35rem 0.875rem; border-radius:6px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Semana</button>
-                        <button id="cxBtnMes" onclick="window.setCxPeriodo('mes')"
-                            style="padding:0.35rem 0.875rem; border-radius:6px; border:none; cursor:pointer; font-size:0.78rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Mês</button>
-                    </div>
-                    <!-- Date picker -->
-                    <input type="date" id="cxFiltroDia"
-                        style="padding:0.4rem 0.875rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-weight:700; font-size:0.88rem; cursor:pointer; font-family:var(--font-family);">
-                    <!-- Category filter -->
-                    <select id="cxFiltroCategoria"
-                        style="padding:0.4rem 0.875rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.82rem; font-family:var(--font-family); cursor:pointer; flex:1; max-width:260px;">
-                        <option value="">Todas as Categorias</option>
-                        <optgroup label="Receitas">
-                            <option value="faturamento">Faturamento</option>
-                        </optgroup>
-                        <optgroup label="Custos Variáveis">
-                            <option value="insumos">Insumos</option>
-                            <option value="terceirizadosVar">Terceirizados</option>
-                            <option value="labTerceirizado">Laboratório</option>
-                            <option value="comissoes">Comissões</option>
-                        </optgroup>
-                        <optgroup label="Custos Fixos">
-                            <option value="folha">Folha</option>
-                            <option value="aluguel">Aluguel</option>
-                            <option value="agua">Água</option
-                            <option value="luz">Luz</option>
-                            <option value="sistemas">Sistemas</option>
-                            <option value="telecom">Telecom</option>
-                            <option value="marketing">Marketing</option>
-                            <option value="contabilidade">Contabilidade</option>
-                        </optgroup>
-                        <optgroup label="Outros">
-                            <option value="outros">Outros</option>
-                        </optgroup>
-                    </select>
-                    <!-- Client filter -->
-                    <select id="cxFiltroCliente"
-                        style="padding:0.4rem 0.875rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.82rem; font-family:var(--font-family); cursor:pointer; flex:1; max-width:180px;">
-                        <option value="">Todos os Clientes</option>
-                    </select>
-                    <!-- Period label chip -->
-                    <span id="cxPeriodoChip" style="font-size:0.78rem; font-weight:700; color:var(--text-muted); white-space:nowrap; margin-left:auto;"></span>
-                </div>
-            </div>
-
-            <!-- FORMULÁRIO FULL-WIDTH -->
-            <div class="card" style="margin-bottom:1.5rem; padding:0; overflow:hidden;">
-
-                <!-- Cabeçalho -->
-                <div style="padding:1.125rem 2rem; border-bottom:1px solid var(--border); background:var(--bg-surface); display:flex; align-items:center; gap:0.625rem;">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <h3 style="margin:0; font-size:0.95rem; font-weight:700; color:var(--text-primary);">Novo Lançamento</h3>
-                    <span style="font-size:0.78rem; color:var(--text-muted); margin-left:0.25rem;">— registre uma entrada ou saída financeira</span>
-                </div>
-
-                <form id="caixaForm" style="padding:1.75rem 2rem;">
-
-                    <!-- LINHA 1: Tipo | Valor | Data | Recorrência -->
-                    <div class="cx-form-row" style="display:grid; grid-template-columns:auto 1fr 1fr auto; gap:1.25rem; align-items:end; margin-bottom:1.25rem;">
-
-                        <!-- Tipo de Movimentação -->
-                        <div>
-                            <div style="font-size:0.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:0.625rem;">Tipo</div>
-                            <div style="display:flex; gap:0.5rem;">
-                                <label id="cx-tipo-despesa-label" style="display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1.125rem; border-radius:var(--radius-md); border:2px solid rgba(226,75,74,0.40); background:rgba(226,75,74,0.08); cursor:pointer; transition:all 0.15s; white-space:nowrap;">
-                                    <input type="radio" name="cxTipoRadio" id="cxTipoDespesa" value="despesa" checked onchange="window.cxTipoChange()" style="display:none;">
-                                    <span style="width:14px; height:14px; border-radius:50%; border:2px solid #E24B4A; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                        <span id="cx-dot-despesa" style="width:7px; height:7px; border-radius:50%; background:#E24B4A; display:block;"></span>
-                                    </span>
-                                    <span style="font-weight:700; font-size:0.875rem; color:var(--color-danger);">Despesa</span>
-                                    <span style="font-size:0.72rem; color:var(--text-muted);">(−)</span>
-                                </label>
-                                <label id="cx-tipo-receita-label" style="display:flex; align-items:center; gap:0.5rem; padding:0.75rem 1.125rem; border-radius:var(--radius-md); border:2px solid var(--border); background:transparent; cursor:pointer; transition:all 0.15s; white-space:nowrap;">
-                                    <input type="radio" name="cxTipoRadio" id="cxTipoReceita" value="receita" onchange="window.cxTipoChange()" style="display:none;">
-                                    <span style="width:14px; height:14px; border-radius:50%; border:2px solid rgba(29,158,117,0.3); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                        <span id="cx-dot-receita" style="width:7px; height:7px; border-radius:50%; background:#1D9E75; display:none;"></span>
-                                    </span>
-                                    <span style="font-weight:700; font-size:0.875rem; color:var(--text-secondary);">Receita</span>
-                                    <span style="font-size:0.72rem; color:var(--text-muted);">(+)</span>
-                                </label>
-                            </div>
-                            <input type="hidden" id="cxTipo" value="despesa">
-                        </div>
-
-                        <!-- Valor -->
-                        <div class="input-group" style="margin:0;">
-                            <label>Valor (R$)</label>
-                            <input type="number" step="0.01" min="0" id="cxValor" placeholder="0,00" required
-                                   style="font-size:1.2rem; font-weight:800; color:var(--accent-gold);">
-                        </div>
-
-                        <!-- Vencimento -->
-                        <div class="input-group" style="margin:0;">
-                            <label>Data de Vencimento</label>
-                            <input type="date" id="cxVencimento" required>
-                        </div>
-
-                        <!-- Recorrência (inline, compacto) -->
-                        <div style="padding:0.75rem 1rem; border:1px solid var(--border); border-radius:var(--radius-md); background:rgba(0,0,0,0.1); min-width:180px;">
-                            <div style="display:flex; align-items:center; gap:0.625rem;">
-                                <input type="checkbox" id="cxRecorrente"
-                                       style="width:16px; height:16px; accent-color:var(--accent-gold); cursor:pointer; flex-shrink:0;"
-                                       onchange="document.getElementById('cxVezesDiv').style.display = this.checked ? 'flex' : 'none'">
-                                <label for="cxRecorrente" style="margin:0; cursor:pointer; font-weight:600; font-size:0.82rem; color:var(--text-secondary); white-space:nowrap;">Recorrente?</label>
-                            </div>
-                            <div id="cxVezesDiv" style="display:none; align-items:center; gap:0.5rem; margin-top:0.625rem;">
-                                <span style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">Repetir por</span>
-                                <input type="number" id="cxVezes" value="2" min="2" max="60"
-                                       style="width:52px; padding:4px 6px; text-align:center; border-radius:6px; border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-family:var(--font-family); font-size:0.85rem;">
-                                <span style="font-size:0.78rem; color:var(--text-muted); white-space:nowrap;">meses</span>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- LINHA 2: Descrição (full-width) -->
-                    <div style="margin-bottom:1.25rem;">
-                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:0.5rem;">Descrição</label>
-                        <input type="text" id="cxDescricao"
-                               placeholder="Ex: Conta de Luz, Consulta veterinária paga, Compra de insumos..."
-                               required
-                               style="width:100%; padding:0.875rem 1rem; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.95rem; font-family:var(--font-family); outline:none; transition:border-color 0.15s;"
-                               onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
-                    </div>
-
-                    <!-- LINHA 3: Categoria | Forma de Pagamento -->
-                    <div class="grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem;">
-                        <div class="input-group" style="margin:0;">
-                            <label>Categoria Financeira</label>
-                            <select id="cxCategoria">
-                                <optgroup label="Receitas">
-                                    <option value="faturamento">Faturamento (Serviços / Consultas)</option>
-                                </optgroup>
-                                <optgroup label="Custos Variáveis">
-                                    <option value="insumos">Insumos / Estoque</option>
-                                    <option value="terceirizadosVar">Terceirizados</option>
-                                    <option value="labTerceirizado">Laboratório</option>
-                                    <option value="comissoes">Comissões</option>
-                                </optgroup>
-                                <optgroup label="Custos Fixos">
-                                    <option value="folha">Folha de Pagamento</option>
-                                    <option value="aluguel">Aluguel</option>
-                                    <option value="agua">Água</option>
-                                    <option value="luz">Luz</option>
-                                    <option value="sistemas">Sistemas / Software</option>
-                                    <option value="telecom">Telefone / Internet</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="contabilidade">Contabilidade</option>
-                                </optgroup>
-                                <optgroup label="Outros">
-                                    <option value="outros">Outros</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div class="input-group" style="margin:0;">
-                            <label>Forma de Pagamento</label>
-                            <select id="cxFormaPagamento">
-                                <option value="pix">PIX</option>
-                                <option value="cartao_debito">Cartão de Débito</option>
-                                <option value="cartao_credito">Cartão de Crédito</option>
-                                <option value="dinheiro">Dinheiro</option>
-                                <option value="transferencia">Transferência / TED / DOC</option>
-                                <option value="boleto">Boleto Bancário</option>
-                                <option value="outros">Outros</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- LINHA 4: Cliente (opcional) -->
-                    <div style="margin-bottom:1.25rem;">
-                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:0.5rem;">
-                            Cliente <span style="font-weight:500; opacity:0.55; text-transform:none; letter-spacing:0;">(opcional — para LTV)</span>
-                        </label>
-                        <select id="cxClienteId"
-                                style="width:100%; padding:0.75rem 1rem; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.875rem; font-family:var(--font-family); outline:none; transition:border-color 0.15s;"
-                                onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
-                            <option value="">Sem cliente vinculado</option>
-                        </select>
-                    </div>
-
-                    <!-- LINHA 4b: Serviço vinculado (opcional — receitas) -->
-                    <div style="margin-bottom:1.25rem;">
-                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:0.5rem;">
-                            Serviço <span style="font-weight:500; opacity:0.55; text-transform:none; letter-spacing:0;">(opcional — vincula ao catálogo de precificação)</span>
-                        </label>
-                        <select id="cxServiceId"
-                                onchange="window.cxOnServiceChange(this)"
-                                style="width:100%; padding:0.75rem 1rem; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.875rem; font-family:var(--font-family); outline:none; transition:border-color 0.15s;"
-                                onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'">
-                            <option value="">Sem serviço vinculado</option>
-                        </select>
-                    </div>
-
-                    <!-- LINHA 5: Observação (full-width, opcional) -->
-                    <div style="margin-bottom:1.75rem;">
-                        <label style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; display:block; margin-bottom:0.5rem;">
-                            Observação <span style="font-weight:500; opacity:0.55; text-transform:none; letter-spacing:0;">(opcional)</span>
-                        </label>
-                        <textarea id="cxObservacao"
-                                  placeholder="Informações adicionais sobre este lançamento..."
-                                  style="width:100%; resize:vertical; min-height:64px; max-height:140px; padding:0.75rem 1rem; background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.875rem; font-family:var(--font-family); line-height:1.5; outline:none; transition:border-color 0.15s;"
-                                  onfocus="this.style.borderColor='var(--border-focus)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-                    </div>
-
-                    <!-- LINHA 6: Split de Pagamento (opcional) -->
-                    <div id="cx-split-wrapper" style="margin-bottom:1.75rem;"></div>
-
-                    <!-- LINHA 7: Botão de ação -->
-                    <div style="display:flex; justify-content:flex-end;">
-                        <button type="submit" class="btn-primary"
-                                style="padding:0.875rem 2.5rem; font-size:0.95rem; display:flex; align-items:center; gap:0.625rem; border-radius:var(--radius-md);">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Registrar Lançamento
-                        </button>
-                    </div>
-
-                </form>
-            </div>
-
-            <!-- LISTA DE LANÇAMENTOS + CUSTO DIÁRIO: grid 2 colunas -->
-            <div class="cx-lista-rateio" style="display:grid; grid-template-columns:1fr 340px; gap:1.5rem; align-items:start;">
-
-                <!-- Lista de lançamentos -->
-                <div class="card" style="padding:0; overflow:hidden;">
-                    <div style="padding:1rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                        <div>
-                            <h3 style="margin:0; font-size:0.95rem; font-weight:700;">Lançamentos</h3>
-                            <p id="cxListaSubtitulo" style="margin:0; font-size:0.78rem; color:var(--text-muted); margin-top:2px;">Período selecionado</p>
-                        </div>
-                        <div id="cxBulkBar" style="display:none; align-items:center; gap:0.625rem;">
-                            <span id="cxBulkCount" style="font-size:0.78rem; color:var(--text-secondary); font-weight:700;"></span>
-                            <button onclick="window.marcarSelecionadosPago()" style="padding:0.35rem 0.875rem; border-radius:6px; border:1px solid rgba(29,158,117,0.30); background:rgba(29,158,117,0.08); color:var(--color-success); font-size:0.78rem; font-weight:700; font-family:var(--font-family); cursor:pointer;">Marcar como Pago</button>
-                            <button onclick="window.limparSelecaoCaixa()" style="padding:0.35rem 0.625rem; border-radius:6px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-size:0.78rem; font-family:var(--font-family); cursor:pointer;">Cancelar</button>
-                        </div>
-                    </div>
-                    <div id="cxListaMovimentos" style="display:flex; flex-direction:column; max-height:560px; overflow-y:auto;"></div>
-                </div>
-
-
-            </div>
-        </section>
 
         <!-- Finanças (Balanço) -->
         <section id="aba-balanco" style="display:none;">
@@ -1400,7 +1119,6 @@
             try {
                 await CloudPull.run(true);
                 await _SyncQueue.flush();
-                if (window.renderCaixa)     window.renderCaixa();
                 if (window.renderDashboard) await window.renderDashboard();
                 if (window.renderBills)     window.renderBills();
                 if (window.NotificationsModule) NotificationsModule.refresh();
@@ -1547,48 +1265,40 @@
         window.runSimulation();
     };
 
-    // ── NF-e: sub-tab dentro de Caixa ─────────────────────────
-    // O tab já é inicializado lazy via tabs-premium.js;
-    // Injetamos o botão de NF-e na topbar da aba Caixa quando ela abrir
-    document.addEventListener('pave:tab:caixa', function _nfeCaixaHook() {
-        const section = document.getElementById('aba-caixa');
-        if (!section || section.dataset.nfeWired) return;
-        section.dataset.nfeWired = '1';
+    // ── NF-e: injetado na aba Contas P/R ──────────────────────
+    document.getElementById('tab-bills')?.addEventListener('click', function _nfeBillsHook() {
+        setTimeout(() => {
+            const section = document.getElementById('aba-bills');
+            if (!section || section.dataset.nfeWired) return;
+            section.dataset.nfeWired = '1';
 
-        // Adicionar sub-aba NF-e na topbar interna do Caixa
-        const caixaHeader = section.querySelector('#caixa-subtabs') || null;
-        // Fallback: inserir botão flutuante antes da tabela de lançamentos
-        const listEl = section.querySelector('#caixa-list-area') || section.querySelector('.card');
-        if (!listEl) return;
+            const listEl = section.querySelector('.bills-list-wrap') || section.querySelector('.card') || section.firstElementChild;
+            if (!listEl) return;
 
-        const nfeSection = document.createElement('div');
-        nfeSection.id = 'nfe-import-section';
-        nfeSection.style.marginBottom = '1.5rem';
+            const nfeSection = document.createElement('div');
+            nfeSection.id = 'nfe-import-section';
+            nfeSection.style.marginBottom = '1.5rem';
 
-        const toggle = document.createElement('button');
-        toggle.textContent = '↑ Importar NF-e XML';
-        toggle.style.cssText = 'padding:0.55rem 1.1rem; border:1px solid var(--border); border-radius:8px; background:transparent; color:var(--text-secondary); cursor:pointer; font-size:0.82rem; font-weight:600; margin-bottom:0.75rem;';
-        toggle.addEventListener('click', () => {
-            const body = nfeSection.querySelector('.nfe-body');
-            if (!body) return;
-            const shown = body.style.display !== 'none';
-            body.style.display = shown ? 'none' : '';
-            toggle.textContent = shown ? '↑ Importar NF-e XML' : '↓ Ocultar Importação NF-e';
-        });
+            const toggle = document.createElement('button');
+            toggle.textContent = '↑ Importar NF-e XML';
+            toggle.style.cssText = 'padding:0.55rem 1.1rem; border:1px solid var(--border); border-radius:8px; background:transparent; color:var(--text-secondary); cursor:pointer; font-size:0.82rem; font-weight:600; margin-bottom:0.75rem;';
+            toggle.addEventListener('click', () => {
+                const body = nfeSection.querySelector('.nfe-body');
+                if (!body) return;
+                const shown = body.style.display !== 'none';
+                body.style.display = shown ? 'none' : '';
+                toggle.textContent = shown ? '↑ Importar NF-e XML' : '↓ Ocultar Importação NF-e';
+            });
 
-        const body = document.createElement('div');
-        body.className = 'nfe-body';
-        body.style.display = 'none';
-        if (window.NFEImportModule) NFEImportModule.renderTab(body);
+            const body = document.createElement('div');
+            body.className = 'nfe-body';
+            body.style.display = 'none';
+            if (window.NFEImportModule) NFEImportModule.renderTab(body);
 
-        nfeSection.appendChild(toggle);
-        nfeSection.appendChild(body);
-        listEl.parentNode.insertBefore(nfeSection, listEl);
-    }, { once: false });
-
-    // Disparar evento quando tab-caixa for clicado
-    document.getElementById('tab-caixa')?.addEventListener('click', () => {
-        setTimeout(() => document.dispatchEvent(new Event('pave:tab:caixa')), 300);
+            nfeSection.appendChild(toggle);
+            nfeSection.appendChild(body);
+            section.insertBefore(nfeSection, section.firstChild);
+        }, 300);
     });
     </script>
 
