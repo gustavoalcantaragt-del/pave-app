@@ -251,7 +251,7 @@ const FinancialAPI = {
         // Normaliza para YYYY-MM independente do formato recebido (date retorna YYYY-MM-DD, month retorna YYYY-MM)
         const mesRef = (dados.mesReferencia || '').substring(0, 7);
         dados.mesReferencia = mesRef; // garante consistência no dado salvo
-        const label = mesRef ? `${mesRef.split('-')[1]}/${mesRef.split('-')[0]}` : mesRef;
+        const label = window.formatPeriod ? window.formatPeriod(mesRef) : (mesRef ? `${mesRef.split('-')[1]}/${mesRef.split('-')[0]}` : mesRef);
         const idx = historico.findIndex(h => (h.mesRef || '').substring(0, 7) === mesRef);
         const entry = { mesRef, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() };
         if (idx >= 0) historico[idx] = entry; else historico.push(entry);

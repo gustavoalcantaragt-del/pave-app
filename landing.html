@@ -877,6 +877,22 @@
         }
         .footer-bottom a { color: rgba(255,255,255,0.5); text-decoration: none; }
         .footer-bottom a:hover { color: #fff; }
+
+        /* ── Nav compartilhado ── */
+        .pav-nav { position:sticky; top:0; z-index:200; background:rgba(255,255,255,0.94); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-bottom:1px solid #E5E7EB; box-shadow:0 1px 0 rgba(0,0,0,0.04); }
+        .pav-nav-inner { display:flex; align-items:center; height:64px; gap:2rem; max-width:1160px; margin:0 auto; padding:0 1.5rem; }
+        .pav-nav-brand { display:flex; align-items:center; gap:10px; text-decoration:none; flex-shrink:0; }
+        .pav-nav-brand-icon { width:32px; height:32px; border-radius:7px; background:#234e70; display:flex; align-items:center; justify-content:center; }
+        .pav-nav-brand-name { font-size:1rem; font-weight:700; color:#181818; letter-spacing:-0.3px; }
+        .pav-nav-links { display:flex; align-items:center; gap:0.25rem; margin-left:auto; }
+        .pav-nav-link { font-size:0.85rem; font-weight:500; color:#6B7280; text-decoration:none; padding:6px 12px; border-radius:6px; transition:all 0.15s; }
+        .pav-nav-link:hover { color:#181818; background:rgba(0,0,0,0.04); }
+        .pav-nav-login { font-size:0.85rem; font-weight:600; color:#6B7280; text-decoration:none; padding:6px 12px; transition:color 0.15s; }
+        .pav-nav-login:hover { color:#181818; }
+        .pav-nav-cta { margin-left:8px; display:inline-flex; align-items:center; gap:6px; padding:8px 18px; border-radius:8px; background:#2f9c77; color:#fff !important; font-size:0.85rem; font-weight:700; text-decoration:none; transition:background 0.15s; }
+        .pav-nav-cta:hover { background:#268a68; }
+        .pav-nav-hamburger { display:none; background:none; border:none; cursor:pointer; padding:6px; margin-left:auto; color:#181818; }
+        @media (max-width:720px) { .pav-nav-links { display:none; } .pav-nav-hamburger { display:flex; } }
     </style>
 </head>
 <body>

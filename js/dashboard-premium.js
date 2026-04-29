@@ -1,4 +1,4 @@
-// dashboard-premium.js
+﻿// dashboard-premium.js
 
 // ── THEME HELPERS ────────────────────────────────────────────────────────────
 function _isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
@@ -58,7 +58,7 @@ function _togglePeriodPicker() {
     const items = deduped.map(h => {
         const key = (h.mesRef || h.mesReferencia || '').substring(0, 7);
         const [y, m] = key.split('-');
-        const label = m && y ? `${m}/${y}` : key;
+        const label = window.formatPeriod ? window.formatPeriod(key) : (m && y ? `${m}/${y}` : key);
         const isAtual = key === atual;
         return `<button class="period-picker-item${isAtual ? ' active' : ''}" data-ref="${key}">${label}</button>`;
     }).join('');
@@ -144,11 +144,9 @@ function _renderDashboardImpl(forceData) {
     const ticketMed = qtdAtend > 0 ? (totais.faturamento / qtdAtend) : 0;
 
     // ── PERÍODO ──────────────────────────────────────────────────────────────
-    let dataLabel = data?.mesReferencia || '';
-    if (dataLabel?.includes('-')) {
-        const p = dataLabel.split('-');
-        dataLabel = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : `${p[1]}/${p[0]}`;
-    }
+    let dataLabel = window.formatPeriod
+        ? window.formatPeriod(data?.mesReferencia || '')
+        : (data?.mesReferencia || '');
     const chipContainer = document.getElementById('period-chip-container');
     if (chipContainer) {
         chipContainer.innerHTML = dataLabel
@@ -657,8 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
                 // Normalizar sempre para YYYY-MM para evitar duplicatas com formatos diferentes
                 const mesRefNorm = (mesStr || '').substring(0, 7);
-                const [mY, mM] = mesRefNorm.split('-');
-                const label = mY && mM ? `${mM}/${mY}` : mesRefNorm;
+                const label = window.formatPeriod ? window.formatPeriod(mesRefNorm) : mesRefNorm;
                 const idx = historico.findIndex(h => (h.mesRef || '').substring(0, 7) === mesRefNorm);
                 const entry = { mesRef: mesRefNorm, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() };
                 if (idx >= 0) historico[idx] = entry; else historico.push(entry);
@@ -726,7 +723,7 @@ let _relActiveTab = 'visao-geral';
 
 window.switchRelTab = function(tab) {
     _relActiveTab = tab;
-    const tabs = ['visao-geral','fluxo-caixa','dre','custos','servicos','exportacao','ranking','comparativo'];
+    const tabs = ['visao-geral','fluxo-caixa','dre','custos','servicos','exportacao','comparativo'];
     tabs.forEach(t => {
         const btn   = document.getElementById('rel-tab-' + t);
         const panel = document.getElementById('rel-panel-' + t);
@@ -747,22 +744,81 @@ function _renderRelActiveTab() {
         case 'custos':       _relCustos();         break;
         case 'servicos':     _relServicos();       break;
         case 'exportacao':   _relExportacao();     break;
-        case 'ranking':      _relRanking();        break;
         case 'comparativo':  _relComparativo();    break;
     }
 }
 
 window.renderRelatorios = function() {
-    // Ensure first tab is shown on initial open
+    window._initRelPeriodBar();
     window.switchRelTab(_relActiveTab);
 };
+
+// ── PERÍODO GLOBAL DE RELATÓRIOS ─────────────────────────────────────────────
+// Exposto globalmente: window.REL_PERIOD = { from: 'YYYY-MM', to: 'YYYY-MM' } | null
+window.REL_PERIOD = null;
+
+window._initRelPeriodBar = function() {
+    const fromEl = document.getElementById('rel-period-from');
+    const toEl   = document.getElementById('rel-period-to');
+    if (!fromEl || !toEl) return;
+
+    let historico = [];
+    try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch {}
+
+    const seen = new Set();
+    const keys = [...historico]
+        .map(h => (h.mesRef || '').substring(0, 7))
+        .filter(k => k && !seen.has(k) && seen.add(k))
+        .sort();
+
+    const fp = window.formatPeriod || (k => k);
+    const opts = keys.map(k => `<option value="${k}">${fp(k)}</option>`).join('');
+    fromEl.innerHTML = '<option value="">Todos</option>' + opts;
+    toEl.innerHTML   = '<option value="">Todos</option>' + opts;
+
+    // Restaurar seleção anterior
+    if (window.REL_PERIOD) {
+        fromEl.value = window.REL_PERIOD.from || '';
+        toEl.value   = window.REL_PERIOD.to   || '';
+    }
+};
+
+window.applyRelPeriod = function() {
+    const from = document.getElementById('rel-period-from')?.value || '';
+    const to   = document.getElementById('rel-period-to')?.value   || '';
+    window.REL_PERIOD = (from || to) ? { from, to } : null;
+    window.switchRelTab(_relActiveTab);
+};
+
+window.clearRelPeriod = function() {
+    window.REL_PERIOD = null;
+    const fromEl = document.getElementById('rel-period-from');
+    const toEl   = document.getElementById('rel-period-to');
+    if (fromEl) fromEl.value = '';
+    if (toEl)   toEl.value   = '';
+    window.switchRelTab(_relActiveTab);
+};
+
+// Filtra o histórico respeitando REL_PERIOD
+function _filteredHistorico() {
+    let hist = [];
+    try { hist = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch {}
+    if (!window.REL_PERIOD) return hist;
+    const { from, to } = window.REL_PERIOD;
+    return hist.filter(h => {
+        const k = (h.mesRef || '').substring(0, 7);
+        if (from && k < from) return false;
+        if (to   && k > to)   return false;
+        return true;
+    });
+}
 
 // ── TAB: VISÃO GERAL ──────────────────────────────────────────────────────────
 function _relVisaoGeral() {
     const panel = document.getElementById('rel-panel-visao-geral');
     if (!panel) return;
 
-    let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
+    const historico    = _filteredHistorico();
     const data        = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
     const totais      = data && window.calcularTotais ? window.calcularTotais(data) : {};
     const fmt         = v => `R$ ${(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
@@ -1992,98 +2048,6 @@ window._dismissAlert = function(id) {
 
 // ── FEATURE 2.4 — RANKING DE SERVIÇOS ────────────────────────────────────────
 
-function _relRanking() {
-    const panel = document.getElementById('rel-panel-ranking');
-    if (!panel) return;
-
-    const servicos = JSON.parse(localStorage.getItem('pav_servicos') || '[]');
-    const fmt      = v => `R$ ${parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
-
-    const monthKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
-    const prog     = JSON.parse(localStorage.getItem(`pav_svc_prog_${monthKey}`) || '{}');
-
-    if (servicos.length === 0) {
-        panel.innerHTML = `<div class="card"><p style="color:var(--text-muted); text-align:center; padding:2rem;">Nenhum serviço cadastrado no catálogo.</p></div>`;
-        return;
-    }
-
-    // Sort by monthly revenue (qty × price) desc, fallback margin
-    const ranked = [...servicos].map(s => {
-        const p = prog[s.id] || { qty: 0, revenue: 0 };
-        return { ...s, monthQty: p.qty, monthRevenue: p.qty * parseFloat(s.preco||0) };
-    }).sort((a, b) => {
-        if (b.monthRevenue !== a.monthRevenue) return b.monthRevenue - a.monthRevenue;
-        return parseFloat(b.margem) - parseFloat(a.margem);
-    });
-
-    const maxRev  = ranked[0]?.monthRevenue || 1;
-
-    panel.innerHTML = `
-    <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.5rem;">
-            <div>
-                <h3 style="margin:0; color:var(--text-primary);">Ranking de Serviços</h3>
-                <p style="margin:4px 0 0; font-size:0.8rem; color:var(--text-muted);">Por receita gerada no mês atual · use +1 no catálogo para registrar atendimentos</p>
-            </div>
-            <button onclick="window._rankingExportCSV()" style="padding:0.45rem 1rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-secondary); font-size:0.8rem; cursor:pointer; font-family:var(--font-family); font-weight:600;">↓ CSV</button>
-        </div>
-        <div style="overflow-x:auto;">
-            <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-                <thead>
-                    <tr style="border-bottom:2px solid var(--border);">
-                        <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">#</th>
-                        <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Serviço</th>
-                        <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Atend.</th>
-                        <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Receita Mês</th>
-                        <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Margem</th>
-                        <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Participação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${ranked.slice(0,10).map((s, i) => {
-                        const margem = parseFloat(s.margem) || 0;
-                        const mc = margem >= 30 ? '#1D9E75' : margem >= 15 ? '#ff9500' : '#E24B4A';
-                        const barW = maxRev > 0 ? Math.round((s.monthRevenue / maxRev) * 100) : 0;
-                        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
-                        return `<tr style="border-bottom:1px solid var(--border); transition:background 0.12s;" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">
-                            <td style="padding:0.625rem 0.75rem; font-weight:700;">${medal}</td>
-                            <td style="padding:0.625rem 0.75rem; font-weight:600; color:var(--text-primary);">${s.nome}</td>
-                            <td style="padding:0.625rem 0.75rem; text-align:right; color:var(--text-secondary);">${s.monthQty}</td>
-                            <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:var(--accent-blue);">${fmt(s.monthRevenue)}</td>
-                            <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:${mc};">${margem.toFixed(1)}%</td>
-                            <td style="padding:0.625rem 0.75rem; min-width:100px;">
-                                <div style="height:6px; border-radius:4px; background:var(--border); overflow:hidden;">
-                                    <div style="height:100%; width:${barW}%; background:var(--accent-blue); transition:width 0.4s;"></div>
-                                </div>
-                            </td>
-                        </tr>`;
-                    }).join('')}
-                </tbody>
-            </table>
-        </div>
-    </div>`;
-}
-
-window._rankingExportCSV = function() {
-    const servicos = JSON.parse(localStorage.getItem('pav_servicos') || '[]');
-    const monthKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
-    const prog     = JSON.parse(localStorage.getItem(`pav_svc_prog_${monthKey}`) || '{}');
-
-    const rows = [['Posição','Serviço','Preço','Custo Total','Lucro','Margem %','Atendimentos Mês','Receita Mês']];
-    [...servicos].map(s => {
-        const p = prog[s.id] || { qty: 0 };
-        return { ...s, monthQty: p.qty, monthRevenue: p.qty * parseFloat(s.preco||0) };
-    }).sort((a, b) => b.monthRevenue - a.monthRevenue).slice(0, 10).forEach((s, i) => {
-        rows.push([i+1, s.nome, s.preco, s.custoTotal, s.lucro, s.margem, s.monthQty, s.monthRevenue.toFixed(2)]);
-    });
-
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url; a.download = `ranking_servicos_${monthKey}.csv`; a.click();
-    URL.revokeObjectURL(url);
-};
 
 // ── FEATURE 2.3 — COMPARATIVO DE PERÍODO ─────────────────────────────────────
 
@@ -2091,11 +2055,11 @@ function _relComparativo() {
     const panel = document.getElementById('rel-panel-comparativo');
     if (!panel) return;
 
-    let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
+    const historico = _filteredHistorico();
     const data      = JSON.parse(localStorage.getItem('pav_ultimos_dados'));
 
     if (!data || historico.length < 2) {
-        panel.innerHTML = `<div class="card"><p style="color:var(--text-muted); text-align:center; padding:2rem;">Consolidações insuficientes para comparativo. É necessário ter ao menos 2 meses no histórico.</p></div>`;
+        panel.innerHTML = `<div class="card"><p style="color:var(--text-muted); text-align:center; padding:2rem;">Consolidações insuficientes para comparativo. É necessário ter ao menos 2 meses no histórico${window.REL_PERIOD ? ' no período selecionado' : ''}.</p></div>`;
         return;
     }
 
@@ -2547,7 +2511,7 @@ window.switchRelTab = function(tab) {
         _origSwitchRelTab(tab);
     } else {
         // Hide all known panels
-        ['visao-geral','fluxo-caixa','dre','custos','servicos','exportacao','ranking','comparativo'].forEach(t => {
+        ['visao-geral','fluxo-caixa','dre','custos','servicos','exportacao','comparativo'].forEach(t => {
             const btn   = document.getElementById('rel-tab-' + t);
             const panel = document.getElementById('rel-panel-' + t);
             if (btn)   { btn.style.background = 'transparent'; btn.style.color = 'var(--text-secondary)'; }

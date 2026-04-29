@@ -529,9 +529,20 @@
         <!-- Relatórios -->
         <section id="aba-relatorios" style="display:none;">
             <!-- Header -->
-            <div style="margin-bottom:1.5rem;">
-                <h2 class="text-accent" style="margin:0 0 4px 0;">Central de Relatórios</h2>
-                <p style="color:var(--text-secondary); margin:0; font-size:0.875rem;">Histórico, exportações e inteligência analítica consolidada.</p>
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+                <div>
+                    <h2 class="text-accent" style="margin:0 0 4px 0;">Central de Relatórios</h2>
+                    <p style="color:var(--text-secondary); margin:0; font-size:0.875rem;">Histórico, exportações e inteligência analítica consolidada.</p>
+                </div>
+                <!-- Seletor de período global -->
+                <div id="rel-period-bar" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; padding:0.4rem 0.75rem;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700; white-space:nowrap;">De</label>
+                    <select id="rel-period-from" onchange="window.applyRelPeriod()" style="border:none; background:transparent; color:var(--text-primary); font-size:0.8rem; font-weight:600; font-family:var(--font-family); cursor:pointer; outline:none; padding:0 0.25rem;"><option value="">Todos</option></select>
+                    <label style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">até</label>
+                    <select id="rel-period-to" onchange="window.applyRelPeriod()" style="border:none; background:transparent; color:var(--text-primary); font-size:0.8rem; font-weight:600; font-family:var(--font-family); cursor:pointer; outline:none; padding:0 0.25rem;"><option value="">Todos</option></select>
+                    <button onclick="window.clearRelPeriod()" title="Limpar filtro" style="border:none; background:none; color:var(--text-muted); cursor:pointer; font-size:0.75rem; padding:0 0.25rem; line-height:1;">✕</button>
+                </div>
             </div>
 
             <!-- Sub-tab navigation -->
@@ -548,8 +559,6 @@
                     style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Serviços</button>
                 <button id="rel-tab-exportacao" onclick="window.switchRelTab('exportacao')"
                     style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Exportação</button>
-                <button id="rel-tab-ranking" onclick="window.switchRelTab('ranking')"
-                    style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Ranking</button>
                 <button id="rel-tab-comparativo" onclick="window.switchRelTab('comparativo')"
                     style="padding:0.45rem 1.1rem; border-radius:7px; border:none; cursor:pointer; font-size:0.82rem; font-weight:700; font-family:var(--font-family); transition:all 0.15s; background:transparent; color:var(--text-secondary);">Comparativo</button>
                 <button id="rel-tab-carta" onclick="window.switchRelTab('carta')"
@@ -563,7 +572,6 @@
             <div id="rel-panel-custos" style="display:none;"></div>
             <div id="rel-panel-servicos" style="display:none;"></div>
             <div id="rel-panel-exportacao" style="display:none;"></div>
-            <div id="rel-panel-ranking" style="display:none;"></div>
             <div id="rel-panel-comparativo" style="display:none;"></div>
             <div id="rel-panel-carta" style="display:none;"></div>
         </section>

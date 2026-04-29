@@ -97,6 +97,16 @@ function calcularDivisaoIdeal(lucroGerencial) {
   };
 }
 
+// ── Formatação de período — padrão global: Abr/2026 ─────────────────────────
+window.formatPeriod = function(mesRef) {
+    const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    if (!mesRef) return '';
+    const key = (mesRef + '').substring(0, 7); // garante YYYY-MM
+    const [y, m] = key.split('-');
+    if (!y || !m) return mesRef;
+    return `${MESES[parseInt(m, 10) - 1] || m}/${y}`;
+};
+
 // Exportar para Node.js (backend)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
