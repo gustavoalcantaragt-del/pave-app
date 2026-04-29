@@ -8,37 +8,60 @@ const _sfmt = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency:
 const _spct = (v, dec = 1) => `${(parseFloat(v) || 0).toFixed(dec)}%`;
 
 // ── CÁLCULO DE IMPOSTOS (compartilhado entre módulos) ──────
+// Tabela Simples Nacional Anexo III — vigente 2018 (LC 155/2016)
+const _SIMPLES_ANEX3 = [
+    { lim:  180000, al: 0.060, pd:      0 },
+    { lim:  360000, al: 0.112, pd:   9360 },
+    { lim:  720000, al: 0.132, pd:  17640 },
+    { lim: 1800000, al: 0.160, pd:  35640 },
+    { lim: 3600000, al: 0.210, pd: 125640 },
+    { lim: 4800000, al: 0.330, pd: 648000 },
+];
+// DAS MEI 2025 (serviços): INSS 5% s/ sal. mín. R$1.518 + ISS R$5,00
+// Atualizar anualmente conforme reajuste do salário mínimo
+const _MEI_DAS_SERVICOS = 80.90;
+const _MEI_LIMITE_ANUAL = 81000;
+
 function _calcImpostos(fat, regime) {
     if (!fat || fat <= 0) return 0;
-    const SIMPLES = [
-        { lim: 180000,  al: 0.060,  pd: 0 },
-        { lim: 360000,  al: 0.112,  pd: 9360 },
-        { lim: 720000,  al: 0.132,  pd: 17640 },
-        { lim: 1800000, al: 0.160,  pd: 35640 },
-        { lim: 3600000, al: 0.210,  pd: 125640 },
-        { lim: 4800000, al: 0.330,  pd: 648000 },
-    ];
     switch (regime) {
         case 'mei': {
-            return fat * 12 <= 81000 ? 75.90 : fat * 0.06; // acima do limite, cálculo estimado
+            // Dentro do limite: DAS fixo mensal; acima: não elegível (cálculo estimado como Simples faixa 1)
+            if (fat * 12 <= _MEI_LIMITE_ANUAL) return _MEI_DAS_SERVICOS;
+            const rbt12 = fat * 12;
+            const f = _SIMPLES_ANEX3[0];
+            return fat * ((rbt12 * f.al - f.pd) / rbt12);
         }
         case 'simples': {
             const rbt12 = fat * 12;
-            const f = SIMPLES.find(x => rbt12 <= x.lim) || SIMPLES[SIMPLES.length - 1];
+            const f = _SIMPLES_ANEX3.find(x => rbt12 <= x.lim) || _SIMPLES_ANEX3[_SIMPLES_ANEX3.length - 1];
             return fat * ((rbt12 * f.al - f.pd) / rbt12);
         }
         case 'lucro_presumido': {
+            // Presunção 32% para serviços profissionais (veterinária)
             const base = fat * 0.32;
-            const irpj   = base * 0.15 + Math.max(0, (base * 12 - 240000) / 12) * 0.10;
-            const csll   = base * 0.09;
-            return irpj + csll + fat * 0.0065 + fat * 0.03 + fat * 0.03;
+            const irpj = base * 0.15 + Math.max(0, (base * 12 - 240000) / 12) * 0.10;
+            const csll = base * 0.09;
+            // PIS cumulativo 0,65% + COFINS cumulativo 3% + ISS 5% (alíquota padrão serviços)
+            return irpj + csll + fat * 0.0065 + fat * 0.03 + fat * 0.05;
         }
         case 'lucro_real': {
-            return fat * 0.0165 + fat * 0.076 + fat * 0.03; // PIS/COFINS/ISS (IRPJ/CSLL sobre lucro calculado separado)
+            // PIS não-cumulativo 1,65% + COFINS não-cumulativo 7,6% + ISS 5%
+            // IRPJ/CSLL sobre lucro real ficam fora (dependem do resultado apurado)
+            return fat * 0.0165 + fat * 0.076 + fat * 0.05;
         }
         default: return 0;
     }
 }
+
+// Alíquota efetiva sugerida para precificação por regime (% sobre receita do serviço)
+const _TAX_SUGGEST = {
+    mei:             0.0,   // DAS fixo, não incide por serviço
+    simples:         6.0,   // faixa 1 Anexo III
+    lucro_presumido: 16.3,  // IRPJ+CSLL+PIS+COFINS+ISS estimado
+    lucro_real:      14.3,  // PIS+COFINS+ISS (sem IRPJ/CSLL)
+};
+window._taxSuggestPct = function(regime) { return _TAX_SUGGEST[regime] ?? 6.0; };
 
 // ══════════════════════════════════════════════════════════════
 // MÓDULO 1 — ANÁLISE WHAT-IF

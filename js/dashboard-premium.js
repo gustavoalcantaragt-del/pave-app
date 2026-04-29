@@ -164,6 +164,7 @@ function _renderDashboardImpl(forceData) {
 
     // ── YTD ──────────────────────────────────────────────────────────────────
     let historicoAll; try { historicoAll = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historicoAll = []; }
+    historicoAll = [...historicoAll].sort((a, b) => (a.mesRef || '').localeCompare(b.mesRef || ''));
     const currentYear        = new Date().getFullYear().toString();
     const anoAtual           = historicoAll.filter(h => h.mesRef?.startsWith(currentYear));
     const ytdLucro           = anoAtual.reduce((a, h) => a + (parseFloat(h.lucro) || 0), 0);
@@ -446,6 +447,7 @@ function _renderDashboardImpl(forceData) {
 
     // ── GRÁFICO DE EVOLUÇÃO ───────────────────────────────────────────────────
     let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
+    historico = [...historico].sort((a, b) => (a.mesRef || '').localeCompare(b.mesRef || ''));
     const last6     = historico.slice(-6);
     const evoEl     = document.getElementById('chart-evolution');
     if (evoEl) {
@@ -799,10 +801,11 @@ window.clearRelPeriod = function() {
     window.switchRelTab(_relActiveTab);
 };
 
-// Filtra o histórico respeitando REL_PERIOD
+// Filtra o histórico respeitando REL_PERIOD — sempre ordenado por mesRef asc
 function _filteredHistorico() {
     let hist = [];
     try { hist = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch {}
+    hist = [...hist].sort((a, b) => (a.mesRef || '').localeCompare(b.mesRef || ''));
     if (!window.REL_PERIOD) return hist;
     const { from, to } = window.REL_PERIOD;
     return hist.filter(h => {

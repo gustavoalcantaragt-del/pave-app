@@ -434,7 +434,11 @@
                         <h4 style="margin-bottom: 1rem; color:var(--text-secondary);">Custos Relativos (%)</h4>
                         <div class="input-group" style="margin-bottom:0.75rem;"><label>Custo Fixo (%) <span id="cf-auto-badge" style="font-size:0.65rem; color:var(--accent-gold); display:none;">• auto</span></label><input type="number" id="calc-cf-pct" value="15" oninput="window.updateCat()"></div>
                         <div class="input-group" style="margin-bottom:0.75rem;"><label>Taxa Cartão/PIX (%)</label><input type="number" id="calc-taxa-pct" value="4.8" oninput="window.updateCat()"></div>
-                        <div class="input-group" style="margin-bottom:0.75rem;"><label>Imposto (%)</label><input type="number" id="calc-imp-pct" value="6" oninput="window.updateCat()"></div>
+                        <div class="input-group" style="margin-bottom:0.75rem;">
+                            <label>Imposto (%) <span id="imp-auto-badge" style="font-size:0.65rem; color:var(--accent-gold); display:none;">• auto</span></label>
+                            <input type="number" id="calc-imp-pct" value="6" oninput="window.updateCat()">
+                            <span id="imp-hint" style="display:none; font-size:0.65rem; color:var(--text-muted); margin-top:0.25rem;"></span>
+                        </div>
                     </div>
 
                     <!-- Custos Diretos (R$) — insumos ficam desabilitados no combo, comissões ficam ativas -->
@@ -1381,6 +1385,29 @@
     };
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(window.calcRateioDiario, 800);
+
+        // Auto-suggest imposto baseado no regime tributário salvo
+        function _applyImpAutoSuggest() {
+            const field  = document.getElementById('calc-imp-pct');
+            const badge  = document.getElementById('imp-auto-badge');
+            const hint   = document.getElementById('imp-hint');
+            if (!field || !window._taxSuggestPct) return;
+            try {
+                const cfg    = JSON.parse(localStorage.getItem('pav_clinica') || '{}');
+                const regime = cfg.regime || 'simples';
+                const pct    = window._taxSuggestPct(regime);
+                const labels = { mei:'MEI', simples:'Simples Nacional', lucro_presumido:'Lucro Presumido', lucro_real:'Lucro Real' };
+                field.value = pct;
+                if (badge) { badge.style.display = 'inline'; }
+                if (hint)  { hint.style.display = 'block'; hint.textContent = `Sugestão baseada no ${labels[regime] || regime}`; }
+                if (window.updateCat) window.updateCat();
+            } catch(e) { /* silencioso */ }
+        }
+        setTimeout(_applyImpAutoSuggest, 600);
+        // Re-aplica quando o usuário navega para a aba Precificação
+        document.querySelectorAll('[data-tab="tab-catalogo"], #tab-catalogo').forEach(btn => {
+            btn.addEventListener('click', () => setTimeout(_applyImpAutoSuggest, 100));
+        });
 
         // Limpeza única: remove entradas duplicadas do histórico (mesmo mês, formatos diferentes)
         try {
