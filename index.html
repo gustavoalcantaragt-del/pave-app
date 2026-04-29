@@ -1371,7 +1371,22 @@
         el.style.fontSize = '1.6rem';
         el.textContent = custoDia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     };
-    document.addEventListener('DOMContentLoaded', () => setTimeout(window.calcRateioDiario, 800));
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(window.calcRateioDiario, 800);
+
+        // Limpeza única: remove entradas duplicadas do histórico (mesmo mês, formatos diferentes)
+        try {
+            const hist = JSON.parse(localStorage.getItem('pav_historico') || '[]');
+            const seen = {};
+            const clean = [];
+            [...hist].reverse().forEach(h => {
+                const key = (h.mesRef || '').substring(0, 7);
+                if (key && !seen[key]) { seen[key] = true; clean.push(h); }
+            });
+            clean.reverse();
+            localStorage.setItem('pav_historico', JSON.stringify(clean));
+        } catch (e) { /* silencioso */ }
+    });
     </script>
 
 </body>

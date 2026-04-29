@@ -655,10 +655,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('pav_ultimos_dados', JSON.stringify(dados));
                 const totais = window.calcularTotais ? window.calcularTotais(dados) : {};
                 let historico; try { historico = JSON.parse(localStorage.getItem('pav_historico') || '[]'); } catch { historico = []; }
-                let label = mesStr;
-                if (label?.includes('-')) { const p = label.split('-'); label = p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : label; }
-                const idx = historico.findIndex(h => h.mesRef === mesStr);
-                const entry = { mesRef: mesStr, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() };
+                // Normalizar sempre para YYYY-MM para evitar duplicatas com formatos diferentes
+                const mesRefNorm = (mesStr || '').substring(0, 7);
+                const [mY, mM] = mesRefNorm.split('-');
+                const label = mY && mM ? `${mM}/${mY}` : mesRefNorm;
+                const idx = historico.findIndex(h => (h.mesRef || '').substring(0, 7) === mesRefNorm);
+                const entry = { mesRef: mesRefNorm, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() };
                 if (idx >= 0) historico[idx] = entry; else historico.push(entry);
                 localStorage.setItem('pav_historico', JSON.stringify(historico));
             }
