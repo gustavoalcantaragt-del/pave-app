@@ -80,12 +80,15 @@ function _togglePeriodPicker() {
             const orgId = await OrgAPI.getOrgId();
             if (orgId) {
                 const refDate = ref.length === 7 ? ref + '-01' : ref;
+                const yyyyMM  = refDate.substring(0, 7);
+                const [_y, _m] = yyyyMM.split('-').map(Number);
+                const nextMonth = _m === 12 ? `${_y + 1}-01-01` : `${_y}-${String(_m + 1).padStart(2, '0')}-01`;
                 const { data: entries } = await _supabase
                     .from('financial_entries')
                     .select('reference_date, data')
                     .eq('organization_id', orgId)
-                    .gte('reference_date', refDate.substring(0, 7) + '-01')
-                    .lt('reference_date', (() => { const d = new Date(refDate.substring(0, 7) + '-01'); d.setMonth(d.getMonth() + 1); return d.toISOString().substring(0, 10); })())
+                    .gte('reference_date', yyyyMM + '-01')
+                    .lt('reference_date', nextMonth)
                     .order('reference_date', { ascending: false })
                     .limit(1);
 
