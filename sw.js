@@ -24,7 +24,6 @@ const PRECACHE_URLS = [
     '/js/simulador-premium.js',
     '/js/configuracoes-premium.js',
     '/js/notifications.js',
-    '/js/clientes.js',
     '/js/calendario.js',
     '/js/tabs-premium.js',
     '/assets/favicon.svg',

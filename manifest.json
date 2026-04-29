@@ -33,10 +33,10 @@
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "Caixa Diário",
-      "short_name": "Caixa",
-      "description": "Abrir lançamento de caixa",
-      "url": "/index.html#caixa",
+      "name": "Contas a Pagar/Receber",
+      "short_name": "Contas",
+      "description": "Abrir contas a pagar e receber",
+      "url": "/index.html#bills",
       "icons": [{ "src": "assets/icon-192.png", "sizes": "192x192" }]
     },
     {

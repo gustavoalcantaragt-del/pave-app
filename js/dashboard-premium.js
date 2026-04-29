@@ -221,7 +221,7 @@ function _renderDashboardImpl(forceData) {
         : fromCaixa
         ? `<div style="grid-column:1/-1; padding:0.75rem 1.25rem; background:rgba(29,158,117,0.07); border:1px solid rgba(29,158,117,0.25); border-radius:var(--radius-card); display:flex; align-items:center; gap:10px; margin-bottom:0.5rem;">
             <span style="color:#1D9E75; flex-shrink:0;">${IC.check}</span>
-            <span style="font-size:0.82rem; color:var(--text-secondary);">Dados calculados automaticamente do <strong>Caixa</strong> — ${data._movCount} lançamentos pagos em ${dataLabel}. Preencha o <button onclick="document.getElementById('tab-balanco').click()" style="background:none;border:none;padding:0;font-size:inherit;color:var(--accent-blue);cursor:pointer;font-weight:700;text-decoration:underline;">Balanço</button> para ver o detalhamento de custos fixos vs variáveis.</span>
+            <span style="font-size:0.82rem; color:var(--text-secondary);">Dados calculados automaticamente do <strong>Extrato</strong> — ${data._movCount} lançamentos pagos em ${dataLabel}. Preencha o <button onclick="document.getElementById('tab-balanco').click()" style="background:none;border:none;padding:0;font-size:inherit;color:var(--accent-blue);cursor:pointer;font-weight:700;text-decoration:underline;">Balanço</button> para ver o detalhamento de custos fixos vs variáveis.</span>
            </div>`
         : '';
 
@@ -281,7 +281,7 @@ function _renderDashboardImpl(forceData) {
 
             <!-- Termômetro -->
             <div class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
-                <h3 style="margin-bottom:1.5rem; color:var(--text-secondary); display:flex; align-items:center; gap:6px; justify-content:center;" data-tooltip="${fromCaixa ? 'Percentual do faturamento comprometido com custos totais (dados do Caixa). Abaixo de 35%: saudável · 35–50%: atenção · Acima de 50%: crítico.' : 'Percentual do faturamento comprometido com custos fixos. Abaixo de 35%: saudável · 35–50%: atenção · Acima de 50%: crítico.'}">${fromCaixa ? 'Índice de Custos Totais' : 'Índice de Custo Fixo'} <span style="opacity:0.6; color:var(--text-muted);">${IC.info}</span></h3>
+                <h3 style="margin-bottom:1.5rem; color:var(--text-secondary); display:flex; align-items:center; gap:6px; justify-content:center;" data-tooltip="${fromCaixa ? 'Percentual do faturamento comprometido com custos totais (extrato de movimentações). Abaixo de 35%: saudável · 35–50%: atenção · Acima de 50%: crítico.' : 'Percentual do faturamento comprometido com custos fixos. Abaixo de 35%: saudável · 35–50%: atenção · Acima de 50%: crítico.'}">${fromCaixa ? 'Índice de Custos Totais' : 'Índice de Custo Fixo'} <span style="opacity:0.6; color:var(--text-muted);">${IC.info}</span></h3>
                 <div style="position:relative; width:150px; height:150px; border-radius:50%; background:conic-gradient(${healthColor} ${healthScore}%, ${_isDark()?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.07)'} 0%); display:flex; align-items:center; justify-content:center;">
                     <div style="width:118px; height:118px; border-radius:50%; background:var(--bg-card); display:flex; flex-direction:column; align-items:center; justify-content:center;">
                         <span style="font-size:2rem; font-weight:900; color:${healthColor};">${hasData ? healthScore + '%' : '—'}</span>
@@ -398,7 +398,7 @@ function _renderDashboardImpl(forceData) {
         top5 = [];
         const custosCaixa = Math.max(0, totais.totalFixos);
         const lucroCaixa  = Math.max(0, totais.lucroGerencial);
-        if (custosCaixa > 0) top5.push({ name: 'Custos Totais (Caixa)', val: custosCaixa });
+        if (custosCaixa > 0) top5.push({ name: 'Custos Totais', val: custosCaixa });
         if (lucroCaixa  > 0) top5.push({ name: 'Lucro', val: lucroCaixa });
         if (top5.length === 0) top5.push({ name: 'Sem resultado', val: 1 });
     } else {
@@ -1376,8 +1376,8 @@ function _relExportacao() {
                     </button>
                 </div>
                 <div style="padding:1.5rem; background:rgba(10,132,255,0.06); border:1px solid rgba(10,132,255,0.2); border-radius:var(--radius-card); text-align:center;">
-                    <div style="font-weight:700; color:var(--accent-blue); margin-bottom:0.5rem;">Extrato CSV (Caixa)</div>
-                    <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:1rem;">Todos os lançamentos do Caixa em .csv.</p>
+                    <div style="font-weight:700; color:var(--accent-blue); margin-bottom:0.5rem;">Extrato CSV</div>
+                    <p style="color:var(--text-secondary); font-size:0.8rem; margin-bottom:1rem;">Todas as movimentações de receitas e despesas em .csv.</p>
                     <button onclick="window.exportCaixaCSV()"
                         style="padding:0.6rem 1.5rem; border-radius:var(--radius-sm); border:1px solid rgba(10,132,255,0.4); background:rgba(10,132,255,0.12); color:var(--accent-blue); font-weight:700; font-size:0.85rem; font-family:var(--font-family); cursor:pointer;">
                         Exportar CSV
