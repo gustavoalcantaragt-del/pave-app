@@ -571,18 +571,27 @@
 </head>
 <body>
 
-<!-- Top bar -->
-<header class="plans-topbar">
-    <a href="landing.html" class="plans-topbar-brand">
-        <div class="plans-topbar-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+<!-- Nav compartilhado -->
+<header class="pav-nav">
+    <nav class="pav-nav-inner">
+        <a href="landing.html" class="pav-nav-brand">
+            <div class="pav-nav-brand-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <span class="pav-nav-brand-name">PAVE</span>
+        </a>
+        <div class="pav-nav-links">
+            <a href="landing.html#funcionalidades" class="pav-nav-link">Funcionalidades</a>
+            <a href="landing.html#depoimentos" class="pav-nav-link">Depoimentos</a>
+            <a href="planos.html" class="pav-nav-link" style="color:#181818; font-weight:700;">Planos</a>
+            <a href="landing.html#faq" class="pav-nav-link">FAQ</a>
+            <a href="login.html" class="pav-nav-login">Entrar</a>
+            <a href="login.html#register" class="pav-nav-cta">Testar grátis</a>
         </div>
-        <span class="plans-topbar-name">PAVE</span>
-    </a>
-    <div class="plans-topbar-actions">
-        <span id="nav-user-email"></span>
-        <a href="index.html" class="plans-back-link">← Voltar ao App</a>
-    </div>
+        <button class="pav-nav-hamburger" aria-label="Menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+    </nav>
 </header>
 
 <!-- Hero -->
@@ -640,7 +649,7 @@
             </li>
             <li>
                 <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                Caixa Diário + Contas a Pagar/Receber
+                Balanço mensal + Contas a Pagar/Receber
             </li>
             <li>
                 <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
@@ -697,10 +706,6 @@
             <li class="feat-highlight">
                 <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                 HealthScore financeiro + SmartAlerts
-            </li>
-            <li class="feat-highlight">
-                <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                LTV e Ranking de Clientes
             </li>
             <li class="feat-highlight">
                 <span class="feat-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
@@ -789,7 +794,6 @@
                 <tr class="section-row"><td colspan="4">Financeiro</td></tr>
                 <tr><td>Dashboard com KPIs</td><td>✓</td><td>✓</td><td>✓</td></tr>
                 <tr><td>Balanço Mensal (DRE)</td><td>✓</td><td>✓</td><td>✓</td></tr>
-                <tr><td>Caixa Diário</td><td>✓</td><td>✓</td><td>✓</td></tr>
                 <tr><td>Contas a Pagar/Receber</td><td>✓</td><td>✓</td><td>✓</td></tr>
                 <tr><td>Alertas de Vencimento</td><td>✓</td><td>✓</td><td>✓</td></tr>
                 <tr><td>Ticket Médio e Metas</td><td>✓</td><td>✓</td><td>✓</td></tr>
@@ -804,10 +808,6 @@
                 <tr><td>Busca e ordenação</td><td>✓</td><td>✓</td><td>✓</td></tr>
                 <tr><td>Split de pagamento</td><td>✓</td><td>✓</td><td>✓</td></tr>
 
-                <tr class="section-row"><td colspan="4">Clientes &amp; Análises</td></tr>
-                <tr><td>Cadastro de Clientes + Pets</td><td>✓</td><td>✓</td><td>✓</td></tr>
-                <tr><td>Importação CSV de Clientes</td><td>—</td><td>✓</td><td>✓</td></tr>
-                <tr><td>LTV e Ranking de Clientes</td><td>—</td><td>✓</td><td>✓</td></tr>
                 <tr><td>Comparativo mês a mês</td><td>—</td><td>✓</td><td>✓</td></tr>
 
                 <tr class="section-row"><td colspan="4">Relatórios &amp; Exportação</td></tr>
@@ -899,7 +899,7 @@
             <span>Posso importar notas fiscais (NF-e)?</span>
             <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="faq-a">Sim, nos planos Pro e Clinic você pode importar arquivos XML de NF-e para lançar automaticamente as entradas no caixa diário. Isso elimina o trabalho manual de digitar cada nota recebida de fornecedores.</div>
+        <div class="faq-a">Sim, nos planos Pro e Clinic você pode importar arquivos XML de NF-e para lançar automaticamente as entradas no balanço. Isso elimina o trabalho manual de digitar cada nota recebida de fornecedores.</div>
     </div>
 </section>
 

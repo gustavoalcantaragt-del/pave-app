@@ -132,87 +132,6 @@
         }
 
         /* ─────────────────────────────────────────────
-           1. NAVBAR
-        ───────────────────────────────────────────── */
-        .nav {
-            position: sticky;
-            top: 0;
-            z-index: 200;
-            background: rgba(255,255,255,0.94);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid #E5E7EB;
-            box-shadow: 0 1px 0 rgba(0,0,0,0.04);
-        }
-        .nav-inner {
-            display: flex;
-            align-items: center;
-            height: 64px;
-            gap: 2rem;
-        }
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            flex-shrink: 0;
-        }
-        .nav-brand-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 7px;
-            background: var(--brand);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .nav-brand-name {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text);
-            letter-spacing: -0.3px;
-        }
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            margin-left: auto;
-        }
-        .nav-link {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--muted);
-            text-decoration: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            transition: all 0.15s;
-        }
-        .nav-link:hover { color: var(--text); background: rgba(0,0,0,0.04); }
-        .nav-cta { margin-left: 8px; }
-        .nav-login {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--muted);
-            text-decoration: none;
-            padding: 6px 12px;
-            transition: color 0.15s;
-        }
-        .nav-login:hover { color: var(--text); }
-        .nav-hamburger {
-            display: none;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 6px;
-            margin-left: auto;
-            color: var(--text);
-        }
-        @media (max-width: 720px) {
-            .nav-links { display: none; }
-            .nav-hamburger { display: flex; }
-        }
-
-        /* ─────────────────────────────────────────────
            2. HERO
         ───────────────────────────────────────────── */
         .hero {
@@ -963,28 +882,26 @@
 <body>
 
 <!-- ─── 1. NAVBAR ─────────────────────────────────────────────────────────── -->
-<header class="nav">
-    <div class="container">
-        <nav class="nav-inner">
-            <a href="landing.html" class="nav-brand">
-                <div class="nav-brand-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                </div>
-                <span class="nav-brand-name">PAVE</span>
-            </a>
-            <div class="nav-links">
-                <a href="#funcionalidades" class="nav-link">Funcionalidades</a>
-                <a href="#depoimentos" class="nav-link">Depoimentos</a>
-                <a href="#planos" class="nav-link">Planos</a>
-                <a href="#faq" class="nav-link">FAQ</a>
-                <a href="login.html" class="nav-login">Entrar</a>
-                <a href="login.html#register" class="btn btn-primary nav-cta">Testar grátis</a>
+<header class="pav-nav">
+    <nav class="pav-nav-inner">
+        <a href="landing.html" class="pav-nav-brand">
+            <div class="pav-nav-brand-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </div>
-            <button class="nav-hamburger" aria-label="Menu">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-            </button>
-        </nav>
-    </div>
+            <span class="pav-nav-brand-name">PAVE</span>
+        </a>
+        <div class="pav-nav-links">
+            <a href="#funcionalidades" class="pav-nav-link">Funcionalidades</a>
+            <a href="#depoimentos" class="pav-nav-link">Depoimentos</a>
+            <a href="planos.html" class="pav-nav-link">Planos</a>
+            <a href="#faq" class="pav-nav-link">FAQ</a>
+            <a href="login.html" class="pav-nav-login">Entrar</a>
+            <a href="login.html#register" class="pav-nav-cta">Testar grátis</a>
+        </div>
+        <button class="pav-nav-hamburger" aria-label="Menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+    </nav>
 </header>
 
 <!-- ─── 2. HERO ───────────────────────────────────────────────────────────── -->
@@ -1110,8 +1027,8 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#234e70" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                         </div>
                         <div class="solution-text">
-                            <strong>Caixa diário e DRE mensal</strong>
-                            <span>Contas a pagar/receber, conciliação e balanço num clique.</span>
+                            <strong>Balanço mensal e DRE</strong>
+                            <span>Contas a pagar/receber, balanço consolidado e resultado real num clique.</span>
                         </div>
                     </li>
                     <li>
@@ -1147,7 +1064,7 @@
         </div>
         <div class="tour-tabs">
             <button class="tour-tab active" onclick="showTour('dashboard', this)">Dashboard</button>
-            <button class="tour-tab" onclick="showTour('caixa', this)">Caixa Diário</button>
+            <button class="tour-tab" onclick="showTour('caixa', this)">Balanço</button>
             <button class="tour-tab" onclick="showTour('contas', this)">Contas &amp; Alertas</button>
             <button class="tour-tab" onclick="showTour('precificacao', this)">Precificação</button>
             <button class="tour-tab" onclick="showTour('relatorios', this)">Relatórios</button>
@@ -1188,35 +1105,32 @@
                 </div>
             </div>
 
-            <!-- Caixa -->
+            <!-- Balanço -->
             <div class="tour-panel" id="tour-caixa">
                 <div class="tour-panel-text">
-                    <h3>Caixa diário sem planilha</h3>
-                    <p>Lance entradas e saídas em segundos. Visualize o saldo projetado para os próximos dias e saiba sempre quando os pagamentos chegam.</p>
+                    <h3>Balanço mensal com lucro real</h3>
+                    <p>Consolide receitas e custos do mês em um formulário simples. O PAVE calcula seu lucro gerencial, margem de contribuição e ponto de equilíbrio automaticamente.</p>
                     <ul class="tour-feature-list">
-                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Contas a pagar e a receber</li>
-                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Saldo projetado por dia</li>
-                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Exportação CSV para contabilidade</li>
-                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Categorização por centro de custo</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> DRE gerencial com um clique</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Custos fixos e variáveis separados</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Ponto de equilíbrio calculado</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2f9c77" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Exportação em PDF e Excel</li>
                     </ul>
                 </div>
                 <div class="tour-panel-visual">
                     <div class="mockup-dashboard">
                         <div class="mockup-row">
-                            <div class="mockup-kpi"><div class="mockup-kpi-label">A receber hoje</div><div class="mockup-kpi-value green">R$ 3.800</div></div>
-                            <div class="mockup-kpi"><div class="mockup-kpi-label">A pagar hoje</div><div class="mockup-kpi-value red">R$ 1.200</div></div>
-                            <div class="mockup-kpi"><div class="mockup-kpi-label">Saldo projetado</div><div class="mockup-kpi-value">R$ 8.4k</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Faturamento</div><div class="mockup-kpi-value green">R$ 42k</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Custos totais</div><div class="mockup-kpi-value red">R$ 28k</div></div>
+                            <div class="mockup-kpi"><div class="mockup-kpi-label">Lucro líquido</div><div class="mockup-kpi-value">R$ 14k</div></div>
                         </div>
                         <div class="mockup-bar-chart">
-                            <div class="mockup-chart-label">Fluxo dos próximos 7 dias</div>
+                            <div class="mockup-chart-label">Composição do resultado</div>
                             <div class="mockup-bars">
-                                <div class="mockup-bar accent" style="height:80%"></div>
-                                <div class="mockup-bar" style="height:30%"></div>
-                                <div class="mockup-bar accent" style="height:65%"></div>
-                                <div class="mockup-bar" style="height:45%"></div>
-                                <div class="mockup-bar accent" style="height:90%"></div>
-                                <div class="mockup-bar" style="height:20%"></div>
-                                <div class="mockup-bar accent" style="height:55%"></div>
+                                <div class="mockup-bar accent" style="height:85%; flex:2;"></div>
+                                <div class="mockup-bar" style="height:55%; background:#E24B4A; opacity:0.5; flex:1.5;"></div>
+                                <div class="mockup-bar" style="height:35%; background:#FEF3C7; flex:1;"></div>
+                                <div class="mockup-bar accent" style="height:65%; flex:1.5;"></div>
                             </div>
                         </div>
                     </div>

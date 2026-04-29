@@ -1035,7 +1035,7 @@ window.exportCaixaCSV = function() {
     const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a'); a.href = url; a.download = 'caixa-pave.csv'; a.click();
+    const a    = document.createElement('a'); a.href = url; a.download = 'extrato-pave.csv'; a.click();
     URL.revokeObjectURL(url);
     Utils.showToast('CSV exportado com sucesso!', 'success');
 };
@@ -1172,7 +1172,7 @@ function _relCustos() {
     const custos = [
         { label: 'Folha de Pagamento',   val: data.folha||0,                  tipo: 'Fixo',     badge: '#E24B4A' },
         { label: 'Aluguel',              val: data.aluguel||0,                tipo: 'Fixo',     badge: '#E24B4A' },
-        { label: 'Insumos / Estoque',    val: data.insumos||0,                tipo: 'Variável', badge: '#ffd60a' },
+        { label: 'Insumos',               val: data.insumos||0,                tipo: 'Variável', badge: '#ffd60a' },
         { label: 'Impostos',             val: data.impostos||0,               tipo: 'Variável', badge: '#ffd60a' },
         { label: 'Taxas Cartão',         val: data.taxasCartao||0,            tipo: 'Variável', badge: '#ffd60a' },
         { label: 'Marketing',            val: data.marketing||0,              tipo: 'Fixo',     badge: '#E24B4A' },
@@ -2526,86 +2526,11 @@ async function _generateCartaPDF(financialData, monthValue, movimentos, observac
     if (window.Utils) Utils.showToast('PDF gerado com sucesso!', 'success');
 }
 
-// ── FEATURE 3.2 — CLIENTES NO RELATÓRIO ──────────────────────────────────────
-
-async function _relClientes() {
-    const panel = document.getElementById('rel-panel-clientes');
-    if (!panel) return;
-
-    const now        = new Date();
-    const defStart   = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-    const lastDay    = new Date(now.getFullYear(), now.getMonth()+1, 0);
-    const defEnd     = lastDay.toISOString().split('T')[0];
-
-    panel.innerHTML = `
-    <div class="card">
-        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.25rem; flex-wrap:wrap;">
-            <span style="font-size:0.78rem; color:var(--text-muted);">De</span>
-            <input type="date" id="client-rev-start" value="${defStart}"
-                style="padding:0.4rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-size:0.82rem; font-family:var(--font-family); outline:none;">
-            <span style="font-size:0.78rem; color:var(--text-muted);">até</span>
-            <input type="date" id="client-rev-end" value="${defEnd}"
-                style="padding:0.4rem 0.75rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-elevated); color:var(--text-primary); font-size:0.82rem; font-family:var(--font-family); outline:none;">
-            <button id="btn-load-client-rev" style="padding:0.4rem 1rem; border-radius:var(--radius-sm); border:none; background:var(--accent-blue); color:#fff; font-size:0.82rem; font-weight:700; cursor:pointer; font-family:var(--font-family);">Carregar</button>
-        </div>
-        <div id="client-revenue-result"><p style="color:var(--text-muted); text-align:center; padding:1rem; font-size:0.85rem;">Clique em "Carregar" para ver o ranking de clientes.</p></div>
-    </div>`;
-
-    async function loadClientRevenue() {
-        const start  = panel.querySelector('#client-rev-start').value;
-        const end    = panel.querySelector('#client-rev-end').value;
-        const res    = panel.querySelector('#client-revenue-result');
-        const fmt    = v => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-        res.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:1rem; font-size:0.85rem;">Carregando...</p>`;
-
-        try {
-            if (!window.ClientesModule) throw new Error('Módulo de clientes não carregado.');
-            const orgId = await OrgAPI.getOrgId();
-            if (!orgId) throw new Error('Organização não encontrada.');
-            const data = await ClientesModule.fetchClientRevenue(orgId, start, end);
-
-            if (!data.length) {
-                res.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:2rem; font-size:0.85rem;">Nenhum lançamento vinculado a clientes no período.<br><span style="font-size:0.75rem;">Vincule clientes aos lançamentos do Caixa para habilitar esta visão.</span></p>`;
-                return;
-            }
-
-            res.innerHTML = `
-            <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse:collapse; font-size:0.82rem;">
-                    <thead>
-                        <tr style="border-bottom:2px solid var(--border);">
-                            <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">#</th>
-                            <th style="text-align:left; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Cliente</th>
-                            <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Visitas</th>
-                            <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Faturamento</th>
-                            <th style="text-align:right; padding:0.5rem 0.75rem; color:var(--text-muted); font-weight:700;">Ticket Médio</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.map((c, i) => `
-                        <tr style="border-bottom:1px solid var(--border); transition:background 0.1s;" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background=''">
-                            <td style="padding:0.625rem 0.75rem; font-weight:700;">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</td>
-                            <td style="padding:0.625rem 0.75rem; font-weight:600; color:var(--text-primary);">${c.name}</td>
-                            <td style="padding:0.625rem 0.75rem; text-align:right; color:var(--text-secondary);">${c.qtd}</td>
-                            <td style="padding:0.625rem 0.75rem; text-align:right; font-weight:700; color:var(--accent-blue);">${fmt(c.total)}</td>
-                            <td style="padding:0.625rem 0.75rem; text-align:right; color:var(--text-secondary);">${fmt(c.ticketMedio)}</td>
-                        </tr>`).join('')}
-                    </tbody>
-                </table>
-            </div>`;
-        } catch (err) {
-            res.innerHTML = `<p style="color:var(--color-danger); padding:1rem;">${err.message}</p>`;
-        }
-    }
-
-    panel.querySelector('#btn-load-client-rev').addEventListener('click', loadClientRevenue);
-}
-
-// ── PATCH switchRelTab to include carta + clientes ────────────────────────────
+// ── PATCH switchRelTab to include carta ──────────────────────────────────────
 
 const _origSwitchRelTab = window.switchRelTab;
 window.switchRelTab = function(tab) {
-    const extraTabs = ['carta', 'clientes'];
+    const extraTabs = ['carta'];
     const isExtra = extraTabs.includes(tab);
 
     // Always reset extra-tab visual state
@@ -2631,8 +2556,7 @@ window.switchRelTab = function(tab) {
         const activePanel = document.getElementById('rel-panel-' + tab);
         if (activeBtn)   { activeBtn.style.background = 'var(--accent-blue)'; activeBtn.style.color = '#fff'; }
         if (activePanel) activePanel.style.display = '';
-        if (tab === 'carta')    _relCartaContador();
-        if (tab === 'clientes') _relClientes();
+        if (tab === 'carta') _relCartaContador();
     }
 };
 

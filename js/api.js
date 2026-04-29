@@ -348,7 +348,8 @@ const CashAPI = {
                 recurrence_group: mov.recurrenceGroup || null,
                 client_id:        mov.clienteId      || null,
                 bill_id:          mov.billId          || null,
-                service_id:       mov.serviceId       || null
+                service_id:       mov.serviceId       || null,
+                payments:         mov.payments        || null
             }, { onConflict: 'id' });
             localStorage.setItem('pav_local_ts', String(Date.now()));
         } catch (e) {

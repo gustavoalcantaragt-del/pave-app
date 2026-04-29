@@ -72,7 +72,7 @@ const BillsModule = (() => {
         return d.toISOString().split('T')[0];
     }
 
-    async function markAsPaid(id) {
+    async function markAsPaid(id, payments = null) {
         const today = new Date().toISOString().split('T')[0];
 
         // Busca a bill para usar os dados no movimento de Caixa
@@ -86,6 +86,12 @@ const BillsModule = (() => {
             // Verifica se já existe movimento vinculado a esta bill para não duplicar
             const existentes = CashAPI.getLocal().filter(m => m.billId === id);
             if (existentes.length === 0) {
+                // formaPag: se split com 1 método, usa esse; se múltiplos, usa 'misto'
+                const formaPag = payments && payments.length === 1
+                    ? payments[0].method
+                    : payments && payments.length > 1
+                        ? 'misto'
+                        : 'outros';
                 await CashAPI.upsertMovimento({
                     id:          _genUUID(),
                     descricao:   bill.description,
@@ -93,7 +99,8 @@ const BillsModule = (() => {
                     vencimento:  today,
                     tipo:        bill.type === 'payable' ? 'despesa' : 'receita',
                     categoria:   bill.category || '',
-                    formaPag:    'outros',
+                    formaPag,
+                    payments:    payments || null,
                     observacao:  `Lançado automaticamente via Contas a Pagar/Receber`,
                     status:      'pago',
                     billId:      bill.id
@@ -171,7 +178,7 @@ const BillsModule = (() => {
                         <td>${fmtDate(b.due_date)}</td>
                         <td><span class="bills-status-badge bills-badge-${b.status}">${_statusLabel(b.status)}</span></td>
                         <td class="bills-actions">
-                            ${b.status !== 'paid' ? `<button class="bills-btn-pay" data-id="${b.id}" title="Marcar como pago">✓ Pagar</button>` : ''}
+                            ${b.status !== 'paid' ? `<button class="bills-btn-pay" data-id="${b.id}" data-amount="${b.amount}" title="Marcar como pago">✓ Pagar</button>` : ''}
                             <button class="bills-btn-edit" data-id="${b.id}" title="Editar">✏️</button>
                             <button class="bills-btn-delete" data-id="${b.id}" title="Excluir">🗑</button>
                         </td>
@@ -327,15 +334,15 @@ const BillsModule = (() => {
                 return;
             }
 
-            // Pagar
+            // Pagar — abre modal de split de pagamento
             if (e.target.matches('.bills-btn-pay')) {
-                const id = e.target.dataset.id;
-                Utils.confirm('Confirmar pagamento na data de hoje?', 'Marcar como pago', async () => {
+                const id  = e.target.dataset.id;
+                const amt = parseFloat(e.target.dataset.amount) || 0;
+                _openPaymentSplitModal(container, id, amt, async (payments) => {
                     try {
-                        await markAsPaid(id);
+                        await markAsPaid(id, payments);
                         await _loadView(container, currentType);
                         Utils.showToast('Conta marcada como paga!', 'success');
-                        // Atualizar badge de notificações
                         if (window.NotificationsModule) await window.NotificationsModule.refresh();
                     } catch (err) {
                         Utils.showToast('Erro ao marcar: ' + err.message, 'error');
@@ -484,4 +491,196 @@ window._billsToggleEndDate = function(recurrenceValue) {
         if (input) { input.style.display = 'none'; input.value = ''; }
     }
 };
+
+// ============================================================
+// FEATURE 1.3 — SPLIT DE PAGAMENTO
+// Modal exibido ao clicar em "Pagar" em uma bill
+// ============================================================
+
+const PAYMENT_METHODS = [
+    { value: 'dinheiro',        label: 'Dinheiro' },
+    { value: 'pix',             label: 'PIX' },
+    { value: 'cartao_debito',   label: 'Cartão Débito' },
+    { value: 'cartao_credito',  label: 'Cartão Crédito' },
+    { value: 'transferencia',   label: 'Transferência' },
+    { value: 'cheque',          label: 'Cheque' },
+    { value: 'outros',          label: 'Outros' },
+];
+
+function _methodOptions(selected) {
+    return PAYMENT_METHODS.map(m =>
+        `<option value="${m.value}" ${m.value === selected ? 'selected' : ''}>${m.label}</option>`
+    ).join('');
+}
+
+function _renderPaymentLine(payment, index) {
+    return `
+    <div class="payment-line" data-idx="${index}">
+        <select class="pay-method" style="flex:1; padding:0.4rem 0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.85rem; font-family:var(--font-family);">
+            ${_methodOptions(payment?.method || 'dinheiro')}
+        </select>
+        <input type="number" class="pay-amount" min="0.01" step="0.01"
+               value="${payment?.amount || ''}"
+               placeholder="Valor (R$)"
+               style="width:120px; padding:0.4rem 0.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg-input); color:var(--text-primary); font-size:0.85rem; font-family:var(--font-family);"
+               oninput="window._splitUpdateTotal()">
+        ${index > 0
+            ? `<button type="button" class="pay-remove-btn" onclick="window._splitRemoveLine(${index})" title="Remover"
+                   style="padding:0.35rem 0.6rem; border-radius:var(--radius-sm); border:1px solid rgba(226,75,74,0.4); background:rgba(226,75,74,0.1); color:#E24B4A; font-size:0.85rem; cursor:pointer; font-family:var(--font-family);">✕</button>`
+            : `<div style="width:34px;"></div>`}
+    </div>`;
+}
+
+function _renderPaymentSplitSection(totalAmount, existing) {
+    const lines = existing?.length ? existing : [{ method: 'dinheiro', amount: totalAmount }];
+    return `
+    <div id="split-payment-wrap">
+        <div style="margin-bottom:0.75rem;">
+            ${lines.map((p, i) => _renderPaymentLine(p, i)).join('')}
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-bottom:0.75rem;">
+            <button type="button" id="btn-add-split-line"
+                    style="padding:0.35rem 0.9rem; border-radius:var(--radius-sm); border:1px solid rgba(37,99,235,0.4); background:rgba(37,99,235,0.08); color:var(--accent-blue); font-size:0.82rem; font-weight:600; cursor:pointer; font-family:var(--font-family);">
+                + Adicionar forma
+            </button>
+            <button type="button" id="btn-split-equal"
+                    style="padding:0.35rem 0.9rem; border-radius:var(--radius-sm); border:1px solid rgba(29,158,117,0.4); background:rgba(29,158,117,0.08); color:#1D9E75; font-size:0.82rem; font-weight:600; cursor:pointer; font-family:var(--font-family);">
+                Dividir igualmente
+            </button>
+        </div>
+        <div id="split-validation" class="split-validation" style="font-size:0.8rem; font-weight:600; padding:0.35rem 0.75rem; border-radius:var(--radius-sm); display:none;"></div>
+    </div>`;
+}
+
+function _collectPayments(wrap) {
+    const lines = wrap.querySelectorAll('.payment-line');
+    const payments = [];
+    lines.forEach(line => {
+        const method = line.querySelector('.pay-method')?.value;
+        const amount = parseFloat(line.querySelector('.pay-amount')?.value) || 0;
+        if (method && amount > 0) payments.push({ method, amount });
+    });
+    return payments;
+}
+
+function _validatePaymentSplit(totalAmount, payments) {
+    if (!payments.length) return { ok: false, msg: 'Adicione pelo menos uma forma de pagamento.' };
+    const sum = payments.reduce((s, p) => s + p.amount, 0);
+    const diff = Math.abs(sum - totalAmount);
+    if (diff > 0.01) {
+        return { ok: false, msg: `Soma (R$ ${sum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}) ≠ total (R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}).` };
+    }
+    return { ok: true };
+}
+
+function _openPaymentSplitModal(container, billId, totalAmount, onConfirm) {
+    const fmt = v => 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    const overlay = document.createElement('div');
+    overlay.id = 'split-modal-overlay';
+    overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:2000; display:flex; align-items:center; justify-content:center; padding:1rem;';
+
+    overlay.innerHTML = `
+    <div style="background:var(--bg-card); border-radius:var(--radius-card); padding:1.5rem; max-width:460px; width:100%; box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+        <h3 style="margin:0 0 0.25rem 0; font-size:1rem; color:var(--text-primary);">Confirmar Pagamento</h3>
+        <p style="margin:0 0 1.25rem 0; font-size:0.85rem; color:var(--text-secondary);">Total: <strong style="color:var(--accent-blue);">${fmt(totalAmount)}</strong> — informe a(s) forma(s) de pagamento.</p>
+        ${_renderPaymentSplitSection(totalAmount, null)}
+        <div style="display:flex; gap:0.75rem; justify-content:flex-end; margin-top:1.25rem;">
+            <button id="split-btn-cancel" style="padding:0.5rem 1.25rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-size:0.875rem; font-weight:600; cursor:pointer; font-family:var(--font-family);">Cancelar</button>
+            <button id="split-btn-confirm" style="padding:0.5rem 1.25rem; border-radius:var(--radius-sm); border:none; background:var(--accent-blue); color:#fff; font-size:0.875rem; font-weight:700; cursor:pointer; font-family:var(--font-family);">Confirmar Pagamento</button>
+        </div>
+    </div>`;
+
+    document.body.appendChild(overlay);
+
+    // Referências internas
+    const wrap    = overlay.querySelector('#split-payment-wrap');
+    const valEl   = overlay.querySelector('#split-validation');
+    let lineCount = 1;
+
+    // Expor funções para inline handlers
+    window._splitUpdateTotal = function() {
+        const payments = _collectPayments(wrap);
+        const result   = _validatePaymentSplit(totalAmount, payments);
+        if (!result.ok) {
+            valEl.textContent  = result.msg;
+            valEl.style.cssText = 'display:block; color:#E24B4A; background:rgba(226,75,74,0.08); border:1px solid rgba(226,75,74,0.25); font-size:0.8rem; font-weight:600; padding:0.35rem 0.75rem; border-radius:var(--radius-sm);';
+        } else {
+            valEl.textContent  = 'OK — soma confere.';
+            valEl.style.cssText = 'display:block; color:#1D9E75; background:rgba(29,158,117,0.08); border:1px solid rgba(29,158,117,0.25); font-size:0.8rem; font-weight:600; padding:0.35rem 0.75rem; border-radius:var(--radius-sm);';
+        }
+    };
+
+    window._splitRemoveLine = function(idx) {
+        const line = wrap.querySelector(`.payment-line[data-idx="${idx}"]`);
+        if (line) { line.remove(); _renumberLines(wrap); window._splitUpdateTotal(); }
+    };
+
+    function _renumberLines(wrap) {
+        wrap.querySelectorAll('.payment-line').forEach((line, i) => {
+            line.dataset.idx = i;
+            const removeBtn = line.querySelector('.pay-remove-btn');
+            if (removeBtn) removeBtn.setAttribute('onclick', `window._splitRemoveLine(${i})`);
+            // Botão de remover só aparece no i > 0
+            if (i === 0 && removeBtn) {
+                removeBtn.outerHTML = `<div style="width:34px;"></div>`;
+            }
+        });
+    }
+
+    overlay.querySelector('#btn-add-split-line').addEventListener('click', () => {
+        const linesWrap = wrap.querySelector('div');
+        lineCount = wrap.querySelectorAll('.payment-line').length;
+        const tmp = document.createElement('div');
+        tmp.innerHTML = _renderPaymentLine(null, lineCount);
+        linesWrap.appendChild(tmp.firstElementChild);
+        lineCount++;
+    });
+
+    overlay.querySelector('#btn-split-equal').addEventListener('click', () => {
+        const lines  = wrap.querySelectorAll('.payment-line');
+        const n      = lines.length;
+        if (!n) return;
+        const share  = Math.floor((totalAmount / n) * 100) / 100;
+        const rest   = Math.round((totalAmount - share * (n - 1)) * 100) / 100;
+        lines.forEach((line, i) => {
+            const inp = line.querySelector('.pay-amount');
+            if (inp) inp.value = i === n - 1 ? rest : share;
+        });
+        window._splitUpdateTotal();
+    });
+
+    overlay.querySelector('#split-btn-cancel').addEventListener('click', () => {
+        overlay.remove();
+        delete window._splitUpdateTotal;
+        delete window._splitRemoveLine;
+    });
+
+    overlay.querySelector('#split-btn-confirm').addEventListener('click', async () => {
+        const payments = _collectPayments(wrap);
+        const result   = _validatePaymentSplit(totalAmount, payments);
+        if (!result.ok) {
+            window._splitUpdateTotal();
+            return;
+        }
+        overlay.querySelector('#split-btn-confirm').disabled = true;
+        overlay.querySelector('#split-btn-confirm').textContent = 'Salvando…';
+        overlay.remove();
+        delete window._splitUpdateTotal;
+        delete window._splitRemoveLine;
+        await onConfirm(payments);
+    });
+
+    // Fechar ao clicar fora do card
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) {
+            overlay.remove();
+            delete window._splitUpdateTotal;
+            delete window._splitRemoveLine;
+        }
+    });
+
+    // Disparar validação inicial
+    setTimeout(() => window._splitUpdateTotal && window._splitUpdateTotal(), 0);
+}
 
