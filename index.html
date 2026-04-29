@@ -1101,25 +1101,6 @@
             RealtimeModule.start();
         }
 
-        // Custo operacional por dia
-        window.calcRateioDiario = function() {
-            const dias = parseInt(document.getElementById('cxRateioDias')?.value) || 22;
-            const el   = document.getElementById('cxRateioResultado');
-            if (!el) return;
-            const data = JSON.parse(localStorage.getItem('pav_ultimos_dados') || 'null');
-            if (!data) {
-                el.textContent = 'Consolide o balanço primeiro';
-                el.style.fontSize = '0.9rem';
-                return;
-            }
-            const totais   = window.calcularTotais ? window.calcularTotais(data) : {};
-            const fixos    = totais.totalFixos || 0;
-            const custoDia = dias > 0 ? fixos / dias : 0;
-            el.style.fontSize = '1.6rem';
-            el.textContent = custoDia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        };
-        setTimeout(window.calcRateioDiario, 600);
-
         // Meta de faturamento diária — calcula em tempo real
         window._calcMetaDiaria = function() {
             const meta = parseFloat(document.getElementById('metaFaturamento')?.value) || 0;
@@ -1370,6 +1351,27 @@
             });
         }
     })();
+    </script>
+
+    <script>
+    // Custo operacional por dia — definido globalmente para o botão Calcular
+    window.calcRateioDiario = function() {
+        const dias = parseInt(document.getElementById('cxRateioDias')?.value) || 22;
+        const el   = document.getElementById('cxRateioResultado');
+        if (!el) return;
+        const data = JSON.parse(localStorage.getItem('pav_ultimos_dados') || 'null');
+        if (!data) {
+            el.textContent = 'Consolide o balanço primeiro';
+            el.style.fontSize = '0.9rem';
+            return;
+        }
+        const totais   = window.calcularTotais ? window.calcularTotais(data) : {};
+        const fixos    = totais.totalFixos || 0;
+        const custoDia = dias > 0 ? fixos / dias : 0;
+        el.style.fontSize = '1.6rem';
+        el.textContent = custoDia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    };
+    document.addEventListener('DOMContentLoaded', () => setTimeout(window.calcRateioDiario, 800));
     </script>
 
 </body>
