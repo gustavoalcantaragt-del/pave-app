@@ -253,7 +253,7 @@ const FinancialAPI = {
         dados.mesReferencia = mesRef; // garante consistência no dado salvo
         const label = window.formatPeriod ? window.formatPeriod(mesRef) : (mesRef ? `${mesRef.split('-')[1]}/${mesRef.split('-')[0]}` : mesRef);
         const idx = historico.findIndex(h => (h.mesRef || '').substring(0, 7) === mesRef);
-        const entry = { mesRef, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString() };
+        const entry = { mesRef, label, faturamento: dados.faturamento, lucro: totais.lucroGerencial || 0, date: new Date().toISOString(), snapshot: dados };
         if (idx >= 0) historico[idx] = entry; else historico.push(entry);
         localStorage.setItem(STORAGE_KEYS.HISTORICO, JSON.stringify(historico));
 

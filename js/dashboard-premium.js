@@ -97,7 +97,12 @@ function _togglePeriodPicker() {
             }
         } catch {}
 
-        // Fallback: apenas re-renderiza com o que está no localStorage
+        // Fallback: restaura snapshot local do período selecionado, se disponível
+        try {
+            const hist = JSON.parse(localStorage.getItem('pav_historico') || '[]');
+            const entry = hist.find(h => (h.mesRef || '').substring(0, 7) === ref.substring(0, 7));
+            if (entry?.snapshot) localStorage.setItem('pav_ultimos_dados', JSON.stringify(entry.snapshot));
+        } catch {}
         if (window.renderDashboard) window.renderDashboard();
     });
 
