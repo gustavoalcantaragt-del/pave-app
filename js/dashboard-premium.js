@@ -93,20 +93,25 @@ function _togglePeriodPicker() {
                     .limit(1);
 
                 if (entries && entries.length > 0 && entries[0].data) {
-                    localStorage.setItem('pav_ultimos_dados', JSON.stringify(entries[0].data));
-                    if (window.renderDashboard) window.renderDashboard();
+                    const picked = entries[0].data;
+                    localStorage.setItem('pav_ultimos_dados', JSON.stringify(picked));
+                    if (window.renderDashboard) window.renderDashboard(picked);
                     return;
                 }
             }
         } catch {}
 
         // Fallback: restaura snapshot local do período selecionado, se disponível
+        let pickedData = null;
         try {
             const hist = JSON.parse(localStorage.getItem('pav_historico') || '[]');
             const entry = hist.find(h => (h.mesRef || '').substring(0, 7) === ref.substring(0, 7));
-            if (entry?.snapshot) localStorage.setItem('pav_ultimos_dados', JSON.stringify(entry.snapshot));
+            if (entry?.snapshot) {
+                pickedData = entry.snapshot;
+                localStorage.setItem('pav_ultimos_dados', JSON.stringify(pickedData));
+            }
         } catch {}
-        if (window.renderDashboard) window.renderDashboard();
+        if (window.renderDashboard) window.renderDashboard(pickedData || undefined);
     });
 
     const close = (ev) => {
